@@ -1,14 +1,41 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { motion } from 'framer-motion';
+import CountUp from '../components/CountUp';
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
 
 export default function Home() {
   return (
     <Layout>
       {/* BEGIN: Hero Section */}
       <section className="relative overflow-hidden hero-gradient pt-16 pb-24 lg:pt-32 lg:pb-40 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16">
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16"
+        >
           {/* Left Column: Content */}
-          <div className="flex-1 text-center lg:text-left">
+          <motion.div variants={fadeIn} className="flex-1 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-apexBlue text-sm font-bold mb-6">
               <span className="w-2 h-2 rounded-full bg-apexBlue animate-ping"></span>
               Maharashtra's Premier Admission Consultants
@@ -20,52 +47,83 @@ export default function Home() {
               Strategic cutoff analysis, personalized preference list planning, and expert guidance to help you secure a seat in Maharashtra's top colleges.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button className="bg-orange-gradient text-white px-8 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all shadow-xl shadow-apexOrange/20">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-orange-gradient text-white px-8 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all shadow-xl shadow-apexOrange/20"
+              >
                 Book Appointment
-              </button>
-              <button className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all">
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all"
+              >
                 Buy Counselling Book
-              </button>
+              </motion.button>
             </div>
             {/* Trust Stats */}
             <div className="grid grid-cols-3 gap-8 mt-16 pt-8 border-t border-slate-200">
               <div>
-                <p className="text-3xl font-extrabold text-apexBlue">18+</p>
+                <p className="text-3xl font-extrabold text-apexBlue">
+                  <CountUp to={18} suffix="+" />
+                </p>
                 <p className="text-sm text-slate-500 font-medium">Years Experience</p>
               </div>
               <div>
-                <p className="text-3xl font-extrabold text-apexBlue">450+</p>
+                <p className="text-3xl font-extrabold text-apexBlue">
+                  <CountUp to={450} suffix="+" />
+                </p>
                 <p className="text-sm text-slate-500 font-medium">Colleges Listed</p>
               </div>
               <div>
-                <p className="text-3xl font-extrabold text-apexBlue">100%</p>
+                <p className="text-3xl font-extrabold text-apexBlue">
+                  <CountUp to={100} suffix="%" />
+                </p>
                 <p className="text-sm text-slate-500 font-medium">Admission Success</p>
               </div>
             </div>
-          </div>
+          </motion.div>
           {/* Right Column: Illustration */}
-          <div className="flex-1 relative">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="flex-1 relative"
+          >
             <div className="absolute -inset-4 bg-gradient-to-tr from-apexBlue/10 to-transparent rounded-full blur-3xl -z-10"></div>
-            <img
+            <motion.img
+              whileHover={{ rotate: -1, scale: 1.02 }}
               alt="Educational Illustration"
               className="w-full h-auto rounded-3xl shadow-2xl"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwptTdvXw_mKVpWV7WnblsGs3nbeqGSJi8W5KvYaBRlWVQ2Mfcs3oeMpMzPJ2XkhZsMKEBmvuDwkbWS63YUzm4dE4V7wGZ9AxfOOR5cmbNZilA88l7e1A9ehWRmcRS0anUGc2zU6l6gHs34Mf8aRqCfxfjgAHBDPYEkePLq0hIO0SuwzsGfIPtR26XDFaxW603P6V7-p28K0RN16dEWVty8Vn4RPqiEepjKsCWtsEtGa0mUoFH9u2Nv3o74NwvFG20JyF5d9E6ZA"
             />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
       {/* END: Hero Section */}
 
       {/* BEGIN: Why You Need a Counsellor */}
       <section className="py-24 bg-apexLight" id="why">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          <motion.div variants={fadeIn} className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-extrabold text-apexBlue mb-4">Why You Need Expert Counselling?</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">Navigating the admission process is complex. We simplify it to ensure you make the best career choices.</p>
-          </div>
+          </motion.div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Card 1 */}
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+              className="p-8 rounded-2xl bg-white border border-slate-100 transition-all group cursor-default"
+            >
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 shadow-sm group-hover:bg-apexBlue group-hover:text-white transition-colors">
                 <svg className="w-6 h-6 text-apexBlue group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -73,9 +131,13 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-apexBlue">Preference Form Complexity</h3>
               <p className="text-slate-600 text-sm leading-relaxed">Avoid errors in option filling that could lead to losing a seat in a dream college despite good marks.</p>
-            </div>
+            </motion.div>
             {/* Card 2 */}
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+              className="p-8 rounded-2xl bg-white border border-slate-100 transition-all group cursor-default"
+            >
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 shadow-sm group-hover:bg-apexBlue group-hover:text-white transition-colors">
                 <svg className="w-6 h-6 text-apexBlue group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -83,9 +145,13 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-apexBlue">TFWS & Fee Saving</h3>
               <p className="text-slate-600 text-sm leading-relaxed">Strategic planning for Tuition Fee Waiver Scheme (TFWS) to save lakhs in fees throughout your degree.</p>
-            </div>
+            </motion.div>
             {/* Card 3 */}
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+              className="p-8 rounded-2xl bg-white border border-slate-100 transition-all group cursor-default"
+            >
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 shadow-sm group-hover:bg-apexBlue group-hover:text-white transition-colors">
                 <svg className="w-6 h-6 text-apexBlue group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -93,9 +159,13 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-apexBlue">Large Selection Pool</h3>
               <p className="text-slate-600 text-sm leading-relaxed">Selecting from 300+ engineering colleges in Maharashtra is overwhelming without data-backed analysis.</p>
-            </div>
+            </motion.div>
             {/* Card 4 */}
-            <div className="p-8 rounded-2xl bg-white border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+              className="p-8 rounded-2xl bg-white border border-slate-100 transition-all group cursor-default"
+            >
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 shadow-sm group-hover:bg-apexBlue group-hover:text-white transition-colors">
                 <svg className="w-6 h-6 text-apexBlue group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -103,9 +173,9 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-apexBlue">Experienced Team</h3>
               <p className="text-slate-600 text-sm leading-relaxed">Benefit from years of experience in counseling thousands of students with similar percentile ranges.</p>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
       {/* END: Why You Need a Counsellor */}
 
@@ -113,14 +183,24 @@ export default function Home() {
       <section className="py-24 bg-apexBlue text-white relative overflow-hidden" id="services">
         <div className="absolute top-0 right-0 w-96 h-96 bg-apexOrange/10 blur-[100px] -z-0"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-900/40 blur-[100px] -z-0"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+        >
+          <motion.div variants={fadeIn} className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-extrabold mb-4">Our Service Packages</h2>
             <p className="text-blue-200">Choose a plan that fits your admission journey</p>
-          </div>
+          </motion.div>
           <div className="grid lg:grid-cols-3 gap-8 items-stretch">
             {/* Basic Offline */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col hover:border-white/20 transition-colors backdrop-blur-sm">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ scale: 1.02 }}
+              className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col transition-colors backdrop-blur-sm"
+            >
               <h3 className="text-xl font-bold mb-2">Offline One-on-One</h3>
               <div className="text-4xl font-extrabold mb-6">₹1,000 <span className="text-sm font-normal text-blue-200">/ Session</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
@@ -143,10 +223,20 @@ export default function Home() {
                   Personalized Consultation
                 </li>
               </ul>
-              <button className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors">Select Plan</button>
-            </div>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors"
+              >
+                Select Plan
+              </motion.button>
+            </motion.div>
             {/* Featured: Complete Guidance */}
-            <div className="p-8 rounded-3xl bg-white text-apexBlue flex flex-col shadow-2xl scale-105 relative">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ scale: 1.05 }}
+              className="p-8 rounded-3xl bg-white text-apexBlue flex flex-col shadow-2xl relative z-20"
+            >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-gradient text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg">Recommended</div>
               <h3 className="text-xl font-bold mb-2">Complete Guidance</h3>
               <div className="text-4xl font-extrabold mb-6 text-apexBlue">₹10,000 <span className="text-sm font-normal text-slate-500">/ Full Process</span></div>
@@ -176,10 +266,20 @@ export default function Home() {
                   24/7 Dedicated Support Head
                 </li>
               </ul>
-              <button className="w-full py-4 rounded-xl bg-orange-gradient text-white font-bold text-lg hover:brightness-110 shadow-xl shadow-apexOrange/30 transition-all">Book Premium Guidance</button>
-            </div>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-4 rounded-xl bg-orange-gradient text-white font-bold text-lg hover:brightness-110 shadow-xl shadow-apexOrange/30 transition-all"
+              >
+                Book Premium Guidance
+              </motion.button>
+            </motion.div>
             {/* FESS Online */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col hover:border-white/20 transition-colors backdrop-blur-sm">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ scale: 1.02 }}
+              className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col transition-colors backdrop-blur-sm"
+            >
               <h3 className="text-xl font-bold mb-2">FESS Online</h3>
               <div className="text-4xl font-extrabold mb-6">₹2,000 <span className="text-sm font-normal text-blue-200">/ Package</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
@@ -202,10 +302,16 @@ export default function Home() {
                   Recorded Video Guides
                 </li>
               </ul>
-              <button className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors">Select Plan</button>
-            </div>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors"
+              >
+                Select Plan
+              </motion.button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
       {/* END: Counselling Services Preview */}
 

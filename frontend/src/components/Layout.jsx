@@ -23,9 +23,11 @@ export default function Layout({ children }) {
             <Link className="hover:text-apexOrangeLight transition-colors" to="/">Home</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/why">Why Counselling</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/services">Services</Link>
-            <Link className="hover:text-apexOrangeLight transition-colors" to="/#feedback">Feedback</Link>
-            <Link className="hover:text-apexOrangeLight transition-colors" to="/#track-record">Track Record</Link>
-            <Link className="hover:text-apexOrangeLight transition-colors" to="/#contact">Contact</Link>
+            <Link className="hover:text-apexOrangeLight transition-colors" to="/book">Counselling Book</Link>
+            {/* <Link className="hover:text-apexOrangeLight transition-colors" to="/#feedback">Feedback</Link> */}
+            <Link className="hover:text-apexOrangeLight transition-colors" to="/track-record">Track Record</Link>
+            <Link className="hover:text-apexOrangeLight transition-colors" to="/about">About Us</Link>
+            {/* <Link className="hover:text-apexOrangeLight transition-colors" to="/#contact">Contact</Link> */}
           </div>
           {/* CTA Button */}
           <div className="flex items-center gap-4">
@@ -44,10 +46,12 @@ export default function Layout({ children }) {
         {isMobileMenuOpen && (
           <div className="xl:hidden bg-apexBlue p-4 space-y-4">
             <Link className="block text-white hover:text-apexOrangeLight" to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+            <Link className="block text-white hover:text-apexOrangeLight" to="/about" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/why" onClick={() => setIsMobileMenuOpen(false)}>Why Counselling</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/services" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
+            <Link className="block text-white hover:text-apexOrangeLight" to="/book" onClick={() => setIsMobileMenuOpen(false)}>Counselling Book</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/#feedback" onClick={() => setIsMobileMenuOpen(false)}>Feedback</Link>
-            <Link className="block text-white hover:text-apexOrangeLight" to="/#track-record" onClick={() => setIsMobileMenuOpen(false)}>Track Record</Link>
+            <Link className="block text-white hover:text-apexOrangeLight" to="/track-record" onClick={() => setIsMobileMenuOpen(false)}>Track Record</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
             <button className="w-full bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-apexOrange/30">
               Book Counselling
@@ -83,9 +87,11 @@ export default function Layout({ children }) {
             <h4 className="font-bold text-lg mb-6">Quick Links</h4>
             <ul className="space-y-4 text-blue-100">
               <li><Link to="/" className="hover:text-apexOrangeLight">Home</Link></li>
+              <li><Link to="/about" className="hover:text-apexOrangeLight">About Us</Link></li>
               <li><Link to="/why" className="hover:text-apexOrangeLight">Why Us</Link></li>
               <li><Link to="/services" className="hover:text-apexOrangeLight">Services</Link></li>
-              <li><Link to="/#track-record" className="hover:text-apexOrangeLight">Track Record</Link></li>
+              <li><Link to="/book" className="hover:text-apexOrangeLight">Counselling Book</Link></li>
+              <li><Link to="/track-record" className="hover:text-apexOrangeLight">Track Record</Link></li>
             </ul>
           </div>
           <div>

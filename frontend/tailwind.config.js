@@ -16,6 +16,8 @@ export default {
         "background-light": "#f8f6f6",
         "background-dark": "#221610",
         navy: "#000080",
+        bookPrimary: '#FF6600',
+        bookSecondary: '#1A1A40',
       },
       fontFamily: {
         inter: ['Inter', 'sans-serif'],
