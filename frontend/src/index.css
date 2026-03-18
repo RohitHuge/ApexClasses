@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-scroll {
+    display: flex;
+    width: max-content;
+    animation: scroll 30s linear infinite;
+  }
+  .glass-header {
+    background: #1A0A62;
+  }
+  .hero-gradient {
+    background: radial-gradient(circle at top right, rgba(26, 10, 98, 0.05), transparent);
+  }
+  .bg-orange-gradient {
+    background: linear-gradient(135deg, #FF8A00 0%, #F24E1E 100%);
+  }
+}
