@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { MessageCircle, Phone, Mail, Sparkles, ShieldCheck, GraduationCap, Laptop } from 'lucide-react';
 
 export default function Services() {
   return (
@@ -122,28 +123,56 @@ export default function Services() {
           </section>
 
           {/* Quick Enquiry Section */}
-          <section className="py-24 px-4 bg-apexBlue">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl font-bold text-white mb-4">Quick Enquiry</h2>
-                <p className="text-slate-300 text-lg">Have questions? Reach out to us through any channel below.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                {[
-                  { icon: 'chat', title: 'WhatsApp', desc: 'Instant Chat' },
-                  { icon: 'call', title: 'Call Us', desc: 'Mon-Sat (9am-6pm)' },
-                  { icon: 'mail', title: 'Email', desc: '24/7 Support' }
-                ].map((item) => (
-                  <a key={item.title} className="flex flex-col items-center gap-6 bg-white p-10 rounded-2xl border border-transparent hover:border-apexOrange transition-all group shadow-2xl" href="#">
-                    <div className="w-16 h-16 rounded-full bg-apexOrange/10 flex items-center justify-center text-apexOrange group-hover:bg-apexOrange group-hover:text-white transition-all">
-                      <span className="material-symbols-outlined text-3xl">{item.icon}</span>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-slate-900">{item.title}</p>
-                      <p className="text-sm text-slate-500 mt-1">{item.desc}</p>
-                    </div>
-                  </a>
-                ))}
+          <section className="py-20 px-4 bg-white relative overflow-hidden">
+            <div className="max-w-6xl mx-auto">
+              <div className="bg-apexBlue rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl">
+                {/* Background Design Elements */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-apexOrange/10 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                
+                {/* Decorative Lucide Icons */}
+                <div className="absolute top-10 left-10 text-white/5 -rotate-12 pointer-events-none">
+                  <Sparkles size={80} />
+                </div>
+                <div className="absolute bottom-10 right-10 text-white/5 rotate-12 pointer-events-none">
+                  <ShieldCheck size={100} />
+                </div>
+                <div className="absolute top-1/2 left-20 text-white/5 -translate-y-1/2 rotate-6 pointer-events-none hidden lg:block">
+                  <GraduationCap size={70} />
+                </div>
+                <div className="absolute bottom-1/4 right-24 text-white/5 -rotate-6 pointer-events-none hidden lg:block">
+                  <Laptop size={60} />
+                </div>
+
+                <div className="relative z-10">
+                  <div className="text-center mb-10">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white font-bold text-xs uppercase tracking-widest mb-4 border border-white/20">Get Support</span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Quick Enquiry</h2>
+                    <p className="text-blue-100/80 text-base max-w-xl mx-auto">Questions? Reach out via any channel below and get instant expert guidance.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {[
+                      { icon: <MessageCircle size={28} />, title: 'WhatsApp', desc: 'Instant Chat', color: 'text-emerald-400', bg: 'bg-emerald-400/10', hover: 'hover:border-emerald-400' },
+                      { icon: <Phone size={28} />, title: 'Call Us', desc: 'Mon-Sat (9am-6pm)', color: 'text-apexOrangeLight', bg: 'bg-apexOrangeLight/10', hover: 'hover:border-apexOrangeLight' },
+                      { icon: <Mail size={28} />, title: 'Email', desc: '24/7 Support', color: 'text-blue-400', bg: 'bg-blue-400/10', hover: 'hover:border-blue-400' }
+                    ].map((item) => (
+                      <a 
+                        key={item.title} 
+                        className={`flex items-center gap-5 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 transition-all group hover:bg-white/10 hover:shadow-2xl ${item.hover}`} 
+                        href="#"
+                      >
+                        <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                          {item.icon}
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-white mb-0.5">{item.title}</p>
+                          <p className="text-xs text-blue-200">{item.desc}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </section>

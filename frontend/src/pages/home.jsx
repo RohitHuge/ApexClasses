@@ -317,73 +317,119 @@ export default function Home() {
 
       {/* BEGIN: Counselling Book Promotion */}
       <section className="py-24 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
           <div className="flex flex-col lg:flex-row items-center gap-16 bg-slate-50 rounded-[3rem] p-8 lg:p-16 border border-slate-100 shadow-sm">
-            <div className="lg:w-1/2 flex justify-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="lg:w-1/2 flex justify-center"
+            >
               {/* 3D Book Mockup */}
               <div className="relative group cursor-pointer">
                 <div className="absolute -inset-4 bg-apexBlue/5 rounded-3xl blur-xl group-hover:bg-apexBlue/10 transition-colors"></div>
-                <img
+                <motion.img
+                  whileHover={{ rotate: -3, scale: 1.05 }}
                   alt="Counselling Book 2026"
-                  className="relative rounded-lg shadow-2xl transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-105"
+                  className="relative rounded-lg shadow-2xl transition-transform duration-500"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2ng5-4VoNV-r-B4Uqs8WNuNlOBugamSOcssG1qf0YGVNcVJp0CrSqc8uXIcP2UL645-NgfcJKecgrNPhM9TFDEksCTq9RsDllHy0kS_sN47JJ2XhF9qGeRg603PyGxnWo8AU5Gg7zPTyTFNHizwJUVZuyYpsPHX9yvqU6FF05NWklubm8wQPC1DtOVAXiqV-rc5sPsawAoyZ6aDP2gqz-o08EJWwH5Mnxn222SvtsO8GSn3CGYXXiUPnYUQno4vcDLEN-jJqTiw"
                 />
               </div>
-            </div>
-            <div className="lg:w-1/2">
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="lg:w-1/2"
+            >
               <span className="text-apexOrange font-bold tracking-widest uppercase text-sm">Best Seller 2026</span>
               <h2 className="text-3xl lg:text-5xl font-extrabold text-apexBlue mt-4 mb-6">MHT-CET Engineering Admission Counselling Guide 2026</h2>
               <p className="text-slate-600 text-lg mb-8 leading-relaxed">
                 Everything you need to know about the CAP process, branch selection, and top colleges in one comprehensive book. Used by 10,000+ students every year.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="bg-orange-gradient text-white px-10 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-apexOrange/20">
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-orange-gradient text-white px-10 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-apexOrange/20"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   Buy Now
-                </button>
-                <button className="bg-emerald-500 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg">
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-emerald-500 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg"
+                >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.438 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                 </svg>
                 WhatsApp
-              </button>
+                </motion.button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
+        </motion.div>
+      </section>
       {/* END: Counselling Book Promotion */}
 
       {/* BEGIN: Proven Track Record */}
       <section className="py-24 bg-white" id="track-record">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-extrabold text-apexBlue mb-16">Proven Track Record</h2>
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+        >
+          <motion.h2 variants={fadeIn} className="text-3xl lg:text-4xl font-extrabold text-apexBlue mb-16">Proven Track Record</motion.h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[
               'COEP Pune', 'VJTI Mumbai', 'PICT Pune', 'SPIT Mumbai',
               'VIT Pune', 'WCE Sangli', 'PCCOE Pune', 'DJ Sanghvi'
             ].map((college) => (
-              <div key={college} className="bg-blue-50 border border-blue-100 p-8 rounded-2xl flex items-center justify-center hover:bg-white hover:shadow-xl transition-all group">
-                <span className="text-2xl lg:text-3xl font-black text-apexBlue group-hover:text-apexOrange">{college}</span>
-              </div>
+              <motion.div 
+                key={college} 
+                variants={fadeIn}
+                whileHover={{ scale: 1.1, backgroundColor: "#fff", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+                className="bg-blue-50 border border-blue-100 p-8 rounded-2xl flex items-center justify-center transition-all group cursor-default"
+              >
+                <span className="text-2xl lg:text-3xl font-black text-apexBlue group-hover:text-apexOrange transition-colors">{college}</span>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
       {/* END: Proven Track Record */}
 
       {/* BEGIN: Student Video Feedback */}
       <section className="py-24 bg-apexLight" id="feedback">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          <motion.div variants={fadeIn} className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-extrabold text-apexBlue mb-4">Success Stories</h2>
             <p className="text-slate-500">Hear from students who achieved their dreams with Apex</p>
-          </div>
+          </motion.div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Testimonial 1 */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -5 }}
+              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all group"
+            >
               <div className="relative h-48 bg-slate-200">
                 <img
                   alt="Testimonial Thumbnail"
@@ -391,11 +437,15 @@ export default function Home() {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfRzafLnVEu5xAshy-kPFBjSyoFXF6mTuOzbcwGKZnh5POl5HW5r7RBrCq__yerRt_1ubWtqaVKrcHWX22L7slm-IRIq8lTYguiDHX_bjb0ddUnGXnnyC5prCHUWS9OTrv7eZouelAHgBq2s1X0c4Ssp8vJMOx_35pqpfuVdTYf88prOPaqHagn_rqtXpgxTI3lNkT0TZebMFalN2QJO-78gPS2Wl_84COzoF6ePiiVqh1pKXILllfD3DDUvRl-KCk0LrEE7napg"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover:scale-110 transition-transform cursor-pointer">
+                  <motion.div 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-transform cursor-pointer"
+                  >
                     <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
               <div className="p-6">
@@ -410,9 +460,13 @@ export default function Home() {
                 <p className="text-slate-600 font-semibold text-sm">COEP Pune (Computer Engineering)</p>
                 <p className="text-slate-500 text-sm mt-3 leading-relaxed italic">"The preference list provided by Apex was the key. I got my dream college in CAP Round 1!"</p>
               </div>
-            </div>
+            </motion.div>
             {/* Testimonial 2 */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg transition-all group">
+            <motion.div 
+              variants={fadeIn}
+              whileHover={{ y: -5 }}
+              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all group"
+            >
               <div className="relative h-48 bg-slate-200">
                 <img
                   alt="Testimonial Thumbnail"
@@ -420,11 +474,15 @@ export default function Home() {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmRX6f4cGEgfuk1OLa8Aaw2xjlHLKQhmsHUmF-nynqIipshSz_IDNEtpsWqzkC0RQ4qCWWnc7FqX7kwSrbBbAjf-HdJANO1Z6Uq3INRoYosDWC4nn0z12IMU7GUM_fNVBEuRShDL6SHLQj3ZGHXu1AkuEzA60m1sHOjmdsoORLXwhYOAnK553yI438PszdAAYaqBLYx4NyuE6iWzVPLjf1aPLA4wKP-vdmZ47nvoPsi__JFHT6Y4XPDsiyc9RDSimezx5ehAIcLw"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover:scale-110 transition-transform cursor-pointer">
+                  <motion.div 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-transform cursor-pointer"
+                  >
                     <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
               <div className="p-6">
@@ -439,13 +497,16 @@ export default function Home() {
                 <p className="text-slate-600 font-semibold text-sm">PICT Pune (IT Engineering)</p>
                 <p className="text-slate-500 text-sm mt-3 leading-relaxed italic">"Extremely professional and knowledgeable. They knew exactly which colleges I should target with my percentile."</p>
               </div>
-            </div>
+            </motion.div>
             {/* Testimonial Placeholder */}
-            <div className="bg-slate-100 rounded-3xl overflow-hidden shadow-sm border border-dashed border-slate-300 flex items-center justify-center p-8">
+            <motion.div 
+              variants={fadeIn}
+              className="bg-slate-100 rounded-3xl overflow-hidden shadow-sm border border-dashed border-slate-300 flex items-center justify-center p-8"
+            >
               <p className="text-slate-400 font-medium">Coming Soon...</p>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
     </Layout>
   );
