@@ -9,6 +9,10 @@ import TrackRecord from './pages/TrackRecord'
 import AboutUs from './pages/AboutUs'
 
 import JLPTN5 from './pages/JLPTN5'
+import CourseLayout from './courses/CourseLayout'
+import CoursesLanding from './courses/pages/CoursesLanding'
+import ClassPage from './courses/pages/ClassPage'
+import SubjectPage from './courses/pages/SubjectPage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -25,6 +29,15 @@ function App() {
           <Route path="/book/index" element={<BookIndex />} />
           <Route path="/track-record" element={<TrackRecord />} />
           <Route path="/jlpt-n5" element={<JLPTN5 />} />
+          
+          {/* Courses Module Routes */}
+          <Route path="/courses" element={<CourseLayout />}>
+            <Route index element={<CoursesLanding />} />
+            <Route path=":class" element={<ClassPage />} />
+            <Route path=":class/:subject" element={<SubjectPage />} />
+            <Route path=":class/:subject/:chapter" element={<SubjectPage />} />
+            <Route path=":class/:subject/:chapter/:topic" element={<SubjectPage />} />
+          </Route>
         </Routes>
       </Router>
     </>
