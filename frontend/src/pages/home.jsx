@@ -338,7 +338,7 @@ export default function Home() {
                   whileHover={{ rotate: -3, scale: 1.05 }}
                   alt="Counselling Book 2026"
                   className="relative rounded-lg shadow-2xl transition-transform duration-500"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2ng5-4VoNV-r-B4Uqs8WNuNlOBugamSOcssG1qf0YGVNcVJp0CrSqc8uXIcP2UL645-NgfcJKecgrNPhM9TFDEksCTq9RsDllHy0kS_sN47JJ2XhF9qGeRg603PyGxnWo8AU5Gg7zPTyTFNHizwJUVZuyYpsPHX9yvqU6FF05NWklubm8wQPC1DtOVAXiqV-rc5sPsawAoyZ6aDP2gqz-o08EJWwH5Mnxn222SvtsO8GSn3CGYXXiUPnYUQno4vcDLEN-jJqTiw"
+                  src="https://ik.imagekit.io/apexcounselling/homepage.png"
                 />
               </div>
             </motion.div>

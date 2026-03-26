@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JLPT N5 | Editorial Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary-fixed": "#2f1500",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-surface": "#191c1d",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#001c3a",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#603100",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#a9c7ff",
+                        "on-tertiary-container": "#5c87cb",
+                        "inverse-primary": "#afc8f0",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary-fixed-variant": "#0e4686",
+                        "on-surface-variant": "#43474e",
+                        "tertiary-container": "#001e42",
+                        tertiary: "#000513",
+                        "on-primary-fixed-variant": "#2f486a",
+                        secondary: "#904d00",
+                        "primary-fixed": "#d4e3ff",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary-container": "#6f88ad",
+                        "outline-variant": "#c4c6cf",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "on-tertiary-fixed": "#001b3d",
+                        "primary-container": "#001f3f",
+                        "error-container": "#ffdad6",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#afc8f0",
+                        "secondary-fixed": "#ffdcc3",
+                        primary: "#000613",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-fixed": "#d6e3ff",
+                        outline: "#74777f",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container": "#edeeef",
+                        "secondary-container": "#fd8b00",
+                        "on-error": "#ffffff",
+                        background: "#f8f9fa",
+                        surface: "#f8f9fa",
+                        "surface-dim": "#d9dadb",
+                        error: "#ba1a1a",
+                        "surface-tint": "#476083"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope"],
+                        body: ["Inter"],
+                        label: ["Inter"],
+                        display: "Manrope"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2.5rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Updated Hero Gradient to Orange Brand Color */
+        .hero-gradient-orange {
+            background: linear-gradient(135deg, #fd8b00 0%, #ffb77d 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl shadow-sm">
+<div class="flex items-center justify-between px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-xl font-extrabold tracking-tighter text-slate-900 dark:text-white font-headline">
+            Editorial Intelligence
+        </div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors" href="#">Home</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors" href="#">Why Counselling</a>
+<a class="text-slate-900 relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-orange-600 after:rounded-full font-bold" href="#">Services</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors" href="#">Counselling Book</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors" href="#">Track Record</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors" href="#">Contact</a>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 font-bold tracking-tight active:scale-95 transition-transform">
+            Get Started
+        </button>
+</div>
+</nav>
+<main class="pt-20">
+<!-- Hero Section: Background changed to Orange -->
+<section class="hero-gradient-orange relative overflow-hidden py-24 md:py-32">
+<div class="max-w-screen-2xl mx-auto px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div>
+<span class="inline-block text-on-secondary-fixed font-bold tracking-widest uppercase text-xs mb-4">Foundation Course</span>
+<h1 class="text-5xl md:text-7xl font-headline font-extrabold text-on-secondary-fixed tracking-tight mb-6">
+                    JLPT (Japanese Language Proficiency Test)
+                </h1>
+<p class="text-on-secondary-container text-lg md:text-xl max-w-xl leading-relaxed mb-8">
+                    Master the fundamentals of the Japanese language with our expert-led N5 certification program. Designed for the architectural precision required in modern linguistics.
+                </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary text-on-primary px-8 py-4 font-bold active:scale-95 transition-transform">
+                        Enroll Now
+                    </button>
+<button class="border border-on-secondary-fixed/20 text-on-secondary-fixed px-8 py-4 font-bold hover:bg-white/10 transition-colors">
+                        Download Syllabus
+                    </button>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -top-12 -left-12 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
+<div class="relative bg-white/10 backdrop-blur-sm p-4 rounded-3xl border border-white/20 shadow-2xl">
+<img alt="JLPT Learning" class="w-full h-[400px] object-cover rounded-2xl" data-alt="Modern classroom in Tokyo with view of city skyline, bright natural light, minimalist interior design, educational atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4X-CheCIfcdOkgAbzi_wrwoy0DJMw_ooquKutx6rgGfabQ8MnAbRe4xAhn2y05HaGUgsXOsTddbI2qRPWfY9gDAXalDSe-Yk5GfezyDW0lBgxd7e-SfjFYVjTNbQTDuqfZCH3qYGIHHlfMMiPecnR7VLQK_PTJbZwcEn6ZjhAcIzKTfIRvvDTim3XxLCSYsfTBdo-qkN3xXlh2d39Qg4zkn3UjqSnTiJvMYr5-ZMHDQT2ATBa_YhlVmluEPcHEhnuxLt4BtFFmQ"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Benefits Section: Redesigned to be more colorful and round -->
+<section class="py-24 bg-primary text-white">
+<div class="max-w-screen-2xl mx-auto px-8">
+<div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+<div class="max-w-2xl">
+<h2 class="text-3xl md:text-5xl font-headline font-bold text-white tracking-tight mb-4">
+                        Why Learn JLPT N5?
+                    </h2>
+<div class="w-16 h-1 bg-secondary-container mb-6"></div>
+<p class="text-white/70 text-lg">
+                        The N5 level is the essential gateway to Japanese fluency, focusing on basic expressions and fundamental literacy.
+                    </p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Benefit 1: Orange/Round -->
+<div class="bg-secondary-container p-10 rounded-3xl group hover:-translate-y-2 transition-all duration-300">
+<div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-white text-3xl" data-icon="translate">translate</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-secondary-fixed mb-4">Understand basic vocabulary</h3>
+<p class="text-on-secondary-container leading-relaxed">
+                        Gain mastery over 800+ essential words used in daily Japanese conversations.
+                    </p>
+</div>
+<!-- Benefit 2: Deep Navy/Round -->
+<div class="bg-primary-container p-10 rounded-3xl group hover:-translate-y-2 transition-all duration-300 border border-white/10">
+<div class="w-14 h-14 bg-secondary-container/20 rounded-2xl flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-secondary-container text-3xl" data-icon="menu_book">menu_book</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-white mb-4">Read simple sentences</h3>
+<p class="text-white/60 leading-relaxed">
+                        Learn to read and write Hiragana, Katakana, and basic Kanji characters with confidence.
+                    </p>
+</div>
+<!-- Benefit 3: Orange/Round -->
+<div class="bg-secondary-container p-10 rounded-3xl group hover:-translate-y-2 transition-all duration-300">
+<div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-white text-3xl" data-icon="architecture">architecture</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-secondary-fixed mb-4">Build a foundation</h3>
+<p class="text-on-secondary-container leading-relaxed">
+                        Create a robust grammatical structural base for advancing to N4 and professional levels.
+                    </p>
+</div>
+<!-- Benefit 4: Deep Navy/Round -->
+<div class="bg-primary-container p-10 rounded-3xl group hover:-translate-y-2 transition-all duration-300 border border-white/10">
+<div class="w-14 h-14 bg-secondary-container/20 rounded-2xl flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-secondary-container text-3xl" data-icon="flight_takeoff">flight_takeoff</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-white mb-4">Improve opportunities</h3>
+<p class="text-white/60 leading-relaxed">
+                        Unlock career and academic paths in Japan with a globally recognized certification.
+                    </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Courses Section -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-screen-2xl mx-auto px-8">
+<div class="text-center mb-20">
+<h2 class="text-4xl md:text-5xl font-headline font-extrabold text-primary tracking-tight mb-4">Our Courses</h2>
+<p class="text-on-surface-variant max-w-xl mx-auto">Choose the learning path that fits your lifestyle and professional goals.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+<!-- Option 1: Online Classes -->
+<div class="bg-surface-container-lowest p-1 shadow-[0_20_40_rgba(0,31,63,0.08)] relative overflow-hidden group rounded-3xl">
+<div class="w-10 h-0.5 bg-secondary-container absolute top-0 left-0"></div>
+<div class="p-10">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-2xl font-headline font-bold text-primary mb-1">Online Classes</h3>
+<p class="text-secondary font-semibold text-sm">Basic Level</p>
+</div>
+<div class="text-right">
+<p class="text-xs uppercase tracking-widest text-on-surface-variant mb-1">Fees</p>
+<p class="text-3xl font-headline font-extrabold text-primary">Rs. 3000</p>
+</div>
+</div>
+<ul class="space-y-4 mb-10 border-t border-outline-variant/20 pt-8">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="calendar_today">calendar_today</span>
+<span>Starting 10th July</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="play_circle">play_circle</span>
+<span>60 Intensive lectures</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="groups">groups</span>
+<span>Interactive live sessions</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="schedule">schedule</span>
+<span>Flexible timing modules</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="home">home</span>
+<span>Study from home</span>
+</li>
+</ul>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold active:scale-95 transition-transform group-hover:bg-primary-container">
+                            Register for Online
+                        </button>
+</div>
+</div>
+<!-- Option 2: Offline Batches -->
+<div class="bg-primary-container p-1 shadow-[0_20_40_rgba(0,31,63,0.15)] relative overflow-hidden group rounded-3xl">
+<div class="w-10 h-0.5 bg-secondary-container absolute top-0 left-0"></div>
+<div class="p-10">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-2xl font-headline font-bold text-white mb-1">Offline Batches</h3>
+<p class="text-secondary-container font-semibold text-sm">Classroom Learning</p>
+</div>
+<div class="text-right">
+<p class="text-xs uppercase tracking-widest text-on-primary-container mb-1">Fees</p>
+<p class="text-3xl font-headline font-extrabold text-white">Rs. 7000</p>
+</div>
+</div>
+<ul class="space-y-4 mb-10 border-t border-white/10 pt-8">
+<li class="flex items-center gap-3 text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="person_pin_circle">person_pin_circle</span>
+<span>In-person expert guidance</span>
+</li>
+<li class="flex items-center gap-3 text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="apartment">apartment</span>
+<span>Structured environment</span>
+</li>
+<li class="flex items-center gap-3 text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="forum">forum</span>
+<span>Direct peer interaction</span>
+</li>
+<li class="flex items-center gap-3 text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="library_books">library_books</span>
+<span>Library access included</span>
+</li>
+<li class="flex items-center gap-3 text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-container text-xl" data-icon="verified">verified</span>
+<span>Official N5 Study Materials</span>
+</li>
+</ul>
+<button class="w-full bg-secondary-container text-on-secondary-fixed py-4 rounded-xl font-bold active:scale-95 transition-transform">
+                            Apply for Offline
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24 bg-surface">
+<div class="max-w-screen-2xl mx-auto px-8">
+<div class="bg-surface-container-low p-16 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden">
+<div class="relative z-10 max-w-2xl text-center md:text-left">
+<h2 class="text-4xl font-headline font-extrabold text-primary mb-6">Ready to start your journey?</h2>
+<p class="text-on-surface-variant text-lg mb-8">Join over 5,000 students who have successfully passed their JLPT exams with our mentoring program.</p>
+<div class="flex flex-wrap justify-center md:justify-start gap-4">
+<a class="flex items-center gap-2 text-primary font-bold hover:underline decoration-secondary-container underline-offset-8" href="#">
+                            Speak to a Counsellor
+                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="relative w-full max-w-xs md:max-w-md">
+<img alt="Counselling" class="w-full grayscale brightness-90 contrast-125 rounded-2xl" data-alt="Professional educational counsellor smiling while talking to a student in a modern office with glass walls" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD37SJWmHqg4z-yCm82vW6XQ0Dh2EjG-IAl8wrAmIgJfA0hF_IikkdyZafvjrEE_Q1hyONH9luxbiUyI_DrClaHLbHmIt0yB5yrxZeFnjRX135jMDqHlozGH8OD-VzOXm_RIseKjxg_hk5MXg3U1Dg6cpGoEm0tJglWZ8-dH9lyJYT0cQPx77wlMQ8cOFZlpSfx0gO4nJJSDDNkelZqvB7u8eJJ0AVUcqHGITzTmsDPaziO57Anj2ZQHr_fLCXlpP2WOgLDJUofmw"/>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-8 w-full max-w-screen-2xl mx-auto">
+<div class="font-manrope font-black text-lg text-slate-900 dark:text-white">
+            Editorial Intelligence
+        </div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors hover:underline decoration-orange-500 underline-offset-4" href="#">Privacy Policy</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors hover:underline decoration-orange-500 underline-offset-4" href="#">Terms of Service</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors hover:underline decoration-orange-500 underline-offset-4" href="#">Accessibility</a>
+<a class="text-slate-500 font-medium hover:text-slate-900 transition-colors hover:underline decoration-orange-500 underline-offset-4" href="#">Global Offices</a>
+</div>
+<p class="text-slate-500 font-inter text-sm leading-relaxed">
+            © 2024 Editorial Intelligence. All rights reserved.
+        </p>
+</div>
+</footer>
+</body></html>

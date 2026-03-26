@@ -18,7 +18,7 @@ export default function CounsellingBook() {
                     <img 
                       className="relative w-full h-auto rounded-lg shadow-2xl transform hover:scale-105 transition-transform duration-500" 
                       alt="3D book mockup titled MHT-CET Engineering Admission Counselling Guide 2026" 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfeKO3RL2o-n8lVfhGS7vLY_qVPVrYa1PqbhREqAm2zeGNdL5_hi0Rgx42v99PB9zOXaKmuZ48qh18KId3J74-1lLluqIJVGZ1HhJ_o1iDllW-MhyE0pDty5aPfI-onJtT7Mo8k4RK8Cc8b0p0lXvzWa0k6XRK1gTlruDMA1kgcMJ36YbbDs1nU8ShxlD84GOQjAVPPbYvO_-nZTwvniFBUMkssHQG9v0o_zYY2Sq6GMc2HqhFf-9AZPRrXW7C0zbNGwohxYXpNA"
+                      src="https://ik.imagekit.io/apexcounselling/Gemini_Generated_Image_e4o9y0e4o9y0e4o9.png"
                     />
                   </div>
                 </div>
