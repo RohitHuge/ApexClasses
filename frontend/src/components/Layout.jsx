@@ -26,6 +26,7 @@ export default function Layout({ children }) {
             <Link className="hover:text-apexOrangeLight transition-colors" to="/book">Counselling Book</Link>
             {/* <Link className="hover:text-apexOrangeLight transition-colors" to="/#feedback">Feedback</Link> */}
             <Link className="hover:text-apexOrangeLight transition-colors" to="/track-record">Track Record</Link>
+            <Link className="hover:text-apexOrangeLight transition-colors" to="/jlpt-n5">JLPT N5</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/about">About Us</Link>
             {/* <Link className="hover:text-apexOrangeLight transition-colors" to="/#contact">Contact</Link> */}
           </div>
@@ -52,6 +53,7 @@ export default function Layout({ children }) {
             <Link className="block text-white hover:text-apexOrangeLight" to="/book" onClick={() => setIsMobileMenuOpen(false)}>Counselling Book</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/#feedback" onClick={() => setIsMobileMenuOpen(false)}>Feedback</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/track-record" onClick={() => setIsMobileMenuOpen(false)}>Track Record</Link>
+            <Link className="block text-white hover:text-apexOrangeLight" to="/jlpt-n5" onClick={() => setIsMobileMenuOpen(false)}>JLPT N5</Link>
             <Link className="block text-white hover:text-apexOrangeLight" to="/#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
             <button className="w-full bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-apexOrange/30">
               Book Counselling
@@ -92,6 +94,7 @@ export default function Layout({ children }) {
               <li><Link to="/services" className="hover:text-apexOrangeLight">Services</Link></li>
               <li><Link to="/book" className="hover:text-apexOrangeLight">Counselling Book</Link></li>
               <li><Link to="/track-record" className="hover:text-apexOrangeLight">Track Record</Link></li>
+              <li><Link to="/jlpt-n5" className="hover:text-apexOrangeLight">JLPT N5</Link></li>
             </ul>
           </div>
           <div>
