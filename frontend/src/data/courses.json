@@ -1,0 +1,133 @@
+{
+  "classes": [
+    {
+      "id": "11th",
+      "name": "Class 11th",
+      "image": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=80",
+      "subjects": [
+        {
+          "id": "physics",
+          "name": "Physics",
+          "image": "https://images.unsplash.com/photo-1636466484294-181cf1e3d481?w=800&q=80",
+          "chapters": [
+            {
+              "id": "units-and-measurements",
+              "name": "Units and Measurements",
+              "topics": [
+                {
+                  "id": "introduction",
+                  "name": "Introduction",
+                  "videos": [
+                    {
+                      "id": "vid101",
+                      "title": "Introduction to Units",
+                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+                      "duration": "10:00",
+                      "description": "Understanding the basic units of measurement."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "12th",
+      "name": "Class 12th",
+      "image": "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&q=80",
+      "subjects": [
+        {
+          "id": "physics",
+          "name": "Physics",
+          "image": "https://images.unsplash.com/photo-1636466484294-181cf1e3d481?w=800&q=80",
+          "chapters": [
+            {
+              "id": "rotational-dynamics",
+              "name": "Rotational Dynamics",
+              "topics": [
+                {
+                  "id": "introduction",
+                  "name": "Introduction",
+                  "videos": [
+                    {
+                      "id": "vid1",
+                      "title": "Introduction to Rotational Dynamics",
+                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+                      "duration": "15:20",
+                      "description": "Basic concepts of rotational motion."
+                    },
+                    {
+                      "id": "vid2",
+                      "title": "Angular Velocity",
+                      "url": "https://www.w3schools.com/html/movie.mp4",
+                      "duration": "18:10",
+                      "description": "Understanding angular velocity."
+                    }
+                  ]
+                },
+                {
+                  "id": "torque",
+                  "name": "Torque",
+                  "videos": [
+                    {
+                      "id": "vid3",
+                      "title": "Concept of Torque",
+                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+                      "duration": "20:00",
+                      "description": "Detailed explanation of torque."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "thermodynamics",
+              "name": "Thermodynamics",
+              "topics": [
+                {
+                  "id": "basic-concepts",
+                  "name": "Basic Concepts",
+                  "videos": [
+                    {
+                      "id": "vid4",
+                      "title": "Introduction to Thermodynamics",
+                      "url": "https://www.w3schools.com/html/movie.mp4",
+                      "duration": "22:30",
+                      "description": "Basics of thermodynamics."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "chemistry",
+          "name": "Chemistry",
+          "image": "https://images.unsplash.com/photo-1532187875605-7fe358041c2d?w=800&q=80",
+          "chapters": []
+        },
+        {
+          "id": "maths",
+          "name": "Mathematics",
+          "image": "https://images.unsplash.com/photo-1509228468518-180dd48a57a1?w=800&q=80",
+          "chapters": []
+        },
+        {
+          "id": "biology",
+          "name": "Biology",
+          "image": "https://images.unsplash.com/photo-1530026186672-2cd00ffc50fe?w=800&q=80",
+          "chapters": []
+        }
+      ]
+    },
+    {
+      "id": "dropper",
+      "name": "Dropper Batch",
+      "image": "https://images.unsplash.com/photo-1434031213662-874d12797ad5?w=800&q=80",
+      "subjects": []
+    }
+  ]
+}

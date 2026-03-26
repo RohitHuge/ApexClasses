@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <Layout>
       {/* BEGIN: Hero Section */}
-      <section className="relative overflow-hidden hero-gradient pt-16 pb-24 lg:pt-32 lg:pb-40 bg-white">
+      <section className="relative overflow-hidden hero-gradient pt-8 pb-24 lg:pt-12 lg:pb-40 bg-white">
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
@@ -97,7 +97,7 @@ export default function Home() {
               whileHover={{ rotate: -1, scale: 1.02 }}
               alt="Educational Illustration"
               className="w-full h-auto rounded-3xl shadow-2xl"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwptTdvXw_mKVpWV7WnblsGs3nbeqGSJi8W5KvYaBRlWVQ2Mfcs3oeMpMzPJ2XkhZsMKEBmvuDwkbWS63YUzm4dE4V7wGZ9AxfOOR5cmbNZilA88l7e1A9ehWRmcRS0anUGc2zU6l6gHs34Mf8aRqCfxfjgAHBDPYEkePLq0hIO0SuwzsGfIPtR26XDFaxW603P6V7-p28K0RN16dEWVty8Vn4RPqiEepjKsCWtsEtGa0mUoFH9u2Nv3o74NwvFG20JyF5d9E6ZA"
+              src="https://ik.imagekit.io/apexcounselling/Gemini_Generated_Image_r4o6xrr4o6xrr4o6.png"
             />
           </motion.div>
         </motion.div>
