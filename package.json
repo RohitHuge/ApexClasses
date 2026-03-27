@@ -1,0 +1,25 @@
+{
+  "name": "apexclasses",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "consurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RohitHuge/ApexClasses.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RohitHuge/ApexClasses/issues"
+  },
+  "homepage": "https://github.com/RohitHuge/ApexClasses#readme",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
