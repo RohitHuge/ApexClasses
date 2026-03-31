@@ -1,8 +1,18 @@
 import React from 'react';
 import Layout from '../components/Layout';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useProducts } from '../context/ProductContext';
 
 export default function CounsellingBook() {
+  const navigate = useNavigate();
+  const { products } = useProducts();
+
+  const handleOrder = (productId) => {
+    navigate(`/order?productId=${productId}`);
+  };
+
+  const getPrice = (id) => products[id]?.price || '...';
+
   return (
     <Layout>
       <div className="bg-slate-50 font-display text-slate-900">
@@ -38,12 +48,14 @@ export default function CounsellingBook() {
                     This book helps students understand the engineering admission process, college selection, branch selection, TFWS planning, and cutoff analysis for Maharashtra colleges. Secure your seat in a top-tier college with the right preference list.
                   </p>
                   <div className="flex items-center gap-4">
-                    <div className="text-3xl font-bold text-[#1A1A40]">₹499</div>
+                    <div className="text-3xl font-bold text-[#1A1A40]">₹{getPrice('book')}</div>
                     <div className="text-lg text-slate-400 line-through">₹999</div>
                     <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">50% OFF</div>
                   </div>
                   <div className="flex flex-wrap gap-4">
-                    <button className="flex-1 sm:flex-none h-14 px-8 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-[#FF6600]/30 whitespace-nowrap">
+                    <button 
+                      onClick={() => handleOrder('book')}
+                      className="flex-1 sm:flex-none h-14 px-8 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-[#FF6600]/30 whitespace-nowrap">
                       <span className="material-symbols-outlined">shopping_cart</span>
                       Buy Now
                     </button>

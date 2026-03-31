@@ -1,0 +1,62 @@
+{
+  "counselling_offline": {
+    "id": "counselling_offline",
+    "type": "counselling",
+    "mode": "offline",
+    "title": "Offline One-on-One Counselling",
+    "description": "One counselling session (max 1 hour) with personalized college preference list.",
+    "price": 1000,
+    "steps": ["Summary", "Details", "Confirmation", "Payment"],
+    "fields": ["slot", "topic"]
+  },
+  "counselling_online": {
+    "id": "counselling_online",
+    "type": "counselling",
+    "mode": "online",
+    "title": "FESS Online Counselling",
+    "description": "Online expert guidance with min 2 sessions/week after result.",
+    "price": 2000,
+    "steps": ["Summary", "Details", "Confirmation", "Payment"],
+    "fields": ["slot", "topic"]
+  },
+  "counselling_complete": {
+    "id": "counselling_complete",
+    "type": "counselling",
+    "mode": "online",
+    "title": "Complete Guidance",
+    "description": "Full documentation support and assistance until final admission.",
+    "price": 10000,
+    "steps": ["Summary", "Details", "Confirmation", "Payment"],
+    "fields": ["slot", "topic"]
+  },
+  "book": {
+    "id": "book",
+    "type": "book",
+    "mode": "offline",
+    "title": "Engineering Admission Guide 2026",
+    "description": "Comprehensive guide for MHT-CET admissions.",
+    "price": 499,
+    "steps": ["Summary", "Shipping", "Confirmation", "Payment"],
+    "fields": ["address", "city", "state", "pincode"]
+  },
+  "jlpt_online": {
+    "id": "jlpt_online",
+    "type": "jlpt",
+    "mode": "online",
+    "title": "JLPT N5 Online Course",
+    "description": "60 interactive live sessions for N5 certification.",
+    "price": 3000,
+    "steps": ["Summary", "Batch", "Confirmation", "Payment"],
+    "fields": ["batch"]
+  },
+  "jlpt_offline": {
+    "id": "jlpt_offline",
+    "type": "jlpt",
+    "mode": "offline",
+    "title": "JLPT N5 Offline Batch",
+    "description": "Classroom learning with structured environment and materials.",
+    "price": 7000,
+    "steps": ["Summary", "Batch", "Confirmation", "Payment"],
+    "fields": ["batch"]
+  }
+}

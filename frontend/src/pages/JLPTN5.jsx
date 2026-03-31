@@ -1,7 +1,18 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { useNavigate } from 'react-router-dom';
+import { useProducts } from '../context/ProductContext';
 
 const JLPTN5 = () => {
+  const navigate = useNavigate();
+  const { products } = useProducts();
+
+  const handleOrder = (productId) => {
+    navigate(`/order?productId=${productId}`);
+  };
+
+  const getPrice = (id) => products[id]?.price || '...';
+
   return (
     <Layout>
       <main>
@@ -19,7 +30,9 @@ const JLPTN5 = () => {
                 Master the fundamentals of the Japanese language with our expert-led N5 certification program. Designed for the architectural precision required in modern linguistics.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="bg-slate-900 text-white px-8 py-4 font-bold rounded-xl active:scale-95 transition-transform hover:bg-slate-800 shadow-xl shadow-slate-900/20">
+                <button 
+                  onClick={() => handleOrder('jlpt_online')}
+                  className="bg-slate-900 text-white px-8 py-4 font-bold rounded-xl active:scale-95 transition-transform hover:bg-slate-800 shadow-xl shadow-slate-900/20">
                   Enroll Now
                 </button>
                 <button className="border-2 border-white/30 text-white px-8 py-4 font-bold rounded-xl hover:bg-white/10 transition-colors backdrop-blur-sm">
@@ -129,7 +142,7 @@ const JLPTN5 = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Fees</p>
-                      <p className="text-3xl font-bold text-slate-900">₹3,000</p>
+                      <p className="text-3xl font-bold text-slate-900">₹{getPrice('jlpt_online')}</p>
                     </div>
                   </div>
                   <ul className="space-y-4 mb-10 border-t border-slate-100 pt-8">
@@ -148,7 +161,9 @@ const JLPTN5 = () => {
                       </li>
                     ))}
                   </ul>
-                  <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform hover:bg-slate-800 shadow-xl shadow-slate-900/10">
+                  <button 
+                    onClick={() => handleOrder('jlpt_online')}
+                    className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform hover:bg-slate-800 shadow-xl shadow-slate-900/10">
                     Register for Online
                   </button>
                 </div>
@@ -165,7 +180,7 @@ const JLPTN5 = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Fees</p>
-                      <p className="text-3xl font-bold text-white">₹7,000</p>
+                      <p className="text-3xl font-bold text-white">₹{getPrice('jlpt_offline')}</p>
                     </div>
                   </div>
                   <ul className="space-y-4 mb-10 border-t border-white/10 pt-8">
@@ -184,7 +199,9 @@ const JLPTN5 = () => {
                       </li>
                     ))}
                   </ul>
-                  <button className="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform hover:bg-orange-400 shadow-xl shadow-orange-500/20">
+                  <button 
+                    onClick={() => handleOrder('jlpt_offline')}
+                    className="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform hover:bg-orange-400 shadow-xl shadow-orange-500/20">
                     Apply for Offline
                   </button>
                 </div>

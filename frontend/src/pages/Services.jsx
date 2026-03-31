@@ -1,8 +1,19 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Phone, Mail, Sparkles, ShieldCheck, GraduationCap, Laptop } from 'lucide-react';
+import { useProducts } from '../context/ProductContext';
 
 export default function Services() {
+  const navigate = useNavigate();
+  const { products, loading } = useProducts();
+
+  const handleOrder = (productId) => {
+    navigate(`/order?productId=${productId}`);
+  };
+
+  const getPrice = (id) => products[id]?.price || '...';
+
   return (
     <Layout>
       <div className="bg-slate-50 font-display text-slate-900">
@@ -34,11 +45,13 @@ export default function Services() {
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-slate-900 mb-2">One-Time Offline Counselling</h3>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-apexOrange">₹1,000</span>
+                      <span className="text-4xl font-black text-apexOrange">₹{getPrice('counselling_offline')}</span>
                       <span className="text-slate-500 text-sm font-medium">/ session</span>
                     </div>
                   </div>
-                  <button className="w-full py-3 px-6 mb-8 rounded-xl bg-slate-50 text-slate-900 font-bold hover:bg-apexOrange hover:text-white transition-all">
+                  <button 
+                    onClick={() => handleOrder('counselling_offline')}
+                    className="w-full py-3 px-6 mb-8 rounded-xl bg-slate-50 text-slate-900 font-bold hover:bg-apexOrange hover:text-white transition-all">
                     Book Now
                   </button>
                   <div className="space-y-4">
@@ -64,11 +77,13 @@ export default function Services() {
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-slate-900 mb-2">FESS Online Counselling</h3>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-apexOrange">₹2,000</span>
+                      <span className="text-4xl font-black text-apexOrange">₹{getPrice('counselling_online')}</span>
                       <span className="text-slate-500 text-sm font-medium">/ full course</span>
                     </div>
                   </div>
-                  <button className="w-full py-3 px-6 mb-8 rounded-xl bg-apexOrange text-white font-bold hover:bg-apexOrange/90 transition-all shadow-lg shadow-apexOrange/30">
+                  <button 
+                    onClick={() => handleOrder('counselling_online')}
+                    className="w-full py-3 px-6 mb-8 rounded-xl bg-apexOrange text-white font-bold hover:bg-apexOrange/90 transition-all shadow-lg shadow-apexOrange/30">
                     Enroll Now
                   </button>
                   <div className="space-y-4">
@@ -96,11 +111,13 @@ export default function Services() {
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-slate-900 mb-2">Complete Guidance</h3>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-apexOrange">₹10,000</span>
+                      <span className="text-4xl font-black text-apexOrange">₹{getPrice('counselling_complete')}</span>
                       <span className="text-slate-500 text-sm font-medium">/ until admission</span>
                     </div>
                   </div>
-                  <button className="w-full py-3 px-6 mb-8 rounded-xl bg-slate-50 text-slate-900 font-bold hover:bg-apexOrange hover:text-white transition-all">
+                  <button 
+                    onClick={() => handleOrder('counselling_complete')}
+                    className="w-full py-3 px-6 mb-8 rounded-xl bg-slate-50 text-slate-900 font-bold hover:bg-apexOrange hover:text-white transition-all">
                     Get Full Support
                   </button>
                   <div className="space-y-4">
