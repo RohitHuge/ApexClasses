@@ -32,3 +32,17 @@ CREATE TABLE IF NOT EXISTS order_tracking (
     message TEXT,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Payment History Table (Audit Trail)
+CREATE TABLE IF NOT EXISTS payment_history (
+    id SERIAL PRIMARY KEY,
+    order_id UUID REFERENCES orders(id),
+    payment_id VARCHAR(255),
+    payment_order_id VARCHAR(255),
+    event VARCHAR(50) NOT NULL, -- e.g., 'created', 'captured', 'failed', 'refunded'
+    amount DECIMAL(10, 2),
+    currency VARCHAR(10) DEFAULT 'INR',
+    status VARCHAR(20),
+    raw_response JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

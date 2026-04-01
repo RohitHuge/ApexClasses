@@ -36,3 +36,50 @@ export const updateOrderStatus = async (id, status, paymentDetails = {}) => {
     const res = await query(sql, [id, status, payment_id, payment_order_id, payment_signature]);
     return res.rows[0];
 };
+
+export const logPaymentHistory = async (historyData) => {
+    const { order_id, payment_id, payment_order_id, event, amount, status, raw_response } = historyData;
+    const sql = `
+        INSERT INTO payment_history (order_id, payment_id, payment_order_id, event, amount, status, raw_response)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+    `;
+    const res = await query(sql, [order_id, payment_id, payment_order_id, event, amount, status, raw_response]);
+    return res.rows[0];
+};
+
+export const getOrderByRPOrderId = async (rpOrderId) => {
+    const res = await query('SELECT * FROM orders WHERE payment_order_id = $1', [rpOrderId]);
+    return res.rows[0];
+};
+
+// USER MANAGEMENT
+export const getOrCreateUser = async (userData) => {
+    const { id, name, email } = userData;
+    // Check if user exists
+    const existing = await query('SELECT * FROM users WHERE id = $1', [id]);
+    if (existing.rows[0]) return existing.rows[0];
+
+    // Create if not exists
+    const res = await query(
+        'INSERT INTO users (id, name, email) VALUES ($1, $2, $3) RETURNING *',
+        [id, name, email]
+    );
+    return res.rows[0];
+};
+
+export const updateUserPhone = async (userId, phone) => {
+    const sql = `
+        UPDATE users 
+        SET phone = $2 
+        WHERE id = $1 
+        RETURNING *
+    `;
+    const res = await query(sql, [userId, phone]);
+    return res.rows[0];
+};
+
+export const getUserById = async (userId) => {
+    const res = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    return res.rows[0];
+};

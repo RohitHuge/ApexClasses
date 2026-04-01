@@ -1,6 +1,8 @@
+import { io } from 'socket.io-client';
 import { createJWT } from '../utils/appwrite';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const getHeaders = async (userId = null) => {
     const jwt = await createJWT();
@@ -22,33 +24,43 @@ export const orderService = {
         return await response.json();
     },
 
+    getUserProfile: async (userId) => {
+        const headers = await getHeaders(userId);
+        const response = await fetch(`${API_BASE_URL}/orders/user/profile`, {
+            headers: headers
+        });
+        return response.json();
+    },
+
     createOrder: async (orderData) => {
+        const headers = await getHeaders(orderData.user_id);
         const response = await fetch(`${API_BASE_URL}/orders/create`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(orderData),
         });
         return await response.json();
     },
 
-    createPayment: async (orderId, userId) => {
+    createPaymentOrder: async (orderId, userId) => {
         const headers = await getHeaders(userId);
         const response = await fetch(`${API_BASE_URL}/orders/payment/create`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ order_id: orderId }),
+            body: JSON.stringify({ orderId }),
         });
         return response.json();
     },
 
-    verifyPayment: async (paymentData, userId) => {
-        const headers = await getHeaders(userId);
-        const response = await fetch(`${API_BASE_URL}/orders/payment/verify`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(paymentData),
+    getSocket: async (userId) => {
+        const jwt = await createJWT();
+        return io(SOCKET_URL, {
+            auth: {
+                token: jwt,
+                userId: userId
+            },
+            transports: ['websocket']
         });
-        return response.json();
     },
 
     getOrderHistory: async (userId) => {
