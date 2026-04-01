@@ -1,6 +1,8 @@
 import React from 'react';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useProducts } from '../context/ProductContext';
 import CountUp from '../components/CountUp';
 
 const fadeIn = {
@@ -23,6 +25,15 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { products } = useProducts();
+
+  const handleOrder = (productId) => {
+    navigate(`/order?productId=${productId}`);
+  };
+
+  const getPrice = (id) => products[id]?.price || '...';
+
   return (
     <Layout>
       {/* BEGIN: Hero Section */}
@@ -50,6 +61,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleOrder('counselling_offline')}
                 className="bg-orange-gradient text-white px-8 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all shadow-xl shadow-apexOrange/20"
               >
                 Book Appointment
@@ -57,6 +69,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleOrder('book')}
                 className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all"
               >
                 Buy Counselling Book
@@ -202,7 +215,7 @@ export default function Home() {
               className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col transition-colors backdrop-blur-sm"
             >
               <h3 className="text-xl font-bold mb-2">Offline One-on-One</h3>
-              <div className="text-4xl font-extrabold mb-6">₹1,000 <span className="text-sm font-normal text-blue-200">/ Session</span></div>
+              <div className="text-4xl font-extrabold mb-6">₹{getPrice('counselling_offline')} <span className="text-sm font-normal text-blue-200">/ Session</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
                 <li className="flex items-center gap-2 text-sm text-blue-50">
                   <svg className="w-5 h-5 text-apexOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,6 +239,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleOrder('counselling_offline')}
                 className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors"
               >
                 Select Plan
@@ -239,7 +253,7 @@ export default function Home() {
             >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-gradient text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg">Recommended</div>
               <h3 className="text-xl font-bold mb-2">Complete Guidance</h3>
-              <div className="text-4xl font-extrabold mb-6 text-apexBlue">₹10,000 <span className="text-sm font-normal text-slate-500">/ Full Process</span></div>
+              <div className="text-4xl font-extrabold mb-6 text-apexBlue">₹{getPrice('counselling_complete')} <span className="text-sm font-normal text-slate-500">/ Full Process</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-5 h-5 text-apexOrange" fill="currentColor" viewBox="0 0 20 20">
@@ -269,6 +283,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleOrder('counselling_complete')}
                 className="w-full py-4 rounded-xl bg-orange-gradient text-white font-bold text-lg hover:brightness-110 shadow-xl shadow-apexOrange/30 transition-all"
               >
                 Book Premium Guidance
@@ -281,7 +296,7 @@ export default function Home() {
               className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col transition-colors backdrop-blur-sm"
             >
               <h3 className="text-xl font-bold mb-2">FESS Online</h3>
-              <div className="text-4xl font-extrabold mb-6">₹2,000 <span className="text-sm font-normal text-blue-200">/ Package</span></div>
+              <div className="text-4xl font-extrabold mb-6">₹{getPrice('counselling_online')} <span className="text-sm font-normal text-blue-200">/ Package</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
                 <li className="flex items-center gap-2 text-sm text-blue-50">
                   <svg className="w-5 h-5 text-apexOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,6 +320,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleOrder('counselling_online')}
                 className="w-full py-3 rounded-xl border-2 border-white/20 font-bold hover:bg-white/10 transition-colors"
               >
                 Select Plan
@@ -357,6 +373,7 @@ export default function Home() {
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => handleOrder('book')}
                   className="bg-orange-gradient text-white px-10 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-apexOrange/20"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

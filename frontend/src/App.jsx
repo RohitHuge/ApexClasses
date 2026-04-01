@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { ProductProvider } from './context/ProductContext';
 import Home from './pages/home'
 import Services from './pages/Services'
 import WhyCounselling from './pages/WhyCounselling'
@@ -13,13 +14,13 @@ import CourseLayout from './courses/CourseLayout'
 import CoursesLanding from './courses/pages/CoursesLanding'
 import ClassPage from './courses/pages/ClassPage'
 import SubjectPage from './courses/pages/SubjectPage'
+import OrderPage from './order/OrderPage'
+import OrderHistory from './order/components/OrderHistory'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <Router>
+    <Router>
+      <ProductProvider>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<AboutUs />} />
@@ -30,6 +31,10 @@ function App() {
           <Route path="/track-record" element={<TrackRecord />} />
           <Route path="/jlpt-n5" element={<JLPTN5 />} />
           
+          {/* Order Module Routes */}
+          <Route path="/order" element={<OrderPage />} />
+          <Route path="/orders" element={<OrderHistory />} />
+          
           {/* Courses Module Routes */}
           <Route path="/courses" element={<CourseLayout />}>
             <Route index element={<CoursesLanding />} />
@@ -39,8 +44,8 @@ function App() {
             <Route path=":class/:subject/:chapter/:topic" element={<SubjectPage />} />
           </Route>
         </Routes>
-      </Router>
-    </>
+      </ProductProvider>
+    </Router>
   )
 }
 
