@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
+import { getCurrentUser } from '../utils/appwrite';
+import { orderService } from '../order/orderService';
+import AuthModal from '../order/components/AuthModal';
+import { motion } from 'framer-motion';
 
 export default function CounsellingBook() {
   const navigate = useNavigate();
   const { products } = useProducts();
+  const [user, setUser] = useState(null);
+  const [hasBoughtOnline, setHasBoughtOnline] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    checkUserStatus();
+  }, []);
+
+  const checkUserStatus = async () => {
+    const u = await getCurrentUser();
+    if (u) {
+      setUser(u);
+      try {
+        const res = await orderService.getOrderHistory(u.$id);
+        if (res.success) {
+          const onlineBookOrder = res.orders.find(o => 
+            o.product_type === 'book' && o.mode === 'online' && o.status === 'SUCCESS'
+          );
+          if (onlineBookOrder) {
+            setHasBoughtOnline(true);
+            setOrderDetails(onlineBookOrder);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking order status:', err);
+      }
+    }
+  };
 
   const handleOrder = (productId) => {
     navigate(`/order?productId=${productId}`);
@@ -49,22 +82,42 @@ export default function CounsellingBook() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                     {/* Online Edition */}
-                    <div className="bg-white border-2 border-indigo-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                    <div className={`bg-white border-2 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${hasBoughtOnline ? 'border-green-100' : 'border-indigo-100'}`}>
                       <div className="absolute top-0 right-0 p-3">
-                        <span className="material-symbols-outlined text-indigo-200 group-hover:text-indigo-500 transition-colors">cloud_download</span>
+                        <span className={`material-symbols-outlined transition-colors ${hasBoughtOnline ? 'text-green-200 group-hover:text-green-500' : 'text-indigo-200 group-hover:text-indigo-500'}`}>
+                           {hasBoughtOnline ? 'auto_stories' : 'cloud_download'}
+                        </span>
                       </div>
                       <h3 className="font-bold text-xl text-slate-800 mb-2">Digital Edition</h3>
-                      <p className="text-slate-500 text-sm mb-4">Secure Online PDF Reader access. Instant delivery.</p>
+                      <p className="text-slate-500 text-sm mb-4">
+                         {hasBoughtOnline ? 'You have active access to this digital edition.' : 'Secure Online PDF Reader access. Instant delivery.'}
+                      </p>
                       <div className="flex items-center gap-3 mb-6">
-                        <span className="text-2xl font-black text-[#1A1A40]">₹{getPrice('book_online')}</span>
-                        <span className="text-sm text-slate-400 line-through">₹499</span>
+                        <span className={`text-2xl font-black ${hasBoughtOnline ? 'text-green-600' : 'text-[#1A1A40]'}`}>
+                           {hasBoughtOnline ? 'Unlocked' : `₹${getPrice('book_online')}`}
+                        </span>
+                        {!hasBoughtOnline && <span className="text-sm text-slate-400 line-through">₹499</span>}
                       </div>
-                      <button 
-                        onClick={() => handleOrder('book_online')}
-                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-100">
-                        Order Online PDF
-                      </button>
-                      <p className="text-[10px] text-slate-400 mt-3 text-center italic">*Non-downloadable & Non-shareable</p>
+
+                      {hasBoughtOnline ? (
+                         <button 
+                            onClick={() => navigate(`/view-book/${orderDetails.id}`)}
+                            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2"
+                         >
+                            <span className="material-symbols-outlined text-base">menu_book</span>
+                            Read Digital Edition
+                         </button>
+                      ) : (
+                         <button 
+                            onClick={() => handleOrder('book_online')}
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-100"
+                         >
+                            Order Online PDF
+                         </button>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-3 text-center italic">
+                        {hasBoughtOnline ? 'Active on your account' : '*Non-downloadable & Non-shareable'}
+                      </p>
                     </div>
 
                     {/* Offline Edition */}
@@ -80,12 +133,31 @@ export default function CounsellingBook() {
                       </div>
                       <button 
                         onClick={() => handleOrder('book_offline')}
-                        className="w-full py-3 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#FF6600]/20">
+                        className="w-full py-3 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#FF6600]/20"
+                      >
                         Order Hardcopy
                       </button>
                       <p className="text-[10px] text-slate-400 mt-3 text-center italic">*Delivery within 5-7 working days</p>
                     </div>
                   </div>
+
+                  {/* Returning User Flow */}
+                  {!user && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="pt-4"
+                    >
+                        <button 
+                            onClick={() => setShowAuthModal(true)}
+                            className="w-full md:w-auto px-8 py-3 bg-white text-indigo-600 border-2 border-indigo-50 border-dashed rounded-xl font-black text-xs uppercase tracking-widest hover:border-indigo-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">login</span>
+                            Bought already? Read here...
+                        </button>
+                    </motion.div>
+                  )}
+
                   <div className="pt-6">
                     <Link to="/book/index">
                       <button className="w-full md:w-auto px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all border border-slate-200">
@@ -202,6 +274,16 @@ export default function CounsellingBook() {
           </section>
         </div>
       </div>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          // Redirect to dashboard as requested
+          navigate('/dashboard');
+        }}
+      />
     </Layout>
   );
 }
