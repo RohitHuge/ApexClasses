@@ -10,6 +10,8 @@ import TrackRecord from './pages/TrackRecord'
 import AboutUs from './pages/AboutUs'
 
 import JLPTN5 from './pages/JLPTN5'
+import Dashboard from './pages/Dashboard'
+import BookReader from './pages/BookReader'
 import CourseLayout from './courses/CourseLayout'
 import CoursesLanding from './courses/pages/CoursesLanding'
 import ClassPage from './courses/pages/ClassPage'
@@ -34,6 +36,8 @@ function App() {
           {/* Order Module Routes */}
           <Route path="/order" element={<OrderPage />} />
           <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/view-book/:id" element={<BookReader />} />
           
           {/* Courses Module Routes */}
           <Route path="/courses" element={<CourseLayout />}>

@@ -1,44 +1,141 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  # PostgreSQL Database Service
-  db:
-    image: postgres:15-alpine
-    container_name: apex-postgres
-    restart: always
+  postgres:
+    image: postgres:15
+    container_name: jeet_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: apex_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # Backend Node.js Service
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: apex-backend
-    restart: always
+      - jeet_pgdata:/var/lib/postgresql/data
     ports:
-      - "5000:5000"
-    environment:
-      # Use the service name 'db' in the connection string
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/apex_db
-      - PORT=5000
-      - NODE_ENV=production
-      # IMPORTANT: Additional env vars (Razorpay/Appwrite) should be provided 
-      # via a .env file or by adding them here manually.
+      - "127.0.0.1:5433:5432"
+    networks:
+      - jeet_network
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    container_name: jeet_pgbouncer
+    restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
+      - postgres
+    environment:
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      AUTH_TYPE: md5
+      AUTH_USER: ${POSTGRES_USER}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 500
+      DEFAULT_POOL_SIZE: 25
+      IGNORE_STARTUP_PARAMETERS: extra_float_digits
+    ports:
+      - "127.0.0.1:6434:5432"
+    networks:
+      - jeet_network
+
+  backend:
+    image: rohithuge/jeetexam:latest
+    container_name: jeet_backend
+    restart: unless-stopped
+    depends_on:
+      - pgbouncer
+    environment:
+      # 🔥 Uses PgBouncer
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}
+
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY}
+    ports:
+      - "3003:3000"
+    networks:
+      - jeet_network
+
+  upload:
+    image: rohithuge/upload:latest
+    container_name: jeet_upload
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PORT: 5000
+
+      # 🔥 Direct DB (no PgBouncer → avoids auth issues)
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY}
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DISABLE_SOLUTIONS_DB: ${DISABLE_SOLUTIONS_DB}
+
+      SOLUTIONS_DATABASE_URL: ${SOLUTIONS_DATABASE_URL}
+      IMAGEKIT_PUBLIC_KEY: ${IMAGEKIT_PUBLIC_KEY}
+      IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY}
+      IMAGEKIT_URL_ENDPOINT: ${IMAGEKIT_URL_ENDPOINT}
+
+      MATHPIX_APP_ID: ${MATHPIX_APP_ID}
+      MATHPIX_APP_KEY: ${MATHPIX_APP_KEY}
+    ports:
+      - "3004:5000"
+    networks:
+      - jeet_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: jeet_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@jeetexam.in
+      PGADMIN_DEFAULT_PASSWORD: strongpassword
+      PGADMIN_CONFIG_PROXY_X_FORWARDED_PROTO: 'True'
+      PGADMIN_CONFIG_PROXY_X_FORWARDED_FOR: 'True'
+      PGADMIN_CONFIG_PROXY_X_FORWARDED_HOST: 'True'
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_WTF_CSRF_SSL_STRICT: 'False'
+    ports:
+      - "127.0.0.1:5052:80"
+    networks:
+      - jeet_network
+
+  apex:
+    image: rohithuge/apex:latest   # 🔥 Pull from Docker Hub
+    container_name: apex_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres   # optional now (since using Neon, but safe to keep)
+
+    environment:  
+      # Server
+      PORT: 5000
+
+      # 🔥 External DB (Neon)
+      DATABASE_URL: postgresql://neondb_owner:npg_VCJl9fp6cBLt@ep-hidden-mouse-a15xw3zu-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+      # Appwrite
+      APPWRITE_ENDPOINT: https://sgp.cloud.appwrite.io/v1
+      APPWRITE_PROJECT_ID: 69cc175b0039637c1259
+      APPWRITE_API_KEY: standard_d47a0d35c8ed73c8d99637a79d15984c14552e2c2b7f5821bd1389e89169b084c99ea02343debf45234d280c53ffadd2c0b0ee4821cd8bd4ec36f5217734451325319e2adad45b2198ecc1076badc37f6e6c50103b2359fde0e39d68b46147d07285ac9764bff9aa3794eaffc93ec995d1c832c7726eeceb590178aceeca8179
+
+      # Razorpay
+      RAZORPAY_KEY_ID: rzp_test_SY1sMMM9xWcgwM
+      RAZORPAY_KEY_SECRET: 0LcQ8ctXlBiGlRL7ZXCLiaK0
+      RAZORPAY_WEBHOOK_SECRET: 10022006
+
+    ports:
+      - "3005:5000"
+
+    networks:
+      - jeet_network
 
 volumes:
-  postgres_data:
+  jeet_pgdata:
+
+networks:
+  jeet_network:

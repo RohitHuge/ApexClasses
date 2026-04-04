@@ -22,4 +22,7 @@ router.post('/payment/webhook', PaymentController.handleWebhook); // Public Webh
 // Tracking Routes
 router.get('/:id/tracking', getOrderTracking); // Public
 
+// Secure PDF Route
+router.get('/secure-pdf/:id', authMiddleware, OrderController.getSecurePDF);
+
 export default router;

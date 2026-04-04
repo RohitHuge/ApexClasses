@@ -87,7 +87,7 @@ export default function Layout({ children }) {
                                     <ShoppingBag size={18} className="text-apexOrange group-hover:scale-110 transition-transform" />
                                     My Orders
                                 </Link>
-                                <Link to="/orders" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
+                                <Link to="/dashboard" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
                                     <LayoutDashboard size={18} className="text-blue-400 group-hover:scale-110 transition-transform" />
                                     Dashboard
                                 </Link>
@@ -135,7 +135,7 @@ export default function Layout({ children }) {
             
             {user ? (
                <div className="space-y-2 pt-4 border-t border-white/10">
-                  <Link to="/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
+                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
                      <LayoutDashboard size={20} className="text-blue-400" />
                      Dashboard
                   </Link>
