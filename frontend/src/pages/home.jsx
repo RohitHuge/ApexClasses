@@ -69,7 +69,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleOrder('book')}
+                onClick={() => navigate('/book')}
                 className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all"
               >
                 Buy Counselling Book
