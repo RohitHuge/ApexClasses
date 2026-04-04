@@ -98,3 +98,41 @@ export const createOrder = async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 };
+
+export const getSecurePDF = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const orders = await OrderModel.getOrdersByUserId(userId);
+        
+        // Check for successful online book purchase
+        const hasAccess = orders.some(o => 
+            o.product_type === 'book' && 
+            o.mode === 'online' && 
+            o.status === 'SUCCESS'
+        );
+
+        if (!hasAccess) {
+            return res.status(403).json({ error: 'Access denied: Book not purchased or payment pending' });
+        }
+
+        const filePath = path.join(__dirname, '..', 'assets', 'guide_2026.pdf');
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'PDF file not found' });
+        }
+
+        const stat = fs.statSync(filePath);
+
+        res.setHeader('Content-Length', stat.size);
+        // Using octet-stream to bypass IDM/Download Manager interception. 
+        // Frontend fetch will still read this as a valid PDF blob.
+        res.setHeader('Content-Type', 'application/octet-stream');
+
+        const readStream = fs.createReadStream(filePath);
+        readStream.pipe(res);
+
+    } catch (error) {
+        console.error('Secure PDF Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};

@@ -18,8 +18,8 @@ const OrderPage = () => {
     const socketRef = useRef(null);
     
     // State
-    const productId = searchParams.get('productId') || searchParams.get('type') || 'book';
-    const product = products[productId] || products['book'];
+    const productId = searchParams.get('productId') || searchParams.get('type') || 'book_offline';
+    const product = products[productId] || products['book_offline'];
     
     const [step, setStep] = useState(1);
     const [user, setUser] = useState(null);
@@ -293,7 +293,8 @@ const OrderPage = () => {
                         </div>
 
                         <div className="space-y-5">
-                            {productId === 'book' && (
+                            {/* Generic Field Rendering based on product.fields */}
+                            {product.fields?.includes('address') && (
                                 <div className="space-y-4">
                                     <div className="relative">
                                         <textarea 
@@ -309,7 +310,7 @@ const OrderPage = () => {
                                 </div>
                             )}
 
-                            {productId === 'counselling' && (
+                            {product.fields?.includes('slot') && (
                                <div className="space-y-4">
                                     <div className="relative group">
                                         <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none" size={18} />
@@ -332,7 +333,7 @@ const OrderPage = () => {
                                </div>
                             )}
 
-                            {productId.startsWith('jlpt') && (
+                            {product.fields?.includes('batch') && (
                                 <div className="space-y-4">
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Target Batch</p>
                                     <div className="grid grid-cols-3 gap-3">
@@ -346,6 +347,30 @@ const OrderPage = () => {
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Digital Delivery Info for book_online or similar */}
+                            {product.mode === 'online' && product.type === 'book' && (
+                                <div className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-6 space-y-4">
+                                    <div className="flex items-center gap-3 text-indigo-600">
+                                        <ShieldCheck size={24} />
+                                        <h5 className="font-black uppercase tracking-widest text-sm">Digital Delivery Terms</h5>
+                                    </div>
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-xs text-indigo-700 font-medium">
+                                            <Check size={14} className="mt-0.5 shrink-0" />
+                                            Instant access via Dashboard after successful payment.
+                                        </li>
+                                        <li className="flex items-start gap-2 text-xs text-indigo-700 font-medium">
+                                            <Check size={14} className="mt-0.5 shrink-0" />
+                                            The book will be available in a secure online reader.
+                                        </li>
+                                        <li className="flex items-start gap-2 text-xs text-red-600 font-bold">
+                                            <XCircle size={14} className="mt-0.5 shrink-0" />
+                                            PDF is NOT downloadable and NOT shareable.
+                                        </li>
+                                    </ul>
                                 </div>
                             )}
                         </div>

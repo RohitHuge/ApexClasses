@@ -47,26 +47,50 @@ export default function CounsellingBook() {
                   <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
                     This book helps students understand the engineering admission process, college selection, branch selection, TFWS planning, and cutoff analysis for Maharashtra colleges. Secure your seat in a top-tier college with the right preference list.
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl font-bold text-[#1A1A40]">₹{getPrice('book')}</div>
-                    <div className="text-lg text-slate-400 line-through">₹999</div>
-                    <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">50% OFF</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    {/* Online Edition */}
+                    <div className="bg-white border-2 border-indigo-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3">
+                        <span className="material-symbols-outlined text-indigo-200 group-hover:text-indigo-500 transition-colors">cloud_download</span>
+                      </div>
+                      <h3 className="font-bold text-xl text-slate-800 mb-2">Digital Edition</h3>
+                      <p className="text-slate-500 text-sm mb-4">Secure Online PDF Reader access. Instant delivery.</p>
+                      <div className="flex items-center gap-3 mb-6">
+                        <span className="text-2xl font-black text-[#1A1A40]">₹{getPrice('book_online')}</span>
+                        <span className="text-sm text-slate-400 line-through">₹499</span>
+                      </div>
+                      <button 
+                        onClick={() => handleOrder('book_online')}
+                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-100">
+                        Order Online PDF
+                      </button>
+                      <p className="text-[10px] text-slate-400 mt-3 text-center italic">*Non-downloadable & Non-shareable</p>
+                    </div>
+
+                    {/* Offline Edition */}
+                    <div className="bg-white border-2 border-[#FF6600]/20 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3">
+                        <span className="material-symbols-outlined text-[#FF6600]/20 group-hover:text-[#FF6600] transition-colors">local_shipping</span>
+                      </div>
+                      <h3 className="font-bold text-xl text-slate-800 mb-2">Physical Edition</h3>
+                      <p className="text-slate-500 text-sm mb-4">Premium Quality Hardcopy with doorstep delivery.</p>
+                      <div className="flex items-center gap-3 mb-6">
+                        <span className="text-2xl font-black text-[#1A1A40]">₹{getPrice('book_offline')}</span>
+                        <span className="text-sm text-slate-400 line-through">₹999</span>
+                      </div>
+                      <button 
+                        onClick={() => handleOrder('book_offline')}
+                        className="w-full py-3 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#FF6600]/20">
+                        Order Hardcopy
+                      </button>
+                      <p className="text-[10px] text-slate-400 mt-3 text-center italic">*Delivery within 5-7 working days</p>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-4">
-                    <button 
-                      onClick={() => handleOrder('book')}
-                      className="flex-1 sm:flex-none h-14 px-8 bg-[#FF6600] hover:bg-orange-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-[#FF6600]/30 whitespace-nowrap">
-                      <span className="material-symbols-outlined">shopping_cart</span>
-                      Buy Now
-                    </button>
-                    <button className="flex-1 sm:flex-none h-14 px-8 bg-white border-2 border-green-500 text-green-600 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-green-50 transition-all whitespace-nowrap">
-                      <span className="material-symbols-outlined">chat</span>
-                      Order on WhatsApp
-                    </button>
-                    <Link to="/book/index" className="flex-1 sm:flex-none">
-                      <button className="w-full h-14 px-8 bg-[#1A1A40] hover:bg-slate-900 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-[#1A1A40]/20 whitespace-nowrap">
+                  <div className="pt-6">
+                    <Link to="/book/index">
+                      <button className="w-full md:w-auto px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all border border-slate-200">
                         <span className="material-symbols-outlined">menu_book</span>
-                        View Detailed Index
+                        View Detailed Book Index
                       </button>
                     </Link>
                   </div>

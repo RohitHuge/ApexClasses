@@ -29,12 +29,22 @@
     "steps": ["Summary", "Details", "Confirmation", "Payment"],
     "fields": ["slot", "topic"]
   },
-  "book": {
-    "id": "book",
+  "book_online": {
+    "id": "book_online",
+    "type": "book",
+    "mode": "online",
+    "title": "Engineering Admission Guide 2026 (Online PDF)",
+    "description": "Instant digital access to the comprehensive guide for MHT-CET admissions. Non-downloadable and non-shareable.",
+    "price": 299,
+    "steps": ["Summary", "Confirmation", "Payment"],
+    "fields": []
+  },
+  "book_offline": {
+    "id": "book_offline",
     "type": "book",
     "mode": "offline",
-    "title": "Engineering Admission Guide 2026",
-    "description": "Comprehensive guide for MHT-CET admissions.",
+    "title": "Engineering Admission Guide 2026 (Hardcopy)",
+    "description": "Premium printed guide for MHT-CET admissions delivered to your doorstep.",
     "price": 499,
     "steps": ["Summary", "Shipping", "Confirmation", "Payment"],
     "fields": ["address", "city", "state", "pincode"]
