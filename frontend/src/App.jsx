@@ -18,6 +18,7 @@ import ClassPage from './courses/pages/ClassPage'
 import SubjectPage from './courses/pages/SubjectPage'
 import OrderPage from './order/OrderPage'
 import OrderHistory from './order/components/OrderHistory'
+import AdminDashboard from './pages/AdminDashboard'
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/view-book/:id" element={<BookReader />} />
+          
+          {/* Admin Tools (Hidden) */}
+          <Route path="/admin/nexus-terminal" element={<AdminDashboard />} />
           
           {/* Courses Module Routes */}
           <Route path="/courses" element={<CourseLayout />}>
