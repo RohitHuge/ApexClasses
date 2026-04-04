@@ -187,7 +187,13 @@ export default function BookReader() {
       }
 
       const buffer = await response.arrayBuffer();
-      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+      const loadingTask = pdfjsLib.getDocument({ 
+        data: new Uint8Array(buffer),
+        // Essential for mobile rendering: provide CMaps and Standard Fonts
+        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
+        cMapPacked: true,
+        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`
+      });
       const pdf = await loadingTask.promise;
       
       setPdfProxy(pdf);
