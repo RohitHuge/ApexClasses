@@ -68,5 +68,15 @@
     "price": 7000,
     "steps": ["Summary", "Batch", "Confirmation", "Payment"],
     "fields": ["batch"]
+  },
+  "admin_test_token": {
+    "id": "admin_test_token",
+    "type": "testing",
+    "mode": "online",
+    "title": "Admin Nexus Test Token",
+    "description": "Internal test product for payment gateway verification. Non-refundable.",
+    "price": 2,
+    "steps": ["Summary", "Confirmation", "Payment"],
+    "fields": []
   }
 }
