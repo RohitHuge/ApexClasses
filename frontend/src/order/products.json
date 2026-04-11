@@ -13,7 +13,7 @@
     "id": "counselling_online",
     "type": "counselling",
     "mode": "online",
-    "title": "FESS Online Counselling",
+    "title": "Engineering Counselling",
     "description": "Online expert guidance with min 2 sessions/week after result.",
     "price": 2000,
     "steps": ["Summary", "Details", "Confirmation", "Payment"],

@@ -3,8 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { orderService } from '../orderService';
 import { getCurrentUser } from '../../utils/appwrite';
-import { ShoppingBag, Clock, CheckCircle, Package, Receipt, ArrowRight, Loader2, Check, ExternalLink, RefreshCw, X } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle, Package, Receipt, ArrowRight, Loader2, Check, ExternalLink, RefreshCw, X, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 import OrderTracking from './OrderTracking';
 import Invoice from './Invoice';
 
@@ -14,6 +15,7 @@ const OrderHistory = () => {
     
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [verifyingOrderId, setVerifyingOrderId] = useState(null);
     const [user, setUser] = useState(null);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [showInvoice, setShowInvoice] = useState(false);
@@ -21,22 +23,46 @@ const OrderHistory = () => {
     const isSuccess = searchParams.get('success') === 'true';
     const successOrderId = searchParams.get('orderId');
 
+    const fetchOrders = async () => {
+        const u = await getCurrentUser();
+        if (!u) {
+            navigate('/order');
+            return;
+        }
+        setUser(u);
+        const res = await orderService.getOrderHistory(u.$id);
+        if (res.success) {
+            setOrders(res.orders);
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
-        const fetchOrders = async () => {
-            const u = await getCurrentUser();
-            if (!u) {
-                navigate('/order'); // Redirect to order if not logged in
-                return;
-            }
-            setUser(u);
-            const res = await orderService.getOrderHistory(u.$id);
-            if (res.success) {
-                setOrders(res.orders);
-            }
-            setLoading(false);
-        };
         fetchOrders();
     }, [navigate]);
+
+    const handleVerifyPayment = async (orderId) => {
+        setVerifyingOrderId(orderId);
+        const tId = toast.loading('Verifying payment with gateway...');
+        try {
+            const res = await orderService.verifyPaymentStatus(orderId);
+            if (res.success) {
+                if (res.status === 'SUCCESS') {
+                    toast.success(res.message || 'Payment verified! Access granted.', { id: tId });
+                    await fetchOrders(); // Refresh list
+                } else {
+                    toast.error(res.message || 'Payment is still pending.', { id: tId });
+                }
+            } else {
+                toast.error(res.error || 'Verification failed. Try again later.', { id: tId });
+            }
+        } catch (error) {
+            console.error('Verification Error:', error);
+            toast.error('System error during verification.', { id: tId });
+        } finally {
+            setVerifyingOrderId(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -190,9 +216,21 @@ const OrderHistory = () => {
                                                 >
                                                     <Receipt size={18} /> Invoice
                                                 </button>
-                                                <button onClick={() => navigate('/order')} className="flex-1 md:flex-none px-5 md:px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl md:rounded-2xl text-xs md:text-sm font-black flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 transition-all active:scale-95">
-                                                    <RefreshCw size={18} /> Refresh
-                                                </button>
+                                                
+                                                {order.status !== 'SUCCESS' && (
+                                                    <button 
+                                                        disabled={verifyingOrderId === order.id}
+                                                        onClick={() => handleVerifyPayment(order.id)} 
+                                                        className="flex-1 md:flex-none px-5 md:px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl md:rounded-2xl text-xs md:text-sm font-black flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        {verifyingOrderId === order.id ? (
+                                                            <Loader2 size={18} className="animate-spin" />
+                                                        ) : (
+                                                            <ShieldCheck size={18} />
+                                                        )}
+                                                        Verify Payment
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
 

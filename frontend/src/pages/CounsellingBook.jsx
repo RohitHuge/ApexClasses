@@ -253,21 +253,24 @@ export default function CounsellingBook() {
           <section className="py-20 bg-[#FF6600]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-12">Still Have Questions? Connect with Us</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <a className="bg-white/10 hover:bg-white/20 p-8 rounded-2xl transition-all group flex flex-col items-center" href="#">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                <a 
+                  className="bg-white/10 hover:bg-white/20 p-8 rounded-2xl transition-all group flex flex-col items-center" 
+                  href="https://wa.me/919860821154?text=Hi%20Apex%20Classes,%20I'd%20like%20to%20enquire%20about%20the%20MHT-CET%20Admission%20Counselling%20Guide%202026."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <span className="material-symbols-outlined text-5xl text-white mb-4">chat</span>
                   <span className="text-xl font-bold text-white">WhatsApp</span>
                   <p className="text-white/80 mt-2">Get instant replies</p>
                 </a>
-                <a className="bg-white/10 hover:bg-white/20 p-8 rounded-2xl transition-all group flex flex-col items-center" href="#">
+                <a 
+                  className="bg-white/10 hover:bg-white/20 p-8 rounded-2xl transition-all group flex flex-col items-center" 
+                  href="tel:9975941794"
+                >
                   <span className="material-symbols-outlined text-5xl text-white mb-4">call</span>
                   <span className="text-xl font-bold text-white">Call Us</span>
-                  <p className="text-white/80 mt-2">+91 98765 43210</p>
-                </a>
-                <a className="bg-white/10 hover:bg-white/20 p-8 rounded-2xl transition-all group flex flex-col items-center" href="#">
-                  <span className="material-symbols-outlined text-5xl text-white mb-4">mail</span>
-                  <span className="text-xl font-bold text-white">Email</span>
-                  <p className="text-white/80 mt-2">support@apexcounsel.com</p>
+                  <p className="text-white/80 mt-2">9975941794</p>
                 </a>
               </div>
             </div>

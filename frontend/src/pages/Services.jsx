@@ -69,13 +69,13 @@ export default function Services() {
                   </div>
                 </div>
 
-                {/* FESS Online */}
+                {/* Engineering Online */}
                 <div className="flex flex-col bg-white rounded-xl border-2 border-apexOrange p-8 shadow-2xl relative lg:scale-105 z-10">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-apexOrange text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
                     Recommended
                   </div>
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">FESS Online Counselling</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Engineering Counselling</h3>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-black text-apexOrange">₹{getPrice('counselling_online')}</span>
                       <span className="text-slate-500 text-sm font-medium">/ full course</span>
@@ -168,16 +168,33 @@ export default function Services() {
                     <p className="text-blue-100/80 text-base max-w-xl mx-auto">Questions? Reach out via any channel below and get instant expert guidance.</p>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
                     {[
-                      { icon: <MessageCircle size={28} />, title: 'WhatsApp', desc: 'Instant Chat', color: 'text-emerald-400', bg: 'bg-emerald-400/10', hover: 'hover:border-emerald-400' },
-                      { icon: <Phone size={28} />, title: 'Call Us', desc: 'Mon-Sat (9am-6pm)', color: 'text-apexOrangeLight', bg: 'bg-apexOrangeLight/10', hover: 'hover:border-apexOrangeLight' },
-                      { icon: <Mail size={28} />, title: 'Email', desc: '24/7 Support', color: 'text-blue-400', bg: 'bg-blue-400/10', hover: 'hover:border-blue-400' }
+                      { 
+                        icon: <MessageCircle size={28} />, 
+                        title: 'WhatsApp', 
+                        desc: 'Instant Chat', 
+                        color: 'text-emerald-400', 
+                        bg: 'bg-emerald-400/10', 
+                        hover: 'hover:border-emerald-400',
+                        href: "https://wa.me/919860821154?text=Hi%20Apex%20Classes,%20I'm%20interested%20in%20your%20engineering%20admission%20counselling%20services."
+                      },
+                      { 
+                        icon: <Phone size={28} />, 
+                        title: 'Call Us', 
+                        desc: '9049082408', 
+                        color: 'text-apexOrangeLight', 
+                        bg: 'bg-apexOrangeLight/10', 
+                        hover: 'hover:border-apexOrangeLight',
+                        href: "tel:9049082408"
+                      }
                     ].map((item) => (
                       <a 
                         key={item.title} 
                         className={`flex items-center gap-5 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 transition-all group hover:bg-white/10 hover:shadow-2xl ${item.hover}`} 
-                        href="#"
+                        href={item.href}
+                        target={item.title === 'WhatsApp' ? "_blank" : undefined}
+                        rel={item.title === 'WhatsApp' ? "noopener noreferrer" : undefined}
                       >
                         <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
                           {item.icon}

@@ -83,3 +83,41 @@ export const getUserById = async (userId) => {
     const res = await query('SELECT * FROM users WHERE id = $1', [userId]);
     return res.rows[0];
 };
+
+// ADMIN QUERIES
+export const getAllOrdersAdmin = async () => {
+    const sql = `
+        SELECT o.*, u.name as user_name, u.email as user_email, u.phone as user_phone
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        ORDER BY o.created_at DESC
+    `;
+    const res = await query(sql);
+    return res.rows;
+};
+
+export const getOrderStatsAdmin = async () => {
+    const sql = `
+        SELECT 
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = 'SUCCESS' THEN amount ELSE 0 END) as total_revenue,
+            COUNT(CASE WHEN status = 'SUCCESS' THEN 1 END) as success_orders,
+            COUNT(CASE WHEN status = 'FAILED' THEN 1 END) as failed_orders,
+            COUNT(CASE WHEN status = 'PENDING' THEN 1 END) as pending_orders
+        FROM orders
+    `;
+    const res = await query(sql);
+    return res.rows[0];
+};
+
+export const updateOrderMetadataAdmin = async (id, metadata) => {
+    const sql = `
+        UPDATE orders 
+        SET metadata = $2, 
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING *
+    `;
+    const res = await query(sql, [id, metadata]);
+    return res.rows[0];
+};

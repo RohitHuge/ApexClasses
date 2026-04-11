@@ -153,27 +153,29 @@ export default function AboutUs() {
                   />
                   <ContactInfo 
                     icon="location_on" 
-                    label="Pune Office" 
-                    value="Office No. 42, Apex Complex, Kothrud, Pune - 411038" 
+                    label="Thergaon Office" 
+                    value="Apex classes, opp Macdonald's, ABC Nirman building, Dange chowk road, Thergoan, pune-33" 
                     delay={200} 
-                  />
-                  <ContactInfo 
-                    icon="mail" 
-                    label="Email Us" 
-                    value="contact@apexclasses.org" 
-                    delay={300} 
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button className="bg-apexBlue text-white flex items-center justify-center gap-3 py-5 rounded-2xl font-bold hover:bg-apexDeep transition-all shadow-xl shadow-apexBlue/20">
+                  <a 
+                    href="tel:9975941794"
+                    className="bg-apexBlue text-white flex items-center justify-center gap-3 py-5 rounded-2xl font-bold hover:bg-apexDeep transition-all shadow-xl shadow-apexBlue/20"
+                  >
                     <span className="material-symbols-outlined">phone_in_talk</span>
                     Call Now
-                  </button>
-                  <button className="bg-[#25D366] text-white flex items-center justify-center gap-3 py-5 rounded-2xl font-bold hover:bg-[#21b858] transition-all shadow-xl shadow-green-500/20">
+                  </a>
+                  <a 
+                    href="https://wa.me/919860821154?text=Hi%20Apex%20Classes,%20I'd%20like%20to%20get%20in%20touch%20regarding%20admission%20counselling."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#25D366] text-white flex items-center justify-center gap-3 py-5 rounded-2xl font-bold hover:bg-[#21b858] transition-all shadow-xl shadow-green-500/20"
+                  >
                     <span className="material-symbols-outlined">chat</span>
                     WhatsApp Us
-                  </button>
+                  </a>
                 </div>
               </div>
 
@@ -188,8 +190,8 @@ export default function AboutUs() {
                   <div className="absolute bottom-8 left-8 right-8 bg-white p-8 rounded-3xl shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-700">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-extrabold text-apexBlue text-xl mb-1">Regional Office</h4>
-                        <p className="text-sm text-slate-500 font-medium">Maharashtra Regional Headquarters</p>
+                        <h4 className="font-extrabold text-apexBlue text-xl mb-1">Thergaon Office</h4>
+                        <p className="text-sm text-slate-500 font-medium">Regional Headquarters (PCMC)</p>
                       </div>
                       <div className="bg-apexOrange p-4 rounded-2xl text-white shadow-lg shadow-apexOrange/30">
                         <span className="material-symbols-outlined">directions</span>
