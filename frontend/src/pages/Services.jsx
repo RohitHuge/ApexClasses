@@ -69,13 +69,13 @@ export default function Services() {
                   </div>
                 </div>
 
-                {/* FESS Online */}
+                {/* Engineering Online */}
                 <div className="flex flex-col bg-white rounded-xl border-2 border-apexOrange p-8 shadow-2xl relative lg:scale-105 z-10">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-apexOrange text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
                     Recommended
                   </div>
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">FESS Online Counselling</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Engineering Counselling</h3>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-black text-apexOrange">₹{getPrice('counselling_online')}</span>
                       <span className="text-slate-500 text-sm font-medium">/ full course</span>

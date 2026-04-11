@@ -289,13 +289,13 @@ export default function Home() {
                 Book Premium Guidance
               </motion.button>
             </motion.div>
-            {/* FESS Online */}
+            {/* Engineering Counselling */}
             <motion.div 
               variants={fadeIn}
               whileHover={{ scale: 1.02 }}
               className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col transition-colors backdrop-blur-sm"
             >
-              <h3 className="text-xl font-bold mb-2">FESS Online</h3>
+              <h3 className="text-xl font-bold mb-2">Engineering Counselling</h3>
               <div className="text-4xl font-extrabold mb-6">₹{getPrice('counselling_online')} <span className="text-sm font-normal text-blue-200">/ Package</span></div>
               <ul className="space-y-4 mb-8 flex-grow">
                 <li className="flex items-center gap-2 text-sm text-blue-50">
