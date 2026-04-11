@@ -26,12 +26,47 @@ export const authMiddleware = async (req, res, next) => {
             id: user.$id,
             name: user.name,
             email: user.email,
-            phone: user.phone
+            phone: user.phone,
+            labels: user.labels || []
         };
 
         next();
     } catch (error) {
         console.error('Auth Middleware Error:', error.message);
         res.status(401).json({ error: 'Authentication failed' });
+    }
+};
+
+export const adminMiddleware = async (req, res, next) => {
+    try {
+        const jwt = req.headers.authorization?.split(' ')[1];
+        if (!jwt) {
+            return res.status(401).json({ error: 'Auth token missing' });
+        }
+
+        const client = new Client()
+            .setEndpoint(process.env.APPWRITE_ENDPOINT)
+            .setProject(process.env.APPWRITE_PROJECT_ID)
+            .setJWT(jwt);
+
+        const account = new Account(client);
+        const user = await account.get();
+
+        if (!user || !(user.labels || []).includes('admin')) {
+            return res.status(403).json({ error: 'Forbidden: Admin access required' });
+        }
+
+        req.user = { 
+            id: user.$id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            labels: user.labels
+        };
+
+        next();
+    } catch (error) {
+        console.error('Admin Middleware Error:', error.message);
+        res.status(403).json({ error: 'Access denied: Admin verification failed' });
     }
 };

@@ -18,7 +18,10 @@ import ClassPage from './courses/pages/ClassPage'
 import SubjectPage from './courses/pages/SubjectPage'
 import OrderPage from './order/OrderPage'
 import OrderHistory from './order/components/OrderHistory'
-import AdminDashboard from './pages/AdminDashboard'
+import { Suspense, lazy } from 'react';
+import { Loader2 } from 'lucide-react';
+
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 function App() {
   return (
@@ -41,7 +44,14 @@ function App() {
           <Route path="/view-book/:id" element={<BookReader />} />
           
           {/* Admin Tools (Hidden) */}
-          <Route path="/admin/nexus-terminal" element={<AdminDashboard />} />
+          <Route 
+            path="/admin/nexus-terminal" 
+            element={
+              <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="animate-spin text-indigo-500" /></div>}>
+                <AdminDashboard />
+              </Suspense>
+            } 
+          />
           
           {/* Courses Module Routes */}
           <Route path="/courses" element={<CourseLayout />}>

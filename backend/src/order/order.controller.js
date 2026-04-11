@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as OrderModel from './order.model.js';
+import * as PaymentService from './payment.service.js';
+import { getIO, getSocketId } from '../config/socket.js';
+import { query } from '../db/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,5 +137,84 @@ export const getSecurePDF = async (req, res) => {
     } catch (error) {
         console.error('Secure PDF Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const verifyPaymentStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await OrderModel.getOrderById(id);
+
+        if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
+
+        // If already success, return immediately
+        if (order.status === 'SUCCESS') {
+            return res.status(200).json({ 
+                success: true, 
+                status: 'SUCCESS', 
+                message: 'Payment already verified' 
+            });
+        }
+
+        if (!order.payment_order_id) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'No payment associated with this order' 
+            });
+        }
+
+        // Fetch latest from Razorpay
+        const rpOrder = await PaymentService.fetchRazorpayOrder(order.payment_order_id);
+        console.log(`🔍 Verifying Order ${id} (RP: ${order.payment_order_id}) - RP Status: ${rpOrder.status}, Paid: ${rpOrder.amount_paid}`);
+
+        // amount_paid is in paise, so we check if it's > 0 (or matches order amount)
+        if (rpOrder.status === 'paid' || rpOrder.amount_paid > 0) {
+            // Update to SUCCESS
+            await OrderModel.updateOrderStatus(id, 'SUCCESS', {
+                payment_order_id: order.payment_order_id
+            });
+
+            // Log history
+            await OrderModel.logPaymentHistory({
+                order_id: id,
+                payment_order_id: order.payment_order_id,
+                event: 'manual_verification_success',
+                amount: rpOrder.amount_paid / 100,
+                status: 'SUCCESS',
+                raw_response: rpOrder
+            });
+
+            // Add tracking
+            await query('INSERT INTO order_tracking (order_id, status, message) VALUES ($1, $2, $3)', [
+                id, 'ORDER_PLACED', 'Payment verified manually. Order is now active.'
+            ]);
+
+            // Notify via socket
+            const io = getIO();
+            const socketId = getSocketId(order.user_id);
+            if (socketId) {
+                io.to(socketId).emit('payment_success', {
+                    orderId: id,
+                    status: 'SUCCESS',
+                    message: 'Payment verified manually'
+                });
+            }
+
+            return res.status(200).json({ 
+                success: true, 
+                status: 'SUCCESS', 
+                message: 'Payment verified successfully!' 
+            });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            status: order.status, 
+            message: 'Payment is still pending or not found in gateway.' 
+        });
+
+    } catch (error) {
+        console.error('Verify Payment Error:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 };

@@ -79,5 +79,41 @@ export const orderService = {
     getOrderTracking: async (orderId) => {
         const response = await fetch(`${API_BASE_URL}/orders/${orderId}/tracking`);
         return response.json();
+    },
+    
+    verifyPaymentStatus: async (orderId) => {
+        const headers = await getHeaders();
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/verify-payment`, {
+            method: 'POST',
+            headers: headers
+        });
+        return response.json();
+    },
+
+    // ADMIN METHODS
+    getAdminStats: async () => {
+        const headers = await getHeaders();
+        const response = await fetch(`${API_BASE_URL}/orders/admin/stats`, {
+            headers: headers
+        });
+        return response.json();
+    },
+
+    getAdminOrders: async () => {
+        const headers = await getHeaders();
+        const response = await fetch(`${API_BASE_URL}/orders/admin/all-orders`, {
+            headers: headers
+        });
+        return response.json();
+    },
+
+    updateDeliveryStatus: async (orderId, status) => {
+        const headers = await getHeaders();
+        const response = await fetch(`${API_BASE_URL}/orders/admin/update-delivery`, {
+            method: 'PATCH',
+            headers: headers,
+            body: JSON.stringify({ orderId, status })
+        });
+        return response.json();
     }
 };

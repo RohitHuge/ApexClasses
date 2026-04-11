@@ -27,6 +27,16 @@ export const createRazorpayOrder = async (amount, receipt) => {
     }
 };
 
+export const fetchRazorpayOrder = async (orderId) => {
+    try {
+        const order = await razorpay.orders.fetch(orderId);
+        return order;
+    } catch (error) {
+        console.error('Razorpay Order Fetch Error:', error);
+        throw error;
+    }
+};
+
 export const verifyWebhookSignature = (body, signature, secret) => {
     const generatedSignature = crypto
         .createHmac('sha256', secret)
