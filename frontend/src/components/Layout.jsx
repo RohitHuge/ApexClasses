@@ -195,9 +195,8 @@ export default function Layout({ children }) {
           </div>
           <div>
             <h4 className="font-bold text-lg mb-6">Contact Us</h4>
-            <p className="text-blue-100 mb-2">Somewhere in Maharashtra, India</p>
-            <p className="text-blue-100 mb-2">+91 98765 43210</p>
-            <p className="text-blue-100">info@apexcounselling.com</p>
+            <p className="text-blue-100 mb-2">Apex classes, opp Macdonald's, ABC Nirman building, Dange chowk road , Thergoan, pune-33.</p>
+            <p className="text-blue-100 mb-2">9975941794, 9049082408, 9860821154</p>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-white/10 text-center text-blue-200 text-sm">

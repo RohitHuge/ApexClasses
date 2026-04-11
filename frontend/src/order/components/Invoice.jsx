@@ -16,8 +16,8 @@ const Invoice = ({ order, user, onClose }) => {
                      </div>
                      <div className="text-right">
                          <h2 className="text-xl font-bold text-gray-900">Apex Classes</h2>
-                         <p className="text-sm text-gray-500">Express Learning Center</p>
-                         <p className="text-sm text-gray-500">Pune, Maharashtra</p>
+                         <p className="text-sm text-gray-500 font-bold">ABC Nirman building, Dange chowk road,</p>
+                         <p className="text-sm text-gray-500">Thergoan, Pune - 411033</p>
                      </div>
                 </div>
 
