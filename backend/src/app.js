@@ -9,7 +9,7 @@ const app = express();
 
 // Configure CORS for specific origin and headers
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+    origin: ['http://localhost:5173', 'https://apexclasses.org'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']

@@ -8,12 +8,12 @@ dotenv.config();
 // Without this, the server will crash with 'Connection terminated unexpectedly'.
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
-  max: 20, // Increased for concurrent load
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  // ssl: {
+  //   rejectUnauthorized: false
+  // },
+  // max: 20, // Increased for concurrent load
+  // idleTimeoutMillis: 30000,
+  // connectionTimeoutMillis: 10000,
 });
 
 // Prevent background pool errors from crashing the Node process
