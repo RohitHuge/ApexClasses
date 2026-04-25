@@ -9,29 +9,21 @@ import { query } from '../db/db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Cache products at startup — avoids fs.readFileSync on every request
 const productsPath = path.join(__dirname, 'products.json');
-const getProductsConfig = () => JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+const PRODUCTS = Object.freeze(JSON.parse(fs.readFileSync(productsPath, 'utf8')));
 
-export const getAllProducts = async (req, res) => {
-    try {
-        const products = getProductsConfig();
-        res.status(200).json({ success: true, products });
-    } catch (error) {
-        console.error('Get Products Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
-    }
+export const getAllProducts = (_req, res) => {
+    res.status(200).json({ success: true, products: PRODUCTS });
 };
-
-
 
 export const getOrderHistory = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const orders = await OrderModel.getOrdersByUserId(userId);
-        res.status(200).json({ success: true, orders });
-    } catch (error) {
-        console.error('Order History Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
+        const orders = await OrderModel.getOrdersByUserId(req.user.id);
+        res.json({ success: true, orders });
+    } catch (err) {
+        console.error('Order history error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -40,65 +32,65 @@ export const getOrderDetails = async (req, res) => {
         const { id } = req.params;
         const order = await OrderModel.getOrderById(id);
         if (!order) return res.status(404).json({ error: 'Order not found' });
-        res.status(200).json({ success: true, order });
-    } catch (error) {
-        console.error('Order Details Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
+
+        // Users can only see their own orders; admins see all
+        if (req.user.role !== 'admin' && order.user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        res.json({ success: true, order });
+    } catch (err) {
+        console.error('Order details error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
 export const getUserProfile = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const user = await OrderModel.getUserById(userId);
-        if (!user) {
-            // Create user if they exist in Appwrite but not locally
-            const localUser = await OrderModel.getOrCreateUser({
-                id: userId,
-                name: req.user.name,
-                email: req.user.email
-            });
-            return res.status(200).json({ success: true, user: localUser });
-        }
-        res.status(200).json({ success: true, user });
-    } catch (error) {
-        console.error('User Profile Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
+        const user = await OrderModel.getUserById(req.user.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ success: true, user });
+    } catch (err) {
+        console.error('User profile error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
 export const createOrder = async (req, res) => {
     try {
-        const { product_type, mode, metadata, user_id, productId } = req.body;
-        
-        // Secure Price Lookup
-        const products = getProductsConfig();
-        const productKey = productId || product_type; // productId preferred, fallback to type
-        const product = products[productKey];
+        const { productId, metadata, slot_id } = req.body;
+        const userId = req.user.id; // ALWAYS from token — never from body
 
+        const product = PRODUCTS[productId];
         if (!product) {
-            return res.status(400).json({ success: false, error: 'Invalid product' });
+            return res.status(400).json({ error: 'Invalid product' });
         }
 
-        const amount = product.price;
-
-        // Sync phone from metadata if present
-        if (user_id && metadata?.phone) {
-            await OrderModel.updateUserPhone(user_id, metadata.phone);
+        // If a slot is requested, validate it exists (actual booking happens at payment success)
+        if (slot_id) {
+            const slotCheck = await query('SELECT id FROM slots WHERE id = $1 AND is_active = true AND booked < capacity AND slot_time > NOW()', [slot_id]);
+            if (!slotCheck.rows[0]) {
+                return res.status(409).json({ error: 'Slot is no longer available. Please select another.' });
+            }
         }
-        
+
+        if (metadata?.phone) {
+            await OrderModel.updateUserPhone(userId, metadata.phone);
+        }
+
         const order = await OrderModel.createOrder({
-            user_id: user_id || 'guest',
+            user_id: userId,
             product_type: product.type,
             mode: product.mode,
-            amount: amount,
-            metadata
+            amount: product.price,
+            metadata,
+            slot_id: slot_id || null,
         });
 
         res.status(201).json({ success: true, order });
-    } catch (error) {
-        console.error('Create Order Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    } catch (err) {
+        console.error('Create order error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
@@ -106,12 +98,9 @@ export const getSecurePDF = async (req, res) => {
     try {
         const userId = req.user.id;
         const orders = await OrderModel.getOrdersByUserId(userId);
-        
-        // Check for successful online book purchase
-        const hasAccess = orders.some(o => 
-            o.product_type === 'book' && 
-            o.mode === 'online' && 
-            o.status === 'SUCCESS'
+
+        const hasAccess = orders.some(
+            (o) => o.product_type === 'book' && o.mode === 'online' && o.status === 'SUCCESS'
         );
 
         if (!hasAccess) {
@@ -119,23 +108,16 @@ export const getSecurePDF = async (req, res) => {
         }
 
         const filePath = path.join(__dirname, '..', 'assets', 'guide_2026.pdf');
-        
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ error: 'PDF file not found' });
         }
 
         const stat = fs.statSync(filePath);
-
         res.setHeader('Content-Length', stat.size);
-        // Using octet-stream to bypass IDM/Download Manager interception. 
-        // Frontend fetch will still read this as a valid PDF blob.
         res.setHeader('Content-Type', 'application/octet-stream');
-
-        const readStream = fs.createReadStream(filePath);
-        readStream.pipe(res);
-
-    } catch (error) {
-        console.error('Secure PDF Error:', error);
+        fs.createReadStream(filePath).pipe(res);
+    } catch (err) {
+        console.error('Secure PDF error:', err.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -144,77 +126,55 @@ export const verifyPaymentStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const order = await OrderModel.getOrderById(id);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
 
-        if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
+        if (order.user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
 
-        // If already success, return immediately
         if (order.status === 'SUCCESS') {
-            return res.status(200).json({ 
-                success: true, 
-                status: 'SUCCESS', 
-                message: 'Payment already verified' 
-            });
+            return res.json({ success: true, status: 'SUCCESS', message: 'Payment already verified' });
         }
 
         if (!order.payment_order_id) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No payment associated with this order' 
-            });
+            return res.status(400).json({ error: 'No payment associated with this order' });
         }
 
-        // Fetch latest from Razorpay
         const rpOrder = await PaymentService.fetchRazorpayOrder(order.payment_order_id);
-        console.log(`🔍 Verifying Order ${id} (RP: ${order.payment_order_id}) - RP Status: ${rpOrder.status}, Paid: ${rpOrder.amount_paid}`);
 
-        // amount_paid is in paise, so we check if it's > 0 (or matches order amount)
-        if (rpOrder.status === 'paid' || rpOrder.amount_paid > 0) {
-            // Update to SUCCESS
+        // Require full amount — not just > 0
+        const expectedPaise = Math.round(order.amount * 100);
+        if (rpOrder.status === 'paid' && rpOrder.amount_paid >= expectedPaise) {
             await OrderModel.updateOrderStatus(id, 'SUCCESS', {
-                payment_order_id: order.payment_order_id
+                payment_order_id: order.payment_order_id,
             });
 
-            // Log history
             await OrderModel.logPaymentHistory({
                 order_id: id,
                 payment_order_id: order.payment_order_id,
                 event: 'manual_verification_success',
                 amount: rpOrder.amount_paid / 100,
                 status: 'SUCCESS',
-                raw_response: rpOrder
+                raw_response: rpOrder,
             });
 
-            // Add tracking
-            await query('INSERT INTO order_tracking (order_id, status, message) VALUES ($1, $2, $3)', [
-                id, 'ORDER_PLACED', 'Payment verified manually. Order is now active.'
-            ]);
+            await query(
+                'INSERT INTO order_tracking (order_id, status, message) VALUES ($1, $2, $3)',
+                [id, 'ORDER_PLACED', 'Payment verified manually. Order is now active.']
+            );
 
-            // Notify via socket
             const io = getIO();
             const socketId = getSocketId(order.user_id);
             if (socketId) {
-                io.to(socketId).emit('payment_success', {
-                    orderId: id,
-                    status: 'SUCCESS',
-                    message: 'Payment verified manually'
-                });
+                io.to(socketId).emit('payment_success', { orderId: id, status: 'SUCCESS' });
             }
 
-            return res.status(200).json({ 
-                success: true, 
-                status: 'SUCCESS', 
-                message: 'Payment verified successfully!' 
-            });
+            return res.json({ success: true, status: 'SUCCESS', message: 'Payment verified successfully!' });
         }
 
-        return res.status(200).json({ 
-            success: true, 
-            status: order.status, 
-            message: 'Payment is still pending or not found in gateway.' 
-        });
-
-    } catch (error) {
-        console.error('Verify Payment Error:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
+        res.json({ success: true, status: order.status, message: 'Payment is still pending or not found in gateway.' });
+    } catch (err) {
+        console.error('Verify payment error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };

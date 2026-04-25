@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { BATCHES } from './orderTypes';
 import { useProducts } from '../context/ProductContext';
 import { orderService } from './orderService';
-import { getCurrentUser } from '../utils/appwrite';
+import { useAuth } from '../context/AuthContext';
 import AuthModal from './components/AuthModal';
 import { loadRazorpayScript } from './utils/loadRazorpay';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,22 +15,20 @@ const OrderPage = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { products, loading: productsLoading } = useProducts();
+    const { user: authUser } = useAuth();
     const socketRef = useRef(null);
-    
-    // State
+
     const productId = searchParams.get('productId') || searchParams.get('type') || 'book_offline';
     const product = products[productId] || products['book_offline'];
-    
+
     const [step, setStep] = useState(1);
-    const [user, setUser] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
     const [loading, setLoading] = useState(false);
     const [order, setOrder] = useState(null);
-    const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, success, failed
+    const [paymentStatus, setPaymentStatus] = useState('idle');
     const [paymentError, setPaymentError] = useState(null);
     const redirectingRef = useRef(false);
-    
-    // Form Data
+
     const [formData, setFormData] = useState({
         address: '',
         city: '',
@@ -45,31 +43,19 @@ const OrderPage = () => {
     });
 
     useEffect(() => {
-        checkUser();
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-        };
-    }, []);
-
-    const checkUser = async () => {
-        const u = await getCurrentUser();
-        if (!u) {
+        if (!authUser) {
             setShowAuth(true);
-            return;
+        } else {
+            syncFormData(authUser);
         }
-        setUser(u);
-        syncFormData(u);
-    };
+        return () => { if (socketRef.current) socketRef.current.disconnect(); };
+    }, [authUser]);
 
     const syncFormData = async (u) => {
         setLoading(true);
         try {
-            // Fetch local profile for phone
-            const profileRes = await orderService.getUserProfile(u.$id);
+            const profileRes = await orderService.getUserProfile();
             const localUser = profileRes.user || {};
-
             setFormData(prev => ({
                 ...prev,
                 name: u.name || prev.name,
@@ -83,11 +69,10 @@ const OrderPage = () => {
         }
     };
 
-    const setupSocket = async (userId) => {
+    const setupSocket = () => {
         if (socketRef.current) return;
-        
         try {
-            const socket = await orderService.getSocket(userId);
+            const socket = orderService.getSocket();
             socketRef.current = socket;
 
             socket.on('payment_success', (data) => {
@@ -130,19 +115,17 @@ const OrderPage = () => {
     };
 
     const handlePayment = async () => {
-        if (!user) {
+        if (!authUser) {
             setShowAuth(true);
             return;
         }
-        
+
         setLoading(true);
         setPaymentStatus('processing');
-        
-        try {
-            // 1. Setup WebSocket for real-time confirmation
-            await setupSocket(user.$id);
 
-            // 2. Lazy load Razorpay script
+        try {
+            setupSocket();
+
             const isLoaded = await loadRazorpayScript();
             if (!isLoaded) {
                 toast.error('Payment system failed to load. Check your connection.');
@@ -151,44 +134,30 @@ const OrderPage = () => {
                 return;
             }
 
-            // 3. Create Order in our DB
-            const orderRes = await orderService.createOrder({
-                user_id: user.$id,
-                productId: productId,
-                metadata: formData
-            });
-
+            const orderRes = await orderService.createOrder({ productId, metadata: formData });
             if (!orderRes.success) throw new Error(orderRes.error || 'Failed to create order');
             setOrder(orderRes.order);
 
-            // 4. Create Razorpay Payment Order
-            const payOrderRes = await orderService.createPaymentOrder(orderRes.order.id, user.$id);
+            const payOrderRes = await orderService.createPaymentOrder(orderRes.order.id);
             if (!payOrderRes.success) throw new Error(payOrderRes.error || 'Failed to initialize payment');
 
-            // 5. Open Razorpay Popup
             const options = {
                 key: payOrderRes.key,
                 amount: payOrderRes.amount,
-                currency: "INR",
-                name: "Apex Classes",
+                currency: 'INR',
+                name: 'Apex Classes',
                 description: `Payment for ${product.title}`,
                 order_id: payOrderRes.razorpayOrderId,
-                handler: function (response) {
-                    console.log('Razorpay Handler Response:', response);
-                    // WebSocket handles navigation, but we lock the state here to prevent resets
-                    setPaymentStatus('success');
-                },
+                handler: () => { setPaymentStatus('success'); },
                 prefill: {
-                    name: formData.name || user.name,
-                    email: formData.email || user.email,
-                    contact: formData.phone || user.phone
+                    name: formData.name || authUser.name,
+                    email: formData.email || authUser.email,
+                    contact: formData.phone || authUser.phone
                 },
-                theme: {
-                    color: "#4f46e5"
-                },
+                theme: { color: '#4f46e5' },
                 modal: {
-                    ondismiss: function() {
-                        setPaymentStatus(prev => {
+                    ondismiss: () => {
+                        setPaymentStatus((prev) => {
                             if (prev === 'success' || redirectingRef.current) return prev;
                             setLoading(false);
                             toast('Payment popup closed. You can retry.', { icon: 'ℹ️' });
@@ -200,9 +169,8 @@ const OrderPage = () => {
 
             const rzp = new window.Razorpay(options);
             rzp.open();
-
         } catch (error) {
-            console.error('Payment Initialization Error:', error);
+            console.error('Payment error:', error);
             toast.error(error.message || 'Something went wrong');
             setPaymentStatus('failed');
             setLoading(false);

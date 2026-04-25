@@ -1,40 +1,9 @@
-import { Client, Account } from 'appwrite';
+// Appwrite has been replaced with our own JWT auth system.
+// This file re-exports equivalents so any remaining imports don't break.
+export { login, logout, getCurrentUser } from './auth.js';
 
-const client = new Client();
-
-client
-    .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
-    .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
-
-export const account = new Account(client);
-export { client };
-
-export const login = async (email, password) => {
-    return await account.createEmailPasswordSession(email, password);
-};
-
-export const signup = async (email, password, name) => {
-    return await account.create( 'unique()', email, password, name);
-};
-
-export const logout = async () => {
-    return await account.deleteSession('current');
-};
-
-export const getCurrentUser = async () => {
-    try {
-        return await account.get();
-    } catch (error) {
-        return null;
-    }
-};
-
+// createJWT is no longer needed — the access token is managed by auth.js
 export const createJWT = async () => {
-    try {
-        const res = await account.createJWT();
-        return res.jwt;
-    } catch (error) {
-        console.error('JWT Error:', error);
-        return null;
-    }
+    const { getStoredToken } = await import('./auth.js');
+    return getStoredToken();
 };

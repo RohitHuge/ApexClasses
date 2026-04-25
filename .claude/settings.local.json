@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(node src/db/migrate.js)",
+      "Bash(timeout 5 node src/server.js)",
+      "Bash(npm run *)",
+      "Bash(node scripts/seed-admin.js rohitrhuge@gmail.com \"your-password-here\" \"Rohit Huge\")"
+    ]
+  }
+}

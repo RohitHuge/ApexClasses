@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { Client, Account } from 'node-appwrite';
+import jwt from 'jsonwebtoken';
 
 const userSocketMap = new Map();
 let io;
@@ -7,38 +7,24 @@ let io;
 export const initSocket = (server) => {
     io = new Server(server, {
         cors: {
-            origin: "*", // For development; refine for production
-            methods: ["GET", "POST"]
-        }
+            origin: process.env.NODE_ENV === 'production'
+                ? ['https://apexclasses.org']
+                : ['http://localhost:5173'],
+            methods: ['GET', 'POST'],
+            credentials: true,
+        },
     });
 
-    // Authentication Middleware
-    io.use(async (socket, next) => {
+    io.use((socket, next) => {
         const token = socket.handshake.auth.token;
-        const userId = socket.handshake.auth.userId;
-
-        if (!token || !userId) {
-            return next(new Error("Authentication error: Missing credentials"));
-        }
+        if (!token) return next(new Error('Authentication error: missing token'));
 
         try {
-            const authClient = new Client()
-                .setEndpoint(process.env.APPWRITE_ENDPOINT)
-                .setProject(process.env.APPWRITE_PROJECT_ID)
-                .setJWT(token);
-            
-            const account = new Account(authClient);
-            const user = await account.get();
-
-            if (user.$id === userId) {
-                socket.userId = userId;
-                return next();
-            } else {
-                return next(new Error("Authentication error: User ID mismatch"));
-            }
-        } catch (error) {
-            console.error('Socket Auth Error:', error.message);
-            return next(new Error("Authentication error: Invalid session"));
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'changeme-set-in-env');
+            socket.userId = decoded.id;
+            next();
+        } catch {
+            next(new Error('Authentication error: invalid token'));
         }
     });
 
@@ -47,7 +33,6 @@ export const initSocket = (server) => {
         userSocketMap.set(socket.userId, socket.id);
 
         socket.on('disconnect', () => {
-            console.log(`🔌 Socket disconnected: ${socket.userId}`);
             userSocketMap.delete(socket.userId);
         });
     });
@@ -56,9 +41,7 @@ export const initSocket = (server) => {
 };
 
 export const getIO = () => {
-    if (!io) {
-        throw new Error("Socket.io not initialized!");
-    }
+    if (!io) throw new Error('Socket.io not initialized');
     return io;
 };
 

@@ -3,33 +3,35 @@ import * as OrderController from './order.controller.js';
 import * as PaymentController from './payment.controller.js';
 import * as AdminController from './admin.controller.js';
 import { getOrderTracking } from './tracking.controller.js';
-import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
+import { paymentLimiter } from '../middleware/rateLimit.middleware.js';
 
 const router = express.Router();
 
-// Product Routes (Public)
+// Public
 router.get('/products', OrderController.getAllProducts);
 
-// Order Routes
-router.post('/create', authMiddleware, OrderController.createOrder); // Protected
-router.get('/user/profile', authMiddleware, OrderController.getUserProfile); // New
-router.get('/', authMiddleware, OrderController.getOrderHistory); // Protected
-router.get('/:id', OrderController.getOrderDetails); 
-router.post('/:id/verify-payment', authMiddleware, OrderController.verifyPaymentStatus);
+// NOTE: /payment/webhook is mounted in app.js BEFORE express.json() to get raw body
+// Do NOT add it here
 
-// Payment Routes
-router.post('/payment/create', authMiddleware, PaymentController.createPaymentOrder); 
-router.post('/payment/webhook', PaymentController.handleWebhook); // Public Webhook for Razorpay
+// Auth-required
+router.post('/create', requireAuth, OrderController.createOrder);
+router.get('/user/profile', requireAuth, OrderController.getUserProfile);
+router.get('/', requireAuth, OrderController.getOrderHistory);
+router.get('/:id', requireAuth, OrderController.getOrderDetails);
+router.post('/:id/verify-payment', requireAuth, OrderController.verifyPaymentStatus);
+router.post('/payment/create', requireAuth, paymentLimiter, PaymentController.createPaymentOrder);
+router.get('/:id/tracking', requireAuth, getOrderTracking);
 
-// Tracking Routes
-router.get('/:id/tracking', getOrderTracking); // Public
+// Secure PDF
+router.get('/secure-pdf/download', requireAuth, OrderController.getSecurePDF);
 
-// Secure PDF Route
-router.get('/secure-pdf/:id', authMiddleware, OrderController.getSecurePDF);
-
-// Admin Management Routes (Nexus-Terminal)
-router.get('/admin/stats', adminMiddleware, AdminController.getDashboardStats);
-router.get('/admin/all-orders', adminMiddleware, AdminController.getAllOrders);
-router.patch('/admin/update-delivery', adminMiddleware, AdminController.updateDeliveryStatus);
+// Admin
+router.get('/admin/stats', requireAdmin, AdminController.getDashboardStats);
+router.get('/admin/all-orders', requireAdmin, AdminController.getAllOrders);
+router.patch('/admin/update-delivery', requireAdmin, AdminController.updateDeliveryStatus);
+router.get('/admin/users', requireAdmin, AdminController.getAllUsers);
+router.patch('/admin/users/:id/role', requireAdmin, AdminController.updateUserRole);
+router.post('/admin/send-migration-emails', requireAdmin, AdminController.sendMigrationEmails);
 
 export default router;
