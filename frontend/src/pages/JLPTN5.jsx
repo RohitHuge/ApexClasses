@@ -211,7 +211,7 @@ const JLPTN5 = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 bg-white">
+        {/* <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-slate-50 p-12 md:p-20 rounded-[4rem] flex flex-col lg:flex-row items-center justify-between gap-16 relative overflow-hidden border border-slate-100">
               <div className="relative z-10 max-w-2xl text-center lg:text-left">
@@ -240,7 +240,7 @@ const JLPTN5 = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
     </Layout>
   );
