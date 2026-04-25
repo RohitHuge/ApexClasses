@@ -53,7 +53,7 @@ export default function Layout({ children }) {
           {/* CTA & Account Area */}
           <div className="flex items-center gap-4">
             {!user ? (
-               <Link to="/order" className="hidden md:block bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm animate-glow hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30">
+               <Link to="/services" className="hidden md:block bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm animate-glow hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30">
                   Book Counselling
                </Link>
             ) : (
@@ -149,7 +149,7 @@ export default function Layout({ children }) {
                   </button>
                </div>
             ) : (
-               <Link to="/order" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
+               <Link to="/services" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
                   Book Counselling
                </Link>
             )}

@@ -150,7 +150,7 @@ export const forgotPassword = async (req, res) => {
         const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         await AuthModel.setResetToken(email, token, expires);
 
-        const resetUrl = `${process.env.FRONTEND_URL || 'https://apexclasses.org'}/reset-password?token=${token}`;
+        const resetUrl = `https://apexclasses.org/reset-password?token=${token}`;
         EmailService.sendPasswordResetEmail(user, resetUrl);
 
         res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });

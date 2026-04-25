@@ -110,7 +110,7 @@ export const sendMigrationEmails = async (req, res) => {
             `SELECT id, name, email, reset_token FROM users WHERE password IS NULL AND reset_token IS NOT NULL`
         );
         const users = result.rows;
-        const frontendUrl = process.env.FRONTEND_URL || 'https://apexclasses.org';
+        const frontendUrl = 'https://apexclasses.org';
 
         for (const user of users) {
             const resetUrl = `${frontendUrl}/reset-password?token=${user.reset_token}`;

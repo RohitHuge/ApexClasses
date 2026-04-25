@@ -1,7 +1,9 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import { useNavigate } from 'react-router-dom';
 
 export default function WhyCounselling() {
+  const navigate = useNavigate();
   return (
     <Layout>
       <div className="bg-slate-50 font-display text-slate-900">
@@ -20,8 +22,11 @@ export default function WhyCounselling() {
                   <p className="text-slate-300 text-lg md:text-xl leading-relaxed mb-10">
                     Navigating the complex admission landscape requires precision, data-driven decisions, and expert guidance to secure your seat in your dream college.
                   </p>
-                  <button className="flex items-center gap-3 bg-apexOrange text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-apexOrange/30">
-                    <span>Book Free Consultation</span>
+                  <button 
+                    onClick={() => navigate('/services')}
+                    className="flex items-center gap-3 bg-apexOrange text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-apexOrange/30"
+                  >
+                    <span>Book Consultation</span>
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </button>
                 </div>
@@ -217,7 +222,12 @@ export default function WhyCounselling() {
               <h2 className="text-3xl md:text-5xl font-black text-white mb-6">Ready to secure your future?</h2>
               <p className="text-slate-300 text-lg mb-10 max-w-xl mx-auto">Don't risk your admission. Join the thousands of successful students who used Apex Counselling Group.</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button className="w-full sm:w-auto px-10 py-4 bg-apexOrange text-white font-bold rounded-full text-lg hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30">Get Started Today</button>
+                <button 
+                  onClick={() => navigate('/services')}
+                  className="w-full sm:w-auto px-10 py-4 bg-apexOrange text-white font-bold rounded-full text-lg hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30"
+                >
+                  Get Started Today
+                </button>
                 <button className="w-full sm:w-auto px-10 py-4 border border-white/30 text-white font-bold rounded-full text-lg hover:bg-white/10 transition-colors">Call Our Experts</button>
               </div>
             </div>
