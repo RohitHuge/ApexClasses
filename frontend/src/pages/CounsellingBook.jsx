@@ -96,7 +96,7 @@ export default function CounsellingBook() {
                         <span className={`text-2xl font-black ${hasBoughtOnline ? 'text-green-600' : 'text-[#1A1A40]'}`}>
                            {hasBoughtOnline ? 'Unlocked' : `₹${getPrice('book_online')}`}
                         </span>
-                        {!hasBoughtOnline && <span className="text-sm text-slate-400 line-through">₹499</span>}
+
                       </div>
 
                       {hasBoughtOnline ? (
@@ -129,7 +129,7 @@ export default function CounsellingBook() {
                       <p className="text-slate-500 text-sm mb-4">Premium Quality Hardcopy with doorstep delivery.</p>
                       <div className="flex items-center gap-3 mb-6">
                         <span className="text-2xl font-black text-[#1A1A40]">₹{getPrice('book_offline')}</span>
-                        <span className="text-sm text-slate-400 line-through">₹999</span>
+
                       </div>
                       <button 
                         onClick={() => handleOrder('book_offline')}

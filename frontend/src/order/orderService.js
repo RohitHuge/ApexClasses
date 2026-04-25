@@ -1,119 +1,137 @@
 import { io } from 'socket.io-client';
-import { createJWT } from '../utils/appwrite';
+import { apiFetch, getStoredToken } from '../utils/auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-
-const getHeaders = async (userId = null) => {
-    const jwt = await createJWT();
-    const headers = {
-        'Content-Type': 'application/json',
-    };
-    if (jwt) {
-        headers['Authorization'] = `Bearer ${jwt}`;
-    }
-    if (userId) {
-        headers['x-user-id'] = userId;
-    }
-    return headers;
-};
 
 export const orderService = {
     getProducts: async () => {
-        const response = await fetch(`${API_BASE_URL}/orders/products`);
-        return await response.json();
+        const res = await fetch(`${API_BASE}/orders/products`);
+        return res.json();
     },
 
-    getUserProfile: async (userId) => {
-        const headers = await getHeaders(userId);
-        const response = await fetch(`${API_BASE_URL}/orders/user/profile`, {
-            headers: headers
-        });
-        return response.json();
+    getUserProfile: async () => {
+        const res = await apiFetch(`${API_BASE}/orders/user/profile`);
+        return res.json();
     },
 
     createOrder: async (orderData) => {
-        const headers = await getHeaders(orderData.user_id);
-        const response = await fetch(`${API_BASE_URL}/orders/create`, {
+        const res = await apiFetch(`${API_BASE}/orders/create`, {
             method: 'POST',
-            headers: headers,
             body: JSON.stringify(orderData),
         });
-        return await response.json();
+        return res.json();
     },
 
-    createPaymentOrder: async (orderId, userId) => {
-        const headers = await getHeaders(userId);
-        const response = await fetch(`${API_BASE_URL}/orders/payment/create`, {
+    createPaymentOrder: async (orderId) => {
+        const res = await apiFetch(`${API_BASE}/orders/payment/create`, {
             method: 'POST',
-            headers: headers,
             body: JSON.stringify({ orderId }),
         });
-        return response.json();
+        return res.json();
     },
 
-    getSocket: async (userId) => {
-        const jwt = await createJWT();
+    getSocket: () => {
+        const token = getStoredToken();
         return io(SOCKET_URL, {
-            auth: {
-                token: jwt,
-                userId: userId
-            },
-            transports: ['websocket']
+            auth: { token },
+            transports: ['websocket'],
         });
     },
 
-    getOrderHistory: async (userId) => {
-        const headers = await getHeaders(userId);
-        const response = await fetch(`${API_BASE_URL}/orders`, {
-            headers: headers,
-        });
-        return response.json();
+    getOrderHistory: async () => {
+        const res = await apiFetch(`${API_BASE}/orders`);
+        return res.json();
     },
 
     getOrderDetails: async (orderId) => {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
-        return response.json();
+        const res = await apiFetch(`${API_BASE}/orders/${orderId}`);
+        return res.json();
     },
 
     getOrderTracking: async (orderId) => {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/tracking`);
-        return response.json();
+        const res = await apiFetch(`${API_BASE}/orders/${orderId}/tracking`);
+        return res.json();
     },
-    
+
     verifyPaymentStatus: async (orderId) => {
-        const headers = await getHeaders();
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/verify-payment`, {
+        const res = await apiFetch(`${API_BASE}/orders/${orderId}/verify-payment`, {
             method: 'POST',
-            headers: headers
         });
-        return response.json();
+        return res.json();
     },
 
-    // ADMIN METHODS
+    getAvailableSlots: async (productId) => {
+        const res = await apiFetch(`${API_BASE}/slots?productId=${productId}`);
+        return res.json();
+    },
+
+    // ADMIN
     getAdminStats: async () => {
-        const headers = await getHeaders();
-        const response = await fetch(`${API_BASE_URL}/orders/admin/stats`, {
-            headers: headers
-        });
-        return response.json();
+        const res = await apiFetch(`${API_BASE}/orders/admin/stats`);
+        return res.json();
     },
 
-    getAdminOrders: async () => {
-        const headers = await getHeaders();
-        const response = await fetch(`${API_BASE_URL}/orders/admin/all-orders`, {
-            headers: headers
-        });
-        return response.json();
+    getAdminOrders: async (params = {}) => {
+        const qs = new URLSearchParams(params).toString();
+        const res = await apiFetch(`${API_BASE}/orders/admin/all-orders?${qs}`);
+        return res.json();
     },
 
-    updateDeliveryStatus: async (orderId, status) => {
-        const headers = await getHeaders();
-        const response = await fetch(`${API_BASE_URL}/orders/admin/update-delivery`, {
+    updateDeliveryStatus: async (orderId, status, trackingInfo) => {
+        const res = await apiFetch(`${API_BASE}/orders/admin/update-delivery`, {
             method: 'PATCH',
-            headers: headers,
-            body: JSON.stringify({ orderId, status })
+            body: JSON.stringify({ orderId, status, trackingInfo }),
         });
-        return response.json();
-    }
+        return res.json();
+    },
+
+    getAdminUsers: async () => {
+        const res = await apiFetch(`${API_BASE}/orders/admin/users`);
+        return res.json();
+    },
+
+    updateUserRole: async (userId, role) => {
+        const res = await apiFetch(`${API_BASE}/orders/admin/users/${userId}/role`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role }),
+        });
+        return res.json();
+    },
+
+    sendMigrationEmails: async () => {
+        const res = await apiFetch(`${API_BASE}/orders/admin/send-migration-emails`, {
+            method: 'POST',
+        });
+        return res.json();
+    },
+
+    getAdminSlots: async (productId) => {
+        const qs = productId ? `?productId=${productId}` : '';
+        const res = await apiFetch(`${API_BASE}/slots/admin${qs}`);
+        return res.json();
+    },
+
+    createSlot: async (slotData) => {
+        const res = await apiFetch(`${API_BASE}/slots/admin`, {
+            method: 'POST',
+            body: JSON.stringify(slotData),
+        });
+        return res.json();
+    },
+
+    updateSlot: async (slotId, data) => {
+        const res = await apiFetch(`${API_BASE}/slots/admin/${slotId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
+
+    deleteSlot: async (slotId) => {
+        const res = await apiFetch(`${API_BASE}/slots/admin/${slotId}`, {
+            method: 'DELETE',
+        });
+        return res.json();
+    },
 };

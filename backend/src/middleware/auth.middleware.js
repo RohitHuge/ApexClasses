@@ -1,72 +1,36 @@
-import { Client, Account } from 'node-appwrite';
-import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
-dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme-set-in-env';
 
-export const authMiddleware = async (req, res, next) => {
+export const requireAuth = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Auth token missing' });
+
     try {
-        const jwt = req.headers.authorization?.split(' ')[1];
-        if (!jwt) {
-            return res.status(401).json({ error: 'Auth token missing' });
-        }
-
-        const client = new Client()
-            .setEndpoint(process.env.APPWRITE_ENDPOINT)
-            .setProject(process.env.APPWRITE_PROJECT_ID)
-            .setJWT(jwt);
-
-        const account = new Account(client);
-        const user = await account.get();
-
-        if (!user) {
-            return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-        }
-
-        req.user = { 
-            id: user.$id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            labels: user.labels || []
-        };
-
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
         next();
-    } catch (error) {
-        console.error('Auth Middleware Error:', error.message);
-        res.status(401).json({ error: 'Authentication failed' });
+    } catch {
+        res.status(401).json({ error: 'Invalid or expired token' });
     }
 };
 
-export const adminMiddleware = async (req, res, next) => {
+export const requireAdmin = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Auth token missing' });
+
     try {
-        const jwt = req.headers.authorization?.split(' ')[1];
-        if (!jwt) {
-            return res.status(401).json({ error: 'Auth token missing' });
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
         }
-
-        const client = new Client()
-            .setEndpoint(process.env.APPWRITE_ENDPOINT)
-            .setProject(process.env.APPWRITE_PROJECT_ID)
-            .setJWT(jwt);
-
-        const account = new Account(client);
-        const user = await account.get();
-
-        if (!user || !(user.labels || []).includes('admin')) {
-            return res.status(403).json({ error: 'Forbidden: Admin access required' });
-        }
-
-        req.user = { 
-            id: user.$id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            labels: user.labels
-        };
-
+        req.user = decoded;
         next();
-    } catch (error) {
-        console.error('Admin Middleware Error:', error.message);
-        res.status(403).json({ error: 'Access denied: Admin verification failed' });
+    } catch {
+        res.status(401).json({ error: 'Invalid or expired token' });
     }
 };
+
+// Legacy aliases kept so existing order routes don't break during transition
+export const authMiddleware = requireAuth;
+export const adminMiddleware = requireAdmin;
