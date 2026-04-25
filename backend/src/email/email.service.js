@@ -31,7 +31,7 @@ export const sendWelcomeEmail = (user) => send({
     html: `<div style="font-family:sans-serif;max-width:600px;margin:auto">
         <h2 style="color:#4f46e5">Welcome, ${user.name}!</h2>
         <p>Your account has been created successfully. You can now log in and explore all our services.</p>
-        <a href="${process.env.FRONTEND_URL || 'https://apexclasses.org'}/dashboard" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">Go to Dashboard</a>
+        <a href="${'https://apexclasses.org'}/dashboard" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">Go to Dashboard</a>
         <p style="margin-top:24px;color:#6b7280;font-size:14px">Apex Classes — Engineering Your Future</p>
     </div>`
 });
@@ -61,7 +61,7 @@ export const sendOrderConfirmationEmail = (user, order) => {
 
     const key = `${order.product_type}_${order.mode}`;
     const msg = messages[key] || { title: 'Order Confirmed!', body: 'Thank you for your purchase.', link: '/orders' };
-    const base = process.env.FRONTEND_URL || 'https://apexclasses.org';
+    const base = 'https://apexclasses.org';
 
     return send({
         to: user.email,
@@ -89,7 +89,7 @@ export const sendBookShippedEmail = (user, order, trackingInfo = '') => send({
         <p>Hi ${user.name}, your Engineering Admission Guide 2026 has been dispatched.</p>
         ${trackingInfo ? `<p><strong>Tracking Info:</strong> ${trackingInfo}</p>` : ''}
         <p>Expected delivery: 2–4 business days.</p>
-        <a href="${process.env.FRONTEND_URL || 'https://apexclasses.org'}/orders" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">Track Order</a>
+        <a href="${'https://apexclasses.org'}/orders" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">Track Order</a>
     </div>`
 });
 

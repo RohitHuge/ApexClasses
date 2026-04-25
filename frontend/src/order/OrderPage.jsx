@@ -27,6 +27,8 @@ const OrderPage = () => {
     const [order, setOrder] = useState(null);
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [paymentError, setPaymentError] = useState(null);
+    const [availableSlots, setAvailableSlots] = useState([]);
+    const [slotsLoading, setSlotsLoading] = useState(false);
     const redirectingRef = useRef(false);
 
     const [formData, setFormData] = useState({
@@ -68,6 +70,27 @@ const OrderPage = () => {
             setLoading(false);
         }
     };
+
+    const fetchSlots = async () => {
+        if (!product.fields?.includes('slot')) return;
+        setSlotsLoading(true);
+        try {
+            const res = await orderService.getAvailableSlots(productId);
+            if (res.success) {
+                setAvailableSlots(res.slots);
+            }
+        } catch (error) {
+            console.error('Error fetching slots:', error);
+        } finally {
+            setSlotsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (authUser) {
+            fetchSlots();
+        }
+    }, [productId, authUser]);
 
     const setupSocket = () => {
         if (socketRef.current) return;
@@ -134,7 +157,11 @@ const OrderPage = () => {
                 return;
             }
 
-            const orderRes = await orderService.createOrder({ productId, metadata: formData });
+            const orderRes = await orderService.createOrder({ 
+                productId, 
+                metadata: formData,
+                slot_id: formData.slot || null 
+            });
             if (!orderRes.success) throw new Error(orderRes.error || 'Failed to create order');
             setOrder(orderRes.order);
 
@@ -286,10 +313,21 @@ const OrderPage = () => {
                                             className="w-full pl-12 pr-4 py-4 bg-gray-50/50 border-2 border-gray-100 rounded-xl md:rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer" 
                                             value={formData.slot} onChange={e => setFormData({...formData, slot: e.target.value})}
                                         >
-                                            <option value="">Select a Time Slot</option>
-                                            <option value="mon_10am">Monday 10:00 AM</option>
-                                            <option value="wed_2pm">Wednesday 02:00 PM</option>
-                                            <option value="fri_4pm">Friday 04:00 PM</option>
+                                            <option value="">{slotsLoading ? 'Loading slots...' : 'Select a Time Slot'}</option>
+                                            {availableSlots.map(slot => (
+                                                <option key={slot.id} value={slot.id}>
+                                                    {new Date(slot.slot_time).toLocaleString('en-IN', { 
+                                                        weekday: 'short', 
+                                                        month: 'short', 
+                                                        day: 'numeric', 
+                                                        hour: '2-digit', 
+                                                        minute: '2-digit' 
+                                                    })}
+                                                </option>
+                                            ))}
+                                            {!slotsLoading && availableSlots.length === 0 && (
+                                                <option disabled>No available slots found</option>
+                                            )}
                                         </select>
                                         <ChevronRight size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 rotate-90" />
                                     </div>
@@ -385,7 +423,15 @@ const OrderPage = () => {
                                          <Calendar size={18} className="text-indigo-600 shrink-0" />
                                          <div className="min-w-0">
                                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Details</p>
-                                            <p className="text-xs md:text-sm font-bold text-gray-900 leading-none truncate">{formData.city || formData.batch || formData.slot || 'Standard'}</p>
+                                             <p className="text-xs md:text-sm font-bold text-gray-900 leading-none truncate">
+                                                {formData.city || formData.batch || (() => {
+                                                    if (formData.slot) {
+                                                        const s = availableSlots.find(sl => sl.id === formData.slot);
+                                                        return s ? new Date(s.slot_time).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : formData.slot;
+                                                    }
+                                                    return 'Standard';
+                                                })()}
+                                             </p>
                                          </div>
                                      </div>
                                  </div>

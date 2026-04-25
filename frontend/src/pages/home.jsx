@@ -61,7 +61,7 @@ export default function Home() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleOrder('counselling_offline')}
+                onClick={() => navigate('/services')}
                 className="bg-orange-gradient text-white px-8 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all shadow-xl shadow-apexOrange/20"
               >
                 Book Appointment

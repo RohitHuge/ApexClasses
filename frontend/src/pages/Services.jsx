@@ -89,7 +89,7 @@ export default function Services() {
                   <div className="space-y-4">
                     <div className="flex gap-3 items-start">
                       <span className="material-symbols-outlined text-apexOrange">check_circle</span>
-                      <span className="text-sm text-slate-600 font-medium">Everything in Offline plus:</span>
+                      <span className="text-sm text-slate-600 font-medium">Everything in Online Mode</span>
                     </div>
                     {[
                       'Online expert guidance',
