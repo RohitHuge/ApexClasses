@@ -175,7 +175,7 @@ export default function BookReader() {
 
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       
-      const response = await fetch(`${API_URL}/orders/secure-pdf/${id}`, {
+      const response = await fetch(`${API_URL}/orders/secure-pdf/download`, {
         headers: {
           'Authorization': `Bearer ${jwt}`
         }
