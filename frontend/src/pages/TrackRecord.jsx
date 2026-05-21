@@ -42,13 +42,13 @@ const videos = [
   {
     id: 1,
     title: "Apex Counselling Student Testimonial",
-    thumbnail: video1,
+    thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4/ik-thumbnail.jpg",
     videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4",
     duration: "1:18"
   }
 ];
 
-const testimonials = [
+export const testimonials = [
   {
     id: 1,
     name: "Shubhra Bhadane",
