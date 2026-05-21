@@ -35,9 +35,9 @@ const JLPTN5 = () => {
                   className="bg-slate-900 text-white px-8 py-4 font-bold rounded-xl active:scale-95 transition-transform hover:bg-slate-800 shadow-xl shadow-slate-900/20">
                   Enroll Now
                 </button>
-                <button className="border-2 border-white/30 text-white px-8 py-4 font-bold rounded-xl hover:bg-white/10 transition-colors backdrop-blur-sm">
+                {/* <button className="border-2 border-white/30 text-white px-8 py-4 font-bold rounded-xl hover:bg-white/10 transition-colors backdrop-blur-sm">
                   Download Syllabus
-                </button>
+                </button> */}
               </div>
             </div>
             <div className="relative">
