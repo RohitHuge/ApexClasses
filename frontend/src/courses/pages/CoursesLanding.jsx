@@ -4,6 +4,14 @@ import CourseCard from '../components/CourseCard';
 import data from '../../data/courses.json';
 
 const CoursesLanding = () => {
+  const activeClasses = data.classes.filter(cls => 
+    cls.subjects?.some(subject => 
+      subject.chapters?.some(chapter => 
+        chapter.topics?.length > 0
+      )
+    )
+  );
+
   return (
     <div className="space-y-12">
       <div className="text-center md:text-left">
@@ -16,7 +24,7 @@ const CoursesLanding = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {data.classes.map((cls, index) => (
+        {activeClasses.map((cls, index) => (
           <CourseCard
             key={cls.id}
             title={cls.name}

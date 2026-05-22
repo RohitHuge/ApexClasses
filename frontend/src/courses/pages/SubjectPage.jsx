@@ -5,6 +5,7 @@ import { Menu, X, ArrowLeft, ArrowRight, BookOpen, AlertCircle } from 'lucide-re
 import data from '../../data/courses.json';
 import Sidebar from '../components/Sidebar';
 import VideoPlayer from '../components/VideoPlayer';
+import PDFViewer from '../components/PDFViewer';
 import Toast from '../components/Toast';
 
 const SubjectPage = () => {
@@ -26,7 +27,7 @@ const SubjectPage = () => {
   // Determine current content
   const currentChapter = chapters.find(c => c.id === chapterId) || chapters[0];
   const currentTopic = currentChapter?.topics.find(t => t.id === topicId) || currentChapter?.topics[0];
-  const currentVideo = currentTopic?.videos[0]; // Assuming first video for simplicity, or handle multiples if needed
+  const currentVideo = currentTopic?.videos?.[0]; // Assuming first video for simplicity, or handle multiples if needed
 
   // Handle completion
   const handleComplete = (videoId) => {
@@ -133,7 +134,15 @@ const SubjectPage = () => {
           </div>
         ) : (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <VideoPlayer video={currentVideo} onComplete={handleComplete} />
+            {currentTopic.pdfUrl ? (
+              <PDFViewer 
+                pdfUrl={currentTopic.pdfUrl} 
+                onComplete={handleComplete} 
+                isCompleted={completedTopics.includes(currentTopic.id)}
+              />
+            ) : (
+              <VideoPlayer video={currentVideo} onComplete={handleComplete} />
+            )}
             
             {/* Topic Navigation */}
             <div className="flex justify-between items-center py-6 border-t border-slate-200">

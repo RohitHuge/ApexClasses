@@ -9,27 +9,7 @@
           "id": "physics",
           "name": "Physics",
           "image": "https://images.unsplash.com/photo-1636466484294-181cf1e3d481?w=800&q=80",
-          "chapters": [
-            {
-              "id": "units-and-measurements",
-              "name": "Units and Measurements",
-              "topics": [
-                {
-                  "id": "introduction",
-                  "name": "Introduction",
-                  "videos": [
-                    {
-                      "id": "vid101",
-                      "title": "Introduction to Units",
-                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
-                      "duration": "10:00",
-                      "description": "Understanding the basic units of measurement."
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "chapters": []
         }
       ]
     },
@@ -42,72 +22,110 @@
           "id": "physics",
           "name": "Physics",
           "image": "https://images.unsplash.com/photo-1636466484294-181cf1e3d481?w=800&q=80",
-          "chapters": [
-            {
-              "id": "rotational-dynamics",
-              "name": "Rotational Dynamics",
-              "topics": [
-                {
-                  "id": "introduction",
-                  "name": "Introduction",
-                  "videos": [
-                    {
-                      "id": "vid1",
-                      "title": "Introduction to Rotational Dynamics",
-                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
-                      "duration": "15:20",
-                      "description": "Basic concepts of rotational motion."
-                    },
-                    {
-                      "id": "vid2",
-                      "title": "Angular Velocity",
-                      "url": "https://www.w3schools.com/html/movie.mp4",
-                      "duration": "18:10",
-                      "description": "Understanding angular velocity."
-                    }
-                  ]
-                },
-                {
-                  "id": "torque",
-                  "name": "Torque",
-                  "videos": [
-                    {
-                      "id": "vid3",
-                      "title": "Concept of Torque",
-                      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
-                      "duration": "20:00",
-                      "description": "Detailed explanation of torque."
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "thermodynamics",
-              "name": "Thermodynamics",
-              "topics": [
-                {
-                  "id": "basic-concepts",
-                  "name": "Basic Concepts",
-                  "videos": [
-                    {
-                      "id": "vid4",
-                      "title": "Introduction to Thermodynamics",
-                      "url": "https://www.w3schools.com/html/movie.mp4",
-                      "duration": "22:30",
-                      "description": "Basics of thermodynamics."
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "chapters": []
         },
         {
           "id": "chemistry",
           "name": "Chemistry",
           "image": "https://images.unsplash.com/photo-1532187875605-7fe358041c2d?w=800&q=80",
-          "chapters": []
+          "chapters": [
+            {
+              "id": "solid-state",
+              "name": "Solid State",
+              "topics": [
+                {
+                  "id": "solid-state-notes",
+                  "name": "Solid State Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/solid%20state%20Final%20(2).pdf?updatedAt=1779397890368",
+                  "description": "Comprehensive hand-written and revised notes on Solid State."
+                }
+              ]
+            },
+            {
+              "id": "solutions",
+              "name": "Solutions",
+              "topics": [
+                {
+                  "id": "solutions-notes",
+                  "name": "Solutions Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Solutions.pdf?updatedAt=1779397885722",
+                  "description": "Comprehensive hand-written and revised notes on Solutions."
+                }
+              ]
+            },
+            {
+              "id": "ionic-equilibrium",
+              "name": "Ionic Equilibrium",
+              "topics": [
+                {
+                  "id": "ionic-equilibrium-notes",
+                  "name": "Ionic Equilibrium Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Ionic%20EQ.pdf?updatedAt=1779397877263",
+                  "description": "Comprehensive hand-written and revised notes on Ionic Equilibrium."
+                }
+              ]
+            },
+            {
+              "id": "thermodynamics",
+              "name": "Chemical Thermodynamics",
+              "topics": [
+                {
+                  "id": "thermodynamics-notes",
+                  "name": "Thermodynamics Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Thermodynamics.pdf?updatedAt=1779397882491",
+                  "description": "Comprehensive hand-written and revised notes on Chemical Thermodynamics."
+                }
+              ]
+            },
+            {
+              "id": "halogen-derivatives",
+              "name": "Halogen Derivatives",
+              "topics": [
+                {
+                  "id": "halogen-derivatives-notes",
+                  "name": "Halogen Derivatives Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Halogen%20Derivative%20PDF%20final.pdf?updatedAt=1779397887406",
+                  "description": "Comprehensive hand-written and revised notes on Halogen Derivatives."
+                }
+              ]
+            },
+            {
+              "id": "alcohols-phenols-ethers",
+              "name": "Alcohols, Phenols and Ethers",
+              "topics": [
+                {
+                  "id": "alcohols-phenols-ethers-notes",
+                  "name": "Alcohols, Phenols and Ethers Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Alchohol%20Phenol%20and%20Ether.pdf?updatedAt=1779397884532",
+                  "description": "Comprehensive hand-written and revised notes on Alcohols, Phenols and Ethers."
+                }
+              ]
+            },
+            {
+              "id": "aldehydes-ketones-carboxylic-acids",
+              "name": "Aldehydes, Ketones and Carboxylic Acids",
+              "topics": [
+                {
+                  "id": "aldehydes-ketones-carboxylic-acids-notes",
+                  "name": "Aldehydes, Ketones and Carboxylic Acids Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/Aldehyde%20ketones%20and%20acids.pdf?updatedAt=1779397891945",
+                  "description": "Comprehensive hand-written and revised notes on Aldehydes, Ketones and Carboxylic Acids."
+                }
+              ]
+            },
+            {
+              "id": "chemistry-formulae",
+              "name": "Chemistry Formulae",
+              "topics": [
+                {
+                  "id": "chemistry-formulae-notes",
+                  "name": "Chemistry Formulae Notes",
+                  "pdfUrl": "https://ik.imagekit.io/apexcounselling/chemistry%20formule%20Apex%20Classes.pdf?updatedAt=1779397866155",
+                  "description": "Quick revision formula sheet for all Class 12th Chemistry chapters."
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "maths",
