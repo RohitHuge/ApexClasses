@@ -22,6 +22,12 @@ const ClassPage = () => {
     );
   }
 
+  const activeSubjects = classData.subjects.filter(subject => 
+    subject.chapters?.some(chapter => 
+      chapter.topics?.length > 0
+    )
+  );
+
   return (
     <div className="space-y-12">
       <div className="text-center md:text-left">
@@ -33,9 +39,9 @@ const ClassPage = () => {
         </p>
       </div>
 
-      {classData.subjects.length > 0 ? (
+      {activeSubjects.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {classData.subjects.map((subject, index) => (
+          {activeSubjects.map((subject, index) => (
             <CourseCard
               key={subject.id}
               title={subject.name}
@@ -47,7 +53,7 @@ const ClassPage = () => {
         </div>
       ) : (
         <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
-          <p className="text-slate-500 font-medium">No subjects listed for this class yet. Stay tuned!</p>
+          <p className="text-slate-500 font-medium">No active subjects available for this class yet. Stay tuned!</p>
         </div>
       )}
     </div>

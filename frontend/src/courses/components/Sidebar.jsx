@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, PlayCircle, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, PlayCircle, CheckCircle2, BookOpen } from 'lucide-react';
 
 const Sidebar = ({ chapters, activeTopicId, completedTopics = [] }) => {
   const { class: className, subject } = useParams();
@@ -55,6 +55,8 @@ const Sidebar = ({ chapters, activeTopicId, completedTopics = [] }) => {
                     >
                       {completedTopics.includes(topic.id) ? (
                         <CheckCircle2 size={16} className="text-green-500" />
+                      ) : topic.pdfUrl ? (
+                        <BookOpen size={16} className="text-orange-500" />
                       ) : (
                         <PlayCircle size={16} />
                       )}
