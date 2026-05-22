@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import CountUp from '../components/CountUp';
+import { testimonials } from './TrackRecord';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -430,7 +431,7 @@ export default function Home() {
       </section>
       {/* END: Proven Track Record */}
 
-      {/* BEGIN: Student Video Feedback */}
+      {/* BEGIN: Student Testimonials */}
       <section className="py-24 bg-apexLight" id="feedback">
         <motion.div 
           initial="hidden"
@@ -444,88 +445,48 @@ export default function Home() {
             <p className="text-slate-500">Hear from students who achieved their dreams with Apex</p>
           </motion.div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <motion.div 
-              variants={fadeIn}
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all group"
-            >
-              <div className="relative h-48 bg-slate-200">
-                <img
-                  alt="Testimonial Thumbnail"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfRzafLnVEu5xAshy-kPFBjSyoFXF6mTuOzbcwGKZnh5POl5HW5r7RBrCq__yerRt_1ubWtqaVKrcHWX22L7slm-IRIq8lTYguiDHX_bjb0ddUnGXnnyC5prCHUWS9OTrv7eZouelAHgBq2s1X0c4Ssp8vJMOx_35pqpfuVdTYf88prOPaqHagn_rqtXpgxTI3lNkT0TZebMFalN2QJO-78gPS2Wl_84COzoF6ePiiVqh1pKXILllfD3DDUvRl-KCk0LrEE7napg"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-transform cursor-pointer"
-                  >
-                    <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                  </motion.div>
+            {testimonials.slice(0, 3).map((testimonial) => (
+              <motion.div 
+                key={testimonial.id}
+                variants={fadeIn}
+                whileHover={{ y: -5 }}
+                className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col justify-between transition-all group animate-fade-in"
+              >
+                <div>
+                  <div className="flex items-center gap-1 text-apexOrangeLight mb-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-slate-600 text-base leading-relaxed italic mb-6">
+                    "{testimonial.quote}"
+                  </p>
                 </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-1 text-apexOrangeLight mb-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
+                <div className="flex items-center gap-4 border-t border-slate-100 pt-6 mt-4">
+                  <img
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-slate-100"
+                    src={testimonial.image}
+                  />
+                  <div>
+                    <h4 className="font-bold text-apexBlue">{testimonial.name}</h4>
+                    <p className="text-apexOrangeLight font-semibold text-xs">{testimonial.college}</p>
+                  </div>
                 </div>
-                <h4 className="text-lg font-bold text-apexBlue">Aditya Deshmukh</h4>
-                <p className="text-slate-600 font-semibold text-sm">COEP Pune (Computer Engineering)</p>
-                <p className="text-slate-500 text-sm mt-3 leading-relaxed italic">"The preference list provided by Apex was the key. I got my dream college in CAP Round 1!"</p>
-              </div>
-            </motion.div>
-            {/* Testimonial 2 */}
-            <motion.div 
-              variants={fadeIn}
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all group"
-            >
-              <div className="relative h-48 bg-slate-200">
-                <img
-                  alt="Testimonial Thumbnail"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmRX6f4cGEgfuk1OLa8Aaw2xjlHLKQhmsHUmF-nynqIipshSz_IDNEtpsWqzkC0RQ4qCWWnc7FqX7kwSrbBbAjf-HdJANO1Z6Uq3INRoYosDWC4nn0z12IMU7GUM_fNVBEuRShDL6SHLQj3ZGHXu1AkuEzA60m1sHOjmdsoORLXwhYOAnK553yI438PszdAAYaqBLYx4NyuE6iWzVPLjf1aPLA4wKP-vdmZ47nvoPsi__JFHT6Y4XPDsiyc9RDSimezx5ehAIcLw"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-transform cursor-pointer"
-                  >
-                    <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                  </motion.div>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-1 text-apexOrangeLight mb-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <h4 className="text-lg font-bold text-apexBlue">Sakshi Patil</h4>
-                <p className="text-slate-600 font-semibold text-sm">PICT Pune (IT Engineering)</p>
-                <p className="text-slate-500 text-sm mt-3 leading-relaxed italic">"Extremely professional and knowledgeable. They knew exactly which colleges I should target with my percentile."</p>
-              </div>
-            </motion.div>
-            {/* Testimonial Placeholder */}
-            <motion.div 
-              variants={fadeIn}
-              className="bg-slate-100 rounded-3xl overflow-hidden shadow-sm border border-dashed border-slate-300 flex items-center justify-center p-8"
-            >
-              <p className="text-slate-400 font-medium">Coming Soon...</p>
-            </motion.div>
+              </motion.div>
+            ))}
           </div>
+          <motion.div variants={fadeIn} className="text-center mt-12">
+            <button 
+              onClick={() => navigate('/track-record')}
+              className="inline-flex items-center gap-2 text-apexBlue hover:text-apexOrange font-bold transition-all group"
+            >
+              <span>View All Student Success Stories</span>
+              <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+            </button>
+          </motion.div>
         </motion.div>
       </section>
     </Layout>

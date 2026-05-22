@@ -10,8 +10,8 @@ import video2 from '../assets/video_2.png';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.6, ease: "easeOut" }
   }
@@ -39,51 +39,84 @@ const stats = [
 ];
 
 const videos = [
-  { id: 1, title: "Success Story: Aditya", thumbnail: video1, duration: "4:20" },
-  { id: 2, title: "How I cracked COEP", thumbnail: video2, duration: "3:45" },
-  { id: 3, title: "Apex Counselling Review", thumbnail: video1, duration: "5:12" },
-  { id: 4, title: "PICT Admission Guide", thumbnail: video2, duration: "2:30" },
-  { id: 5, title: "MHT-CET Strategy", thumbnail: video1, duration: "6:15" },
-  { id: 6, title: "VJTI Experience", thumbnail: video2, duration: "4:05" },
-  { id: 7, title: "My Journey to IT", thumbnail: video1, duration: "3:50" },
-  { id: 8, title: "TFWS Beneficiary", thumbnail: video2, duration: "4:45" },
-  { id: 9, title: "Pharmacy Admission", thumbnail: video1, duration: "5:30" },
-  { id: 10, title: "Spot Round Miracle", thumbnail: video2, duration: "3:10" },
+  {
+    id: 1,
+    title: "Apex Counselling Student Testimonial",
+    thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4/ik-thumbnail.jpg",
+    videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4",
+    duration: "1:18"
+  }
 ];
 
-const testimonials = [
-  { 
-    id: 1, 
-    name: "Saurabh Patil", 
-    college: "COEP Pune", 
-    image: student1, 
-    quote: "Apex Classes provided the most accurate cutoff analysis. Their preference list was the only reason I got into COEP despite the high competition." 
+export const testimonials = [
+  {
+    id: 1,
+    name: "Shubhra Bhadane",
+    college: "Apex Counselling Student",
+    image: student1,
+    quote: "You gave individual attention and support throughout the admission process. Every doubt and question was solved systematically with proper guidance."
   },
-  { 
-    id: 2, 
-    name: "Anjali Shinde", 
-    college: "PICT Pune", 
-    image: student2, 
-    quote: "The personalized attention during the CAP rounds was amazing. They handled all my doubts and guided me through every step." 
+
+  {
+    id: 2,
+    name: "Amol C25",
+    college: "PICT Pune - E&TC",
+    image: student2,
+    quote: "My daughter secured admission in PICT E&TC because of the expert guidance and support from Tushar Sir during the counselling process."
   },
-  { 
-    id: 3, 
-    name: "Rahul Mehra", 
-    college: "VJTI Mumbai", 
-    image: student1, 
-    quote: "Strategic planning for TFWS saved me lakhs in fees. I'm forever grateful to the team at Apex for their expert advice." 
+
+  {
+    id: 3,
+    name: "Aditya Visave",
+    college: "PCCOE Akurdi - IT",
+    image: student1,
+    quote: "The team was extremely helpful, unbiased, and prompt throughout the entire admission process. Their timely guidance helped me secure IT at PCCOE Akurdi."
   },
-  { 
-    id: 4, 
-    name: "Priya Kulkarni", 
-    college: "VIT Pune", 
-    image: student2, 
-    quote: "Beyond just admissions, they helped me choose the right branch based on my career goals. Truly professional service." 
+
+  {
+    id: 4,
+    name: "Priyangi Sapkal",
+    college: "VIT Pune - IT",
+    image: student2,
+    quote: "We were unaware about the admission and SPOT rounds, but Tushar Sir and the Apex team supported us at every stage and helped secure admission in VIT IT branch."
+  },
+
+  {
+    id: 5,
+    name: "Nisarg Padvi",
+    college: "VIT Pune - AI & DS",
+    image: student1,
+    quote: "The Apex Counselling team provided timely guidance and valuable support during the admission and SPOT round process. Their assistance made the journey smooth and stress-free."
+  },
+
+  {
+    id: 6,
+    name: "Shreekar Markad",
+    college: "Engineering Admission Counselling",
+    image: student2,
+    quote: "Your calm and composed guidance helped me overcome challenges and choose the best college. Your dedication and expertise were truly invaluable."
+  },
+
+  {
+    id: 7,
+    name: "Manasvi Desale",
+    college: "Apex Classes Student",
+    image: student1,
+    quote: "The teaching and counselling experience at Apex was excellent. Tushar Sir, Gajanan Sir, and Chavan Sir provided outstanding guidance throughout."
+  },
+
+  {
+    id: 8,
+    name: "Atharva Deshpande",
+    college: "Engineering Admission Counselling",
+    image: student2,
+    quote: "I was confused and nervous about the admission process, but the Apex team guided me at every step. Their support made us feel comfortable throughout the journey."
   },
 ];
 
 export default function TrackRecord() {
   const [activeVideo, setActiveVideo] = useState(videos[0]);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const videoCarouselRef = useRef(null);
 
@@ -111,14 +144,14 @@ export default function TrackRecord() {
         {/* Compact Header & Stats Section */}
         <section className="pt-10 pb-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-200/60 mb-8">
           <div className="text-center md:text-left max-w-xl">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="text-3xl md:text-5xl font-black text-apexBlue mb-2"
             >
               Our <span className="text-apexOrange">Track Record</span>
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
@@ -128,7 +161,7 @@ export default function TrackRecord() {
             </motion.p>
           </div>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -136,7 +169,7 @@ export default function TrackRecord() {
             className="flex flex-wrap justify-center md:justify-end gap-2 max-w-2xl"
           >
             {stats.map((stat) => (
-              <motion.div 
+              <motion.div
                 key={stat.college}
                 variants={fadeIn}
                 whileHover={{ scale: 1.05 }}
@@ -159,80 +192,138 @@ export default function TrackRecord() {
                 <h2 className="text-3xl font-black mb-2">Success Stories <span className="text-apexOrange">in Action</span></h2>
                 <p className="text-slate-400">Hear directly from our students about their admission journey</p>
               </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => scrollVideos('left')}
-                  className="size-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">arrow_back_ios</span>
-                </button>
-                <button 
-                  onClick={() => scrollVideos('right')}
-                  className="size-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
-                </button>
-              </div>
+              {videos.length > 1 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => scrollVideos('left')}
+                    className="size-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">arrow_back_ios</span>
+                  </button>
+                  <button
+                    onClick={() => scrollVideos('right')}
+                    className="size-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-12 items-start">
-              {/* Main Video Player */}
-              <motion.div 
-                key={activeVideo.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="lg:col-span-2 relative aspect-video bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10"
-              >
-                <img 
-                  src={activeVideo.thumbnail} 
-                  alt={activeVideo.title}
-                  className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.button 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="size-20 bg-apexOrange text-white rounded-full flex items-center justify-center shadow-2xl"
-                  >
-                    <span className="material-symbols-outlined text-4xl fill-current">play_arrow</span>
-                  </motion.button>
-                </div>
-                <div className="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
-                  <span className="bg-apexOrange px-3 py-1 rounded text-xs font-bold uppercase mb-2 inline-block">Featured Story</span>
-                  <h3 className="text-2xl font-bold">{activeVideo.title}</h3>
-                </div>
-              </motion.div>
-
-              {/* Video Carousel Sidebar */}
-              <div 
-                ref={videoCarouselRef}
-                className="flex lg:flex-col overflow-x-auto lg:overflow-y-auto lg:max-h-[500px] gap-4 no-scrollbar pb-4 lg:pb-0"
-              >
-                {videos.map((vid) => (
-                  <motion.div 
-                    key={vid.id}
-                    whileHover={{ x: 5 }}
-                    onClick={() => setActiveVideo(vid)}
-                    className={`flex-shrink-0 w-64 lg:w-full p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${
-                      activeVideo.id === vid.id 
-                        ? 'bg-white/10 border-apexOrange shadow-lg' 
-                        : 'bg-white/5 border-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="relative size-16 rounded-lg overflow-hidden shrink-0">
-                      <img src={vid.thumbnail} alt="" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-xs">play_arrow</span>
+            {videos.length > 1 ? (
+              <div className="grid lg:grid-cols-3 gap-12 items-start">
+                {/* Main Video Player */}
+                <motion.div
+                  key={activeVideo.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="lg:col-span-2 relative aspect-video bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10"
+                >
+                  {isPlaying ? (
+                    <video
+                      src={activeVideo.videoUrl}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <img
+                        src={activeVideo.thumbnail}
+                        alt={activeVideo.title}
+                        className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setIsPlaying(true)}
+                          className="size-20 bg-apexOrange text-white rounded-full flex items-center justify-center shadow-2xl"
+                        >
+                          <span className="material-symbols-outlined text-4xl fill-current">play_arrow</span>
+                        </motion.button>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold truncate">{vid.title}</h4>
-                      <p className="text-xs text-slate-400">{vid.duration}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
+                        <span className="bg-apexOrange px-3 py-1 rounded text-xs font-bold uppercase mb-2 inline-block">Featured Story</span>
+                        <h3 className="text-2xl font-bold">{activeVideo.title}</h3>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+
+                {/* Video Carousel Sidebar */}
+                <div
+                  ref={videoCarouselRef}
+                  className="flex lg:flex-col overflow-x-auto lg:overflow-y-auto lg:max-h-[500px] gap-4 no-scrollbar pb-4 lg:pb-0"
+                >
+                  {videos.map((vid) => (
+                    <motion.div
+                      key={vid.id}
+                      whileHover={{ x: 5 }}
+                      onClick={() => {
+                        setActiveVideo(vid);
+                        setIsPlaying(false);
+                      }}
+                      className={`flex-shrink-0 w-64 lg:w-full p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${activeVideo.id === vid.id
+                          ? 'bg-white/10 border-apexOrange shadow-lg'
+                          : 'bg-white/5 border-white/5 hover:bg-white/10'
+                        }`}
+                    >
+                      <div className="relative size-16 rounded-lg overflow-hidden shrink-0">
+                        <img src={vid.thumbnail} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-xs">play_arrow</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold truncate">{vid.title}</h4>
+                        <p className="text-xs text-slate-400">{vid.duration}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="max-w-4xl mx-auto w-full">
+                <motion.div
+                  key={activeVideo.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative aspect-video bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10"
+                >
+                  {isPlaying ? (
+                    <video
+                      src={activeVideo.videoUrl}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <img
+                        src={activeVideo.thumbnail}
+                        alt={activeVideo.title}
+                        className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setIsPlaying(true)}
+                          className="size-20 bg-apexOrange text-white rounded-full flex items-center justify-center shadow-2xl"
+                        >
+                          <span className="material-symbols-outlined text-4xl fill-current">play_arrow</span>
+                        </motion.button>
+                      </div>
+                      <div className="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
+                        <span className="bg-apexOrange px-3 py-1 rounded text-xs font-bold uppercase mb-2 inline-block">Featured Story</span>
+                        <h3 className="text-2xl font-bold">{activeVideo.title}</h3>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -245,7 +336,7 @@ export default function TrackRecord() {
 
           <div className="relative">
             <AnimatePresence mode="wait">
-              <motion.div 
+              <motion.div
                 key={testimonialIndex}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -258,7 +349,7 @@ export default function TrackRecord() {
                     <img src={testimonials[testimonialIndex].image} alt="" className="w-full h-full object-cover" />
                   </div>
                 </div>
-                
+
                 <div className="pt-10 md:pt-0">
                   <span className="material-symbols-outlined text-6xl text-slate-100 absolute top-8 right-8 pointer-events-none">format_quote</span>
                   <p className="text-xl md:text-2xl text-slate-700 font-medium italic leading-relaxed mb-8">
@@ -274,7 +365,7 @@ export default function TrackRecord() {
 
             {/* Navigation Buttons */}
             <div className="flex justify-center gap-4 mt-12">
-              <button 
+              <button
                 onClick={prevTestimonial}
                 className="size-12 rounded-full bg-white border border-slate-200 text-apexBlue flex items-center justify-center hover:bg-apexBlue hover:text-white transition-all shadow-sm"
               >
@@ -282,16 +373,15 @@ export default function TrackRecord() {
               </button>
               <div className="flex items-center gap-2">
                 {testimonials.map((_, i) => (
-                  <button 
+                  <button
                     key={i}
                     onClick={() => setTestimonialIndex(i)}
-                    className={`h-2 rounded-full transition-all ${
-                      testimonialIndex === i ? 'w-8 bg-apexOrange' : 'w-2 bg-slate-300'
-                    }`}
+                    className={`h-2 rounded-full transition-all ${testimonialIndex === i ? 'w-8 bg-apexOrange' : 'w-2 bg-slate-300'
+                      }`}
                   />
                 ))}
               </div>
-              <button 
+              <button
                 onClick={nextTestimonial}
                 className="size-12 rounded-full bg-white border border-slate-200 text-apexBlue flex items-center justify-center hover:bg-apexBlue hover:text-white transition-all shadow-sm"
               >
