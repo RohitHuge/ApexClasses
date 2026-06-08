@@ -45,6 +45,13 @@ const videos = [
     thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4/ik-thumbnail.jpg",
     videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4",
     duration: "1:18"
+  },
+  {
+    id: 2,
+    title: "Parent Testimonial for Apex Counselling",
+    thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-06-03%20at%208.46.20%20PM.mp4/ik-thumbnail.jpg",
+    videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-06-03%20at%208.46.20%20PM.mp4",
+    duration: "1:06"
   }
 ];
 
