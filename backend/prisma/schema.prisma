@@ -108,3 +108,16 @@ model Cutoff {
   @@index([category, branch, cutoff])
   @@map("cutoffs")
 }
+
+model PredictorLead {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  phone      String    @db.VarChar(20)
+  percentile Decimal?  @db.Decimal(6, 3)
+  category   String?   @db.VarChar(10)
+  branches   String?
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([phone])
+  @@map("predictor_leads")
+}

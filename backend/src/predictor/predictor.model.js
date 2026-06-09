@@ -35,6 +35,19 @@ export const getCategories = async () => {
  * @param {string[]|null} branches      optional branch filter (null = all)
  * @param {number}   reachSlack         how far above the percentile to still include
  */
+/**
+ * Persist a lead captured at the results gate.
+ */
+export const createLead = async ({ name, phone, percentile, category, branches }) => {
+    const res = await query(
+        `INSERT INTO predictor_leads (name, phone, percentile, category, branches)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
+        [name, phone, percentile ?? null, category ?? null, branches ?? null]
+    );
+    return res.rows[0];
+};
+
 export const findEligible = async (percentile, effectiveCategories, branches, reachSlack) => {
     const res = await query(
         `WITH ranked AS (

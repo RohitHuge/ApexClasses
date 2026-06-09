@@ -6,5 +6,6 @@ const router = express.Router();
 // Public endpoints — global generalLimiter (app.js) already applies.
 router.get('/meta', PredictorController.getMeta);
 router.post('/predict', PredictorController.predict);
+router.post('/lead', PredictorController.captureLead);
 
 export default router;

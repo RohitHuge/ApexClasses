@@ -13,6 +13,7 @@ import WhyCounselling from './pages/WhyCounselling';
 import CounsellingBook from './pages/CounsellingBook';
 import BookIndex from './pages/BookIndex';
 import TrackRecord from './pages/TrackRecord';
+import CollegePredictor from './pages/CollegePredictor';
 import AboutUs from './pages/AboutUs';
 import JLPTN5 from './pages/JLPTN5';
 import Dashboard from './pages/Dashboard';
@@ -51,6 +52,7 @@ function App() {
                         <Route path="/book" element={<CounsellingBook />} />
                         <Route path="/book/index" element={<BookIndex />} />
                         <Route path="/track-record" element={<TrackRecord />} />
+                        <Route path="/college-predictor" element={<CollegePredictor />} />
                         <Route path="/jlpt-n5" element={<JLPTN5 />} />
 
                         {/* Auth */}
