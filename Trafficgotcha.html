@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Traffic Gotcha — The api.apexclasses.org 502 Incident</title>
+<style>
+  :root{
+    --ink:#1a1f29; --muted:#5b6573; --line:#dfe3ea; --bg:#ffffff;
+    --accent:#2f6df6; --good:#1a9e57; --bad:#d83a52; --warn:#c8821a;
+    --code-bg:#0f1626; --code-ink:#e6edf7;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);
+    margin:0;line-height:1.55;font-size:13.5px;background:var(--bg);}
+  .page{max-width:820px;margin:0 auto;padding:46px 54px;}
+  h1{font-size:30px;margin:0 0 4px;letter-spacing:-.5px}
+  h2{font-size:19px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line);}
+  h3{font-size:15px;margin:20px 0 6px;color:#26303f}
+  p{margin:8px 0}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .meta{display:flex;gap:26px;flex-wrap:wrap;font-size:12px;color:var(--muted);
+    border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:14px 0 6px;background:#fafbfd}
+  .meta b{color:var(--ink)}
+  code{font-family:"SF Mono",Consolas,Menlo,monospace;font-size:12px;background:#eef1f6;
+    padding:1px 5px;border-radius:4px}
+  pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:10px;
+    overflow:auto;font-family:"SF Mono",Consolas,Menlo,monospace;font-size:11.5px;line-height:1.5}
+  pre .c{color:#7d8aa3}
+  pre .g{color:#7ee2a8}
+  pre .r{color:#ff8a9b}
+  pre .y{color:#ffd479}
+  .callout{border-left:4px solid var(--accent);background:#f3f7ff;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .callout.bad{border-color:var(--bad);background:#fdf3f5}
+  .callout.good{border-color:var(--good);background:#f1faf4}
+  .callout.warn{border-color:var(--warn);background:#fdf8ef}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.3px;
+    padding:2px 8px;border-radius:20px;text-transform:uppercase}
+  .tag.bad{background:#fcdfe4;color:#a32238}
+  .tag.good{background:#d8f3e4;color:#137a43}
+  .tag.warn{background:#faecd2;color:#8a5a11}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:12px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f4f6fa;font-weight:600}
+  .center{text-align:center}
+  figure{margin:18px 0;text-align:center}
+  figcaption{font-size:11.5px;color:var(--muted);margin-top:8px}
+  .lead{font-size:14.5px;color:#2b3542}
+  .kbd{font-family:"SF Mono",Consolas,monospace;font-size:11px;background:#10203f;color:#cfe0ff;padding:1px 6px;border-radius:4px}
+  ol li,ul li{margin:5px 0}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  hr{border:0;border-top:1px solid var(--line);margin:26px 0}
+  .footer{color:var(--muted);font-size:11px;text-align:center;margin-top:34px;border-top:1px solid var(--line);padding-top:12px}
+  @media print{
+    .page{padding:0 14px}
+    h2{break-after:avoid}
+    figure,pre,table,.callout{break-inside:avoid}
+    .page-break{break-before:page}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Traffic Gotcha</h1>
+  <p class="sub">A post‑mortem of the <code>api.apexclasses.org</code> 502 / “CORS” outage — and why the bug was three layers away from where it looked.</p>
+
+  <div class="meta">
+    <span><b>Service</b><br>api.apexclasses.org (Apex backend)</span>
+    <span><b>Symptom</b><br>Browser CORS error + 502 Bad Gateway</span>
+    <span><b>Real cause</b><br>Stale hard‑coded upstream IP in a Traefik static route</span>
+    <span><b>Status</b><br><span class="tag good">Resolved + hardened</span></span>
+    <span><b>Date</b><br>2026‑06‑09</span>
+  </div>
+
+  <div class="callout">
+    <b>One‑line takeaway:</b> A <i>502 strips CORS headers</i>, so a dead backend masquerades as a CORS bug. The backend was healthy the whole time — the proxy was dialing a <b>dead IP</b> baked into a hand‑written Traefik config file that never updated when the container was redeployed.
+  </div>
+
+  <h2>1 · What the user saw</h2>
+  <p class="lead">The frontend at <code>apexclasses.org</code> could not load products. The browser console showed a textbook CORS failure:</p>
+<pre><span class="r">Access to fetch at 'https://api.apexclasses.org/api/orders/products'
+from origin 'https://apexclasses.org' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.</span>
+<span class="c">GET https://api.apexclasses.org/api/orders/products net::ERR_FAILED</span> <span class="y">502 (Bad Gateway)</span>
+Fetch products error: TypeError: Failed to fetch</pre>
+
+  <p>Two clues sat right next to each other and most people read only the first:</p>
+  <ul>
+    <li><b>“CORS policy … No Access‑Control‑Allow‑Origin”</b> — looks like a backend CORS misconfiguration.</li>
+    <li><b>“502 (Bad Gateway)”</b> — the <i>actual</i> signal. The request never reached a working app.</li>
+  </ul>
+
+  <div class="callout bad">
+    <span class="tag bad">The gotcha</span>
+    <p style="margin:8px 0 0">When a reverse proxy returns a <b>502</b>, it returns its own error page — which carries <b>no CORS headers</b>. The browser then fails its CORS check and reports a CORS error. <b>CORS was a symptom, not the disease.</b> Chasing the CORS message means debugging the wrong layer for hours.</p>
+  </div>
+
+  <h2>2 · The system, end to end</h2>
+  <p>Requests cross four layers before reaching the Node app. The bug lived at the proxy.</p>
+
+  <figure>
+  <svg width="760" height="250" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial" font-size="12">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2f6df6"/></marker>
+      <marker id="arb" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d83a52"/></marker>
+    </defs>
+    <!-- boxes -->
+    <g>
+      <rect x="10"  y="60" width="120" height="58" rx="9" fill="#eef3ff" stroke="#2f6df6"/>
+      <text x="70"  y="84" text-anchor="middle" font-weight="700">Browser</text>
+      <text x="70"  y="102" text-anchor="middle" fill="#5b6573">apexclasses.org</text>
+
+      <rect x="170" y="60" width="120" height="58" rx="9" fill="#fff5e9" stroke="#c8821a"/>
+      <text x="230" y="84" text-anchor="middle" font-weight="700">Cloudflare</text>
+      <text x="230" y="102" text-anchor="middle" fill="#5b6573">CDN / proxy</text>
+
+      <rect x="330" y="60" width="140" height="58" rx="9" fill="#f3f0ff" stroke="#7a5cf0"/>
+      <text x="400" y="80" text-anchor="middle" font-weight="700">Traefik</text>
+      <text x="400" y="97" text-anchor="middle" fill="#5b6573">coolify-proxy</text>
+      <text x="400" y="111" text-anchor="middle" fill="#5b6573" font-size="10">v3.6 reverse proxy</text>
+
+      <rect x="510" y="22" width="150" height="52" rx="9" fill="#f1faf4" stroke="#1a9e57"/>
+      <text x="585" y="43" text-anchor="middle" font-weight="700">Apex container</text>
+      <text x="585" y="60" text-anchor="middle" fill="#137a43" font-size="11">10.0.1.14:5000 ✓ healthy</text>
+
+      <rect x="510" y="104" width="150" height="52" rx="9" fill="#fdf3f5" stroke="#d83a52" stroke-dasharray="5 3"/>
+      <text x="585" y="125" text-anchor="middle" font-weight="700" fill="#a32238">10.0.1.11:5000</text>
+      <text x="585" y="142" text-anchor="middle" fill="#a32238" font-size="11">dead IP ✗ (no listener)</text>
+    </g>
+    <!-- arrows -->
+    <line x1="130" y1="89" x2="166" y2="89" stroke="#2f6df6" stroke-width="2" marker-end="url(#ar)"/>
+    <line x1="290" y1="89" x2="326" y2="89" stroke="#2f6df6" stroke-width="2" marker-end="url(#ar)"/>
+    <line x1="470" y1="78" x2="506" y2="120" stroke="#d83a52" stroke-width="2.4" marker-end="url(#arb)"/>
+    <text x="455" y="112" fill="#d83a52" font-size="11" font-weight="700">routed here ✗</text>
+    <line x1="470" y1="64" x2="506" y2="50" stroke="#1a9e57" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+    <text x="476" y="34" fill="#137a43" font-size="10">should have gone here</text>
+    <!-- 502 back -->
+    <path d="M400,120 C400,180 230,180 230,122" fill="none" stroke="#d83a52" stroke-width="1.8" marker-end="url(#arb)"/>
+    <text x="300" y="176" text-anchor="middle" fill="#d83a52" font-weight="700">502 (no CORS headers)</text>
+  </svg>
+  <figcaption>The request path. Traefik matched the route but dialed a dead upstream → 502 propagated back to the browser as a CORS failure.</figcaption>
+  </figure>
+
+  <h2>3 · The investigation — what we tried and what it told us</h2>
+  <p>Each step either fixed nothing or eliminated a suspect. The value was in <i>narrowing</i>, not in any single lucky guess.</p>
+
+  <table>
+    <tr><th style="width:26px">#</th><th>Hypothesis / action</th><th>Result</th><th>What it ruled out</th></tr>
+    <tr><td>1</td><td>Read backend CORS config (<code>app.js</code>) — is the origin allow‑list wrong?</td><td><span class="tag good">Config correct</span></td><td>Not a CORS code bug — <code>apexclasses.org</code> was already allow‑listed.</td></tr>
+    <tr><td>2</td><td>Probe live <code>/health</code> over the public URL.</td><td><span class="tag bad">502</span></td><td>Even the trivial health route 502s → whole app unreachable, not one endpoint.</td></tr>
+    <tr><td>3</td><td>Check app status in Coolify; read container logs.</td><td>Status <code>exited</code>; logs end at <code>🚀 Server running</code></td><td>App boots cleanly (DB + socket OK) then “dies” with no error → looked like a crash.</td></tr>
+    <tr><td>4</td><td>Restart, then full force‑redeploy.</td><td><span class="tag bad">Still 502</span></td><td>Not a one‑off bad container.</td></tr>
+    <tr><td>5</td><td>OOM theory — remove other heavy containers (voice agents) to free RAM.</td><td><span class="tag bad">No change</span></td><td>Not memory pressure / OOM.</td></tr>
+    <tr><td>6</td><td>Code review of post‑startup crash paths (pg pool, socket.io).</td><td><span class="tag good">Clean</span></td><td><code>pool.on('error')</code> exists; no timers/unawaited throws → no silent crash.</td></tr>
+    <tr><td>7</td><td><b>Get into the host</b>: <code>docker inspect</code> exit code + <code>docker logs</code> + <code>wget</code> to the container.</td><td><b>Container UP, <code>/health</code> = 200 internally</b></td><td><b>Turning point.</b> The app was never down. The problem is the <i>proxy → app</i> hop.</td></tr>
+    <tr><td>8</td><td>Test origin directly (Host header, bypass Cloudflare) on :80 and :443.</td><td>:80 → 302, :443 → <span class="tag bad">502</span></td><td>502 is Traefik‑side, TLS is fine — Traefik can’t reach the backend.</td></tr>
+    <tr><td>9</td><td>Confirm network reachability + restart Traefik.</td><td>reachable; restart <span class="tag bad">didn’t fix</span></td><td>Not a stale in‑memory routing table.</td></tr>
+    <tr><td>10</td><td>Discover Traefik’s <b>file provider</b> and read <code>production.yaml</code>.</td><td><span class="tag good">Root cause found</span></td><td>A hand‑written route hard‑codes <code>apex‑backend → 10.0.1.11:5000</code> — a dead IP.</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <span class="tag warn">Why “exited” was a red herring</span>
+    <p style="margin:8px 0 0">Coolify’s UI labeled the app <code>exited</code>, but <code>docker inspect</code> showed <code>ExitCode=0</code> with <code>FinishedAt=0001‑01‑01T00:00:00Z</code> — Docker’s <b>zero value</b>, meaning the container <b>never actually stopped</b>. The status label was wrong; the container was running and listening the entire time.</p>
+  </div>
+
+  <h2 class="page-break">4 · How we recognized the real problem</h2>
+  <p>Three observations, stacked, pointed away from the app and at the proxy:</p>
+  <ol>
+    <li><b>Internal health = 200.</b> From another container on the same Docker network:
+<pre><span class="c"># run from a neighbouring container</span>
+$ wget -qO- http://10.0.1.14:5000/health
+<span class="g">{"status":"ok, From Apex Backend","time":"2026-06-09T11:22:27Z"}</span></pre>
+    The backend answers perfectly. So the failure is <i>between</i> the proxy and the app.</li>
+    <li><b>Origin 502 even bypassing Cloudflare.</b> Hitting Traefik directly with a forged Host header still 502’d on HTTPS — so Cloudflare was innocent; Traefik itself could not complete the upstream dial.</li>
+    <li><b>Traefik had a <i>file</i> provider, not just Docker labels.</b> The static file pinned the route to a literal IP:</li>
+  </ol>
+
+<pre><span class="c"># /data/coolify/proxy/dynamic/production.yaml  (mounted into coolify-proxy)</span>
+services:
+  apex-backend:
+    loadBalancer:
+      servers:
+        - url: <span class="r">http://10.0.1.11:5000</span>   <span class="c"># &lt;-- hard-coded, now DEAD</span></pre>
+
+  <div class="callout bad">
+    <p style="margin:0"><b>The smoking gun.</b> The live container had been redeployed many times; each redeploy gave it a <b>new IP</b> (now <code>10.0.1.14</code>). The static file still said <code>10.0.1.11</code> — an address that, after all the churn, had been reassigned to the <b>Traefik proxy itself</b> (which doesn’t listen on :5000). Traefik was effectively dialing a dead end and returning 502.</p>
+  </div>
+
+  <h3>Why this static route “won” over the correct one</h3>
+  <p>Coolify <i>also</i> generates a correct, auto‑updating Docker‑label route for the same domain. But Traefik resolves conflicts by <b>rule specificity</b>: the file’s rule <code>Host(apex.rohithuge.online) || Host(api.apexclasses.org)</code> is longer than the label’s single‑host rule, so the <b>stale file route took priority</b> and shadowed the good one.</p>
+
+  <h2>5 · The fix</h2>
+
+  <h3>Step 1 — Immediate (stop the bleeding)</h3>
+  <p>Point the static route at the live container IP. Traefik’s file‑watch reloads automatically — no restart needed.</p>
+<pre>$ cp production.yaml production.yaml.bak-20260609        <span class="c"># backup first</span>
+$ sed -i 's/10\.0\.1\.11/10.0.1.14/g' production.yaml    <span class="c"># dead IP -> live IP</span>
+<span class="c"># ~5s later</span>
+$ curl -sk -H 'Host: api.apexclasses.org' https://localhost/health
+<span class="g">origin -> 200</span></pre>
+
+  <h3>Step 2 — Durable (so it can’t recur)</h3>
+  <p>A hard‑coded IP breaks again on the <i>next</i> redeploy. The real fix: delete the apex stanza from the static file and let Coolify’s <b>Docker‑label route</b> own the domain — it tracks the container automatically.</p>
+  <p><b>Safety pre‑check</b> (so we don’t 404): verify the label route is complete before removing the file route —</p>
+<pre>traefik.enable=true
+routers.https-0-…rule = Host(`api.apexclasses.org`)
+routers.https-0-…tls = true   tls.certresolver = letsencrypt
+services.https-0-…loadbalancer.server.port = 5000   <span class="g">✓ all present</span></pre>
+  <p>Then removed the apex router + service from <code>production.yaml</code> (everything else untouched), Traefik reloaded, and:</p>
+<pre>$ curl -sk -H 'Host: api.apexclasses.org' https://localhost/health
+<span class="g">{"status":"ok, From Apex Backend", ...}  http code: 200</span>
+
+<span class="c"># public, through Cloudflare</span>
+/health              -> <span class="g">200</span>
+/api/orders/products -> <span class="g">200</span>
+CORS preflight       -> <span class="g">204</span>   Access-Control-Allow-Origin: https://apexclasses.org</pre>
+
+  <figure>
+  <svg width="740" height="210" viewBox="0 0 740 210" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial" font-size="12">
+    <defs>
+      <marker id="g2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1a9e57"/></marker>
+      <marker id="r2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d83a52"/></marker>
+    </defs>
+    <text x="20" y="22" font-weight="700" fill="#a32238">BEFORE — static file route (hard-coded IP)</text>
+    <rect x="20"  y="34" width="110" height="40" rx="8" fill="#f3f0ff" stroke="#7a5cf0"/><text x="75" y="59" text-anchor="middle">Traefik</text>
+    <rect x="250" y="34" width="150" height="40" rx="8" fill="#fdf3f5" stroke="#d83a52" stroke-dasharray="5 3"/><text x="325" y="53" text-anchor="middle" fill="#a32238">10.0.1.11 (dead)</text><text x="325" y="68" text-anchor="middle" fill="#a32238" font-size="10">frozen in production.yaml</text>
+    <line x1="130" y1="54" x2="246" y2="54" stroke="#d83a52" stroke-width="2.2" marker-end="url(#r2)"/>
+    <text x="188" y="46" text-anchor="middle" fill="#d83a52" font-size="10">502</text>
+
+    <text x="20" y="122" font-weight="700" fill="#137a43">AFTER — Docker-label route (auto-tracked)</text>
+    <rect x="20"  y="134" width="110" height="40" rx="8" fill="#f3f0ff" stroke="#7a5cf0"/><text x="75" y="159" text-anchor="middle">Traefik</text>
+    <rect x="250" y="134" width="170" height="40" rx="8" fill="#f1faf4" stroke="#1a9e57"/><text x="335" y="153" text-anchor="middle" fill="#137a43">live container</text><text x="335" y="168" text-anchor="middle" fill="#137a43" font-size="10">IP discovered via Docker provider</text>
+    <line x1="130" y1="154" x2="246" y2="154" stroke="#1a9e57" stroke-width="2.2" marker-end="url(#g2)"/>
+    <text x="188" y="146" text-anchor="middle" fill="#137a43" font-size="10">200</text>
+    <text x="470" y="150" fill="#5b6573" font-size="11">Redeploy → new IP?</text>
+    <text x="470" y="166" fill="#137a43" font-size="11" font-weight="700">Route follows automatically ✓</text>
+  </svg>
+  <figcaption>Before vs after. Hard‑coded IPs rot on every redeploy; label‑based routing re‑resolves the upstream each time.</figcaption>
+  </figure>
+
+  <h2>6 · Scope check — what we deliberately did <i>not</i> touch</h2>
+  <p>The same static file also routes <code>api.jeetexam.in</code>, <code>upload.*</code>, <code>auth.*</code> and <code>db.*</code>. A discovery pass showed these domains have <b>no Docker‑label route</b> — they <i>depend</i> on the static file. Removing them would have 404’d live services, so we left them as‑is (their IPs were verified current). Migrating them properly means adding each domain inside its Coolify app first — a separate, per‑service change on production.</p>
+
+  <h2>7 · Lessons (the part worth keeping)</h2>
+  <div class="pillrow">
+    <span class="tag bad">502 ≠ CORS</span>
+    <span class="tag bad">Read the second error too</span>
+    <span class="tag warn">UI status can lie</span>
+    <span class="tag warn">Hard-coded IPs rot</span>
+    <span class="tag good">Verify at every hop</span>
+  </div>
+  <ul>
+    <li><b>A CORS error with a 502 next to it is a transport failure, not a CORS bug.</b> The missing <code>Access‑Control‑Allow‑Origin</code> header is what an error page looks like — fix the 502 and CORS fixes itself.</li>
+    <li><b>Don’t trust the dashboard’s status word.</b> <code>exited</code> in the UI vs <code>FinishedAt=0001‑01‑01</code> in <code>docker inspect</code> — go to the source of truth.</li>
+    <li><b>Bisect by layer.</b> The breakthrough was one command: <code>wget</code> the container directly. App‑200 + public‑502 instantly localizes the bug to the proxy hop.</li>
+    <li><b>Prefer dynamic service discovery over hard‑coded IPs.</b> Container IPs are ephemeral; any config that pins one is a time bomb that detonates on the next deploy.</li>
+    <li><b>Beware “shadow” config.</b> Traefik merged a hand‑written <i>file</i> provider with auto‑generated <i>labels</i>; the stale file silently out‑prioritized the correct route. Know every provider feeding your proxy.</li>
+  </ul>
+
+  <h2>8 · Quick reference — diagnostic playbook</h2>
+<pre><span class="c"># 1. Is it the app or the path to the app?  Hit the container directly.</span>
+docker exec &lt;neighbour&gt; wget -qO- http://&lt;container-ip&gt;:5000/health
+
+<span class="c"># 2. Is it the proxy or Cloudflare?  Forge the Host header on the origin.</span>
+curl -sk -H 'Host: api.example.com' https://localhost/health -w '%{http_code}\n'
+
+<span class="c"># 3. Is the container really dead?  Trust inspect, not the dashboard.</span>
+docker inspect &lt;c&gt; --format 'Exit={{.State.ExitCode}} OOM={{.State.OOMKilled}} Finished={{.State.FinishedAt}}'
+
+<span class="c"># 4. What routes does Traefik actually have?  Check BOTH providers.</span>
+docker inspect coolify-proxy --format '{{json .Args}}'      <span class="c"># find --providers.file.directory</span>
+grep -rl &lt;domain&gt; /data/coolify/proxy/dynamic/             <span class="c"># the shadow config</span></pre>
+
+  <div class="footer">
+    Traffic Gotcha · Apex Classes infrastructure post‑mortem · 2026‑06‑09 · Resolved &amp; hardened (Docker‑label routing).
+  </div>
+
+</div>
+</body>
+</html>
