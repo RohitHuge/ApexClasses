@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import orderRoutes from './order/order.route.js';
 import authRoutes from './auth/auth.routes.js';
 import slotsRoutes from './slots/slots.routes.js';
+import predictorRoutes from './predictor/predictor.routes.js';
 import * as PaymentController from './order/payment.controller.js';
 import { generalLimiter } from './middleware/rateLimit.middleware.js';
 
@@ -36,6 +37,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/slots', slotsRoutes);
+app.use('/api/predictor', predictorRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok, From Apex Backend', time: new Date().toISOString() }));
 
