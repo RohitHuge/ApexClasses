@@ -44,14 +44,16 @@ const videos = [
     title: "Apex Counselling Student Testimonial",
     thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4/ik-thumbnail.jpg",
     videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-03-20%20at%206.58.22%20PM.mp4",
-    duration: "1:18"
+    duration: "1:18",
+    orientation: "portrait"
   },
   {
     id: 2,
     title: "Parent Testimonial for Apex Counselling",
     thumbnail: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-06-03%20at%208.46.20%20PM.mp4/ik-thumbnail.jpg",
     videoUrl: "https://ik.imagekit.io/apexcounselling/WhatsApp%20Video%202026-06-03%20at%208.46.20%20PM.mp4",
-    duration: "1:06"
+    duration: "1:06",
+    orientation: "portrait"
   }
 ];
 
@@ -224,14 +226,14 @@ export default function TrackRecord() {
                   key={activeVideo.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="lg:col-span-2 relative aspect-video bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10"
+                  className={`lg:col-span-2 relative bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10 ${activeVideo.orientation === 'portrait' ? 'aspect-[9/16] max-h-[600px] mx-auto w-full' : 'aspect-video'}`}
                 >
                   {isPlaying ? (
                     <video
                       src={activeVideo.videoUrl}
                       controls
                       autoPlay
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <>
@@ -296,14 +298,14 @@ export default function TrackRecord() {
                   key={activeVideo.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative aspect-video bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10"
+                  className={`relative bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group border border-white/10 ${activeVideo.orientation === 'portrait' ? 'aspect-[9/16] max-h-[600px] mx-auto w-full' : 'aspect-video'}`}
                 >
                   {isPlaying ? (
                     <video
                       src={activeVideo.videoUrl}
                       controls
                       autoPlay
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <>
