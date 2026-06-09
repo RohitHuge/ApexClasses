@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model order_tracking {
+  id        Int       @id @default(autoincrement())
+  order_id  String?   @db.Uuid
+  status    String    @db.VarChar(50)
+  message   String?
+  timestamp DateTime? @default(now()) @db.Timestamptz(6)
+  orders    orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([order_id], map: "idx_order_tracking_order_id")
+}
+
+model orders {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String            @db.VarChar(255)
+  product_type      String            @db.VarChar(50)
+  mode              String            @db.VarChar(50)
+  amount            Decimal           @db.Decimal(10, 2)
+  currency          String?           @default("INR") @db.VarChar(10)
+  status            String?           @default("PENDING") @db.VarChar(20)
+  payment_id        String?           @db.VarChar(255)
+  payment_order_id  String?           @db.VarChar(255)
+  payment_signature String?
+  metadata          Json?
+  created_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  slot_id           String?           @db.Uuid
+  order_tracking    order_tracking[]
+  slots             slots?            @relation(fields: [slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payment_history   payment_history[]
+
+  @@index([payment_order_id], map: "idx_orders_payment_order_id")
+  @@index([product_type], map: "idx_orders_product_type")
+  @@index([status], map: "idx_orders_status")
+  @@index([user_id], map: "idx_orders_user_id")
+}
+
+model payment_history {
+  id               Int       @id @default(autoincrement())
+  order_id         String?   @db.Uuid
+  payment_id       String?   @db.VarChar(255)
+  payment_order_id String?   @db.VarChar(255)
+  event            String    @db.VarChar(50)
+  amount           Decimal?  @db.Decimal(10, 2)
+  currency         String?   @default("INR") @db.VarChar(10)
+  status           String?   @db.VarChar(20)
+  raw_response     Json?
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+  orders           orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model slots {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id String    @db.VarChar(50)
+  slot_time  DateTime  @db.Timestamptz(6)
+  capacity   Int       @default(1)
+  booked     Int       @default(0)
+  is_active  Boolean   @default(true)
+  notes      String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  orders     orders[]
+
+  @@index([product_id], map: "idx_slots_product_id")
+  @@index([slot_time], map: "idx_slots_slot_time")
+}
+
+model users {
+  id                    String    @id @db.VarChar(255)
+  name                  String?   @db.VarChar(255)
+  email                 String?   @unique @db.VarChar(255)
+  phone                 String?   @db.VarChar(20)
+  created_at            DateTime? @default(now()) @db.Timestamptz(6)
+  password              String?
+  role                  String    @default("user") @db.VarChar(20)
+  refresh_token         String?
+  refresh_token_expires DateTime? @db.Timestamptz(6)
+  reset_token           String?
+  reset_token_expires   DateTime? @db.Timestamptz(6)
+}
+
+model College {
+  id      Int      @id @default(autoincrement())
+  code    String   @unique @db.VarChar(10)
+  name    String
+  city    String   @default("Pune") @db.VarChar(60)
+  cutoffs Cutoff[]
+
+  @@map("colleges")
+}
+
+model Cutoff {
+  id        Int     @id @default(autoincrement())
+  collegeId Int     @map("college_id")
+  branch    String  @db.VarChar(60)
+  category  String  @db.VarChar(10)
+  cutoff    Decimal @db.Decimal(6, 3)
+  year      Int     @default(2024) @db.SmallInt
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([collegeId, branch, category, year])
+  @@index([category, branch, cutoff])
+  @@map("cutoffs")
+}

@@ -36,7 +36,23 @@
       "Bash(DISPLAY=:0 SSH_ASKPASS=/tmp/askpass.sh SSH_ASKPASS_REQUIRE=force ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 root@82.180.144.69 'echo CONNECTED; hostname')",
       "Bash(curl -s -m 10 -o /dev/null -w \"preflight HTTP %{http_code}\\\\n\" -X OPTIONS -H \"Origin: https://apexclasses.org\" -H \"Access-Control-Request-Method: GET\" https://api.apexclasses.org/api/orders/products)",
       "Bash(curl -s -m 10 -I -H \"Origin: https://apexclasses.org\" https://api.apexclasses.org/health)",
-      "Bash([ -f \"$F\" ])"
+      "Bash([ -f \"$F\" ])",
+      "Bash(python -c \"import pandas as pd; print\\('ok'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python -c ' *.)",
+      "Bash(psql --version)",
+      "Bash(pg_dump --version)",
+      "Bash(export PGPASSWORD='strongpassword')",
+      "Bash(psql \"postgresql://postgres@82.180.144.69:5432/postgres\" -c \"SELECT version\\(\\);\" -c \"\\\\l\")",
+      "Bash(psql \"postgresql://postgres@82.180.144.69:5432/apex_db\" -c \"\\\\dt\" -c \"\\\\dT\")",
+      "Bash(npx prisma *)",
+      "Bash(DATABASE_URL='postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db' npx prisma db pull)",
+      "Bash(DATABASE_URL='postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db' npx prisma generate)",
+      "Bash(DATABASE_URL=postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db node --input-type=module -e ' *)",
+      "Bash(printf '\\\\n# Database backup dumps \\(keep local, do not commit\\)\\\\nbackups/db_backup_*/\\\\n')",
+      "Bash(git check-ignore *)",
+      "Bash(export DATABASE_URL='postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db')",
+      "Bash(psql \"postgresql://postgres@82.180.144.69:5432/apex_db\" -c \"\\\\dt\" -c \"\\\\d cutoffs\" -c \"SELECT count\\(*\\) AS users FROM users; SELECT count\\(*\\) AS orders FROM orders;\")"
     ]
   }
 }
