@@ -12,7 +12,7 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:5173', 'https://apexclasses.org'];
+const allowedOrigins = ['http://localhost:5173', 'https://apexclasses.org', 'https://apexclassestrial.pages.dev'];
 
 app.use(cors({
     origin: (origin, cb) => {
@@ -37,7 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/slots', slotsRoutes);
 
-app.get('/health', (_req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/health', (_req, res) => res.json({ status: 'ok, From Apex Backend', time: new Date().toISOString() }));
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
