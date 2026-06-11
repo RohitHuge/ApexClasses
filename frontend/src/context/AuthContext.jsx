@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getStoredUser, getStoredToken, login as authLogin, logout as authLogout, register as authRegister, clearSession } from '../utils/auth';
+import { getStoredUser, getStoredToken, login as authLogin, logout as authLogout, register as authRegister, predictorGuest as authGuest, clearSession } from '../utils/auth';
 
 const AuthContext = createContext(null);
 
@@ -26,15 +26,23 @@ export const AuthProvider = ({ children }) => {
         return u;
     };
 
+    const loginAsGuest = async (name, phone) => {
+        const u = await authGuest(name, phone);
+        setUser(u);
+        return u;
+    };
+
     const logout = async () => {
         await authLogout();
         setUser(null);
     };
 
     const isAdmin = user?.role === 'admin';
+    // A guest account has a phone but no email (set when they upgrade).
+    const isGuest = !!user && !user.email;
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, register, isAdmin }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, register, loginAsGuest, isAdmin, isGuest }}>
             {children}
         </AuthContext.Provider>
     );

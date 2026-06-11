@@ -1,20 +1,5 @@
-import jwt from 'jsonwebtoken';
 import * as PredictorModel from './predictor.model.js';
 import * as PredictorService from './predictor.service.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-set-in-env';
-const UNLOCK_SCOPE = 'predictor_unlock';
-
-// Verify an unlock token issued at lead capture. Returns true only for a valid,
-// unexpired token with the right scope; never throws.
-const isUnlocked = (token) => {
-    if (!token) return false;
-    try {
-        return jwt.verify(token, JWT_SECRET).scope === UNLOCK_SCOPE;
-    } catch {
-        return false;
-    }
-};
 
 /**
  * GET /api/predictor/meta
@@ -40,7 +25,7 @@ export const getMeta = async (_req, res) => {
  */
 export const predict = async (req, res) => {
     try {
-        const { percentile, category, homeUniversity, branches, tfws, unlockToken } = req.body || {};
+        const { percentile, category, homeUniversity, branches, tfws } = req.body || {};
 
         const pct = Number(percentile);
         if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
@@ -55,13 +40,15 @@ export const predict = async (req, res) => {
             return res.status(400).json({ error: 'branches must be an array of branch names' });
         }
 
+        // Always a locked preview (3/3/2 + counts). The full list is served only
+        // by the authenticated, quota-gated /reveal endpoint.
         const result = await PredictorService.predict({
             percentile: pct,
             category,
             homeUniversity: Boolean(homeUniversity),
             branches,
             tfws: Boolean(tfws),
-            unlocked: isUnlocked(unlockToken),
+            unlocked: false,
         });
 
         res.json({ success: true, ...result });
@@ -97,14 +84,7 @@ export const captureLead = async (req, res) => {
             branches: branchStr,
         });
 
-        // Issue an unlock token so this browser can fetch the full (ungated) list.
-        const unlockToken = jwt.sign(
-            { scope: UNLOCK_SCOPE, leadId: lead.id },
-            JWT_SECRET,
-            { expiresIn: '30d' }
-        );
-
-        res.status(201).json({ success: true, leadId: lead.id, unlockToken });
+        res.status(201).json({ success: true, leadId: lead.id });
     } catch (err) {
         console.error('Predictor lead error:', err.message);
         res.status(500).json({ error: 'Failed to capture lead' });

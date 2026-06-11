@@ -225,6 +225,53 @@ Post-implementation audit findings, all fixed:
 
 ---
 
+## Phase 6 — Accounts, Paywall, Quota & Saved Searches ⏳ IN PROGRESS
+
+**Goal:** Turn the predictor into an account-based, paid product. Reuses existing auth (`users`, JWT + `apex_refresh` cookie, `AuthContext`) and Razorpay (`order/payment.service.js`).
+
+### Decisions (interview, 2026-06-11)
+- **Tiers:** Free (anon-lead OR logged-in unpaid) = unlimited **3/3/2 previews + total count**, nothing else. Paid = full list + PDF + share + saved searches.
+- **Plan:** one-time **₹99 → 15 lifetime full searches**; re-buy another ₹99/15 pack when exhausted.
+- **Search consumption:** live preview + slider what-if always free. Clicking **"Reveal full list"** consumes **1 of 15** for a *new unique combo* (normalized `percentile|cat|homeU|tfws|sortedBranches`); re-opening a saved combo is free.
+- **Anon flow:** phone panel → create/link a **guest account** (phone-keyed, no password) + lead → issue JWT → show 3/3/2. Guest **upgrades to email+password** to return.
+- **Account merge:** phone matching a **guest (no password)** → reuse it. Phone matching a **password account** → DO NOT auto-login; prompt "account exists, please log in" (security).
+- **Profile:** Dashboard card + dedicated **`/my-predictions`** page (quota, plan, saved searches, re-buy CTA).
+- **Header:** an **Account** button beside "Try College Predictor" (Login/Register when logged out; name/profile menu when logged in).
+
+### 6.1 Data model (new migration) ✅ DONE
+- [x] `predictor_profiles`, `predictor_searches` (unique `user_id,combo_hash`), `predictor_payments` — migration `20260611120000_add_predictor_accounts` applied to dev. Prisma models added.
+
+### 6.2 Backend ✅ DONE
+- [x] `predictor.account.model.js` + `predictor.account.controller.js`; routes added.
+- [x] `POST /guest` (create/reuse guest, block password accounts, issue JWT + refresh cookie, lead row).
+- [x] `GET /profile`, `POST /reveal` (auth + quota; dedupe by combo_hash; consume 1 on new; snapshot). `/predict` is now **preview-only** (full list never leaves server without auth+quota).
+- [x] `GET /searches`, `GET /searches/:id`.
+- [x] `POST /pay/create` + `POST /pay/verify` (reuse `payment.service.js`; HMAC verify; one-time grant via status guard → `searches_limit += 15`, plan='paid').
+- [x] PDF/share are paid-only by construction (data only exists after a paid reveal).
+
+### 6.3 Frontend ✅ MOSTLY DONE
+- [x] `Layout.jsx`: Account button (logged-out) + "My Predictions" in menu; switched to reactive `useAuth()`.
+- [x] `CollegePredictor.jsx`: reworked — anon → phone panel (guest) → 3/3/2; "Reveal" consumes quota; paywall modal (Razorpay); upsell banner; PDF/share gated to `isFull`.
+- [x] Razorpay checkout (reuses `order/utils/loadRazorpay`).
+- [x] `/my-predictions` page: plan, X/15, saved searches (re-open via query params = free), re-buy.
+- [ ] Dashboard **card** summary (detail page done; small card on `Dashboard.jsx` still pending).
+- [ ] **Guest→full-account upgrade/merge**: a guest who registers with the same phone currently creates a NEW account (register doesn't merge by phone). Needs an upgrade path that sets email+password on the existing guest row.
+
+### 6.4 Verify
+- [x] Guest → token → preview 3/3/2 (HTTP: 201 / locked / total 61 / 3 visible). ✅
+- [x] Free user reveal → `402 QUOTA_EXHAUSTED`. ✅
+- [x] Model-level: pay grant → 15; reveal new combo → used 1/15 + saved; re-open same combo → free. ✅
+- [x] Frontend `vite build` clean. ✅
+- [ ] Live Razorpay test-key checkout in browser (needs manual click-through).
+- [ ] 15 used → re-buy adds 15 (logic ready; browser-verify).
+
+### Known follow-ups / risks
+- ⚠️ Auth stores **passwords in plaintext** (pre-existing) — should hash before this goes paid/live.
+- Guest→full upgrade/merge (6.3) not yet built.
+- Dashboard summary card (6.3) not yet built.
+
+---
+
 ## Future Enhancements (design now, build later)
 - **Multi-year data** → trend-based prediction (cutoff drift) instead of single year → tighter Reach band
 - **CAP round number** stored (Round 1 cutoffs > later rounds) → big accuracy gain

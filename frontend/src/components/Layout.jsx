@@ -1,27 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logout } from '../utils/appwrite';
-import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles, GraduationCap, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const u = await getCurrentUser();
-    setUser(u);
-  };
 
   const handleLogout = async () => {
     await logout();
-    setUser(null);
     navigate('/');
   };
 
@@ -53,10 +43,16 @@ export default function Layout({ children }) {
           {/* CTA & Account Area */}
           <div className="flex items-center gap-4">
             {!user ? (
-               <Link to="/college-predictor" className="hidden 2xl:inline-flex items-center gap-1.5 bg-orange-gradient text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:brightness-110 transition-all shadow-md shadow-apexOrange/30 whitespace-nowrap">
-                  <Sparkles size={13} />
-                  Try College Predictor
-               </Link>
+               <div className="hidden md:flex items-center gap-2">
+                  <Link to="/college-predictor" className="hidden 2xl:inline-flex items-center gap-1.5 bg-orange-gradient text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:brightness-110 transition-all shadow-md shadow-apexOrange/30 whitespace-nowrap">
+                     <Sparkles size={13} />
+                     Try College Predictor
+                  </Link>
+                  <Link to="/login" className="inline-flex items-center gap-1.5 bg-white/10 text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:bg-white/20 transition-all border border-white/20 whitespace-nowrap">
+                     <LogIn size={14} />
+                     Account
+                  </Link>
+               </div>
             ) : (
                 <div 
                     className="relative hidden md:block"
@@ -84,6 +80,10 @@ export default function Layout({ children }) {
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[100]"
                             >
+                                <Link to="/my-predictions" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
+                                    <GraduationCap size={18} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                                    My Predictions
+                                </Link>
                                 <Link to="/orders" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
                                     <ShoppingBag size={18} className="text-apexOrange group-hover:scale-110 transition-transform" />
                                     My Orders
@@ -136,6 +136,10 @@ export default function Layout({ children }) {
             
             {user ? (
                <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Link to="/my-predictions" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
+                     <GraduationCap size={20} className="text-emerald-400" />
+                     My Predictions
+                  </Link>
                   <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
                      <LayoutDashboard size={20} className="text-blue-400" />
                      Dashboard
@@ -150,10 +154,16 @@ export default function Layout({ children }) {
                   </button>
                </div>
             ) : (
-               <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
-                  <Sparkles size={18} />
-                  Try College Predictor
-               </Link>
+               <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
+                     <Sparkles size={18} />
+                     Try College Predictor
+                  </Link>
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-white/10 text-white px-6 py-4 rounded-xl font-bold text-center border border-white/20">
+                     <LogIn size={18} />
+                     Login / Register
+                  </Link>
+               </div>
             )}
           </div>
         )}

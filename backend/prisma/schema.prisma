@@ -132,3 +132,48 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@map("analytics_events")
 }
+
+// Per-user predictor entitlement: plan + full-search quota.
+// Each ₹99 purchase adds 15 to searchesLimit.
+model PredictorProfile {
+  id            Int      @id @default(autoincrement())
+  userId        String   @unique @map("user_id") @db.VarChar(255)
+  plan          String   @default("free") @db.VarChar(20)
+  searchesLimit Int      @default(0) @map("searches_limit")
+  searchesUsed  Int      @default(0) @map("searches_used")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("predictor_profiles")
+}
+
+// A consumed full search: inputs + a frozen snapshot of the result matrix.
+// comboHash dedupes so re-opening the same combo is free.
+model PredictorSearch {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id") @db.VarChar(255)
+  comboHash String   @map("combo_hash") @db.VarChar(64)
+  inputs    Json
+  result    Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([userId, comboHash])
+  @@index([userId])
+  @@map("predictor_searches")
+}
+
+// Razorpay purchase of a 15-search pack.
+model PredictorPayment {
+  id              Int      @id @default(autoincrement())
+  userId          String   @map("user_id") @db.VarChar(255)
+  razorpayOrderId String   @map("razorpay_order_id") @db.VarChar(255)
+  razorpayPayId   String?  @map("razorpay_payment_id") @db.VarChar(255)
+  amount          Decimal  @db.Decimal(10, 2)
+  searchesGranted Int      @default(15) @map("searches_granted")
+  status          String   @default("CREATED") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([razorpayOrderId])
+  @@map("predictor_payments")
+}
