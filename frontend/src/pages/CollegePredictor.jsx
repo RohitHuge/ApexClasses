@@ -48,6 +48,7 @@ export default function CollegePredictor() {
 
     const debounceRef = useRef(null);
     const initialRunRef = useRef(false);
+    const hydratedRef = useRef(false); // becomes true once URL params are read
 
     useEffect(() => {
         fetchMeta()
@@ -65,7 +66,7 @@ export default function CollegePredictor() {
         const homeU = params.get('hu');
         const tf = params.get('tfws');
         const brs = params.get('branches');
-        if (!pct && !cat && !brs) return;
+        if (!pct && !cat && !brs) { hydratedRef.current = true; return; }
         if (pct) setPercentile(Number(pct));
         if (cat) setCategory(cat);
         if (homeU !== null) setHomeUniversity(homeU === '1');
@@ -75,6 +76,7 @@ export default function CollegePredictor() {
             setBranches(list);
         }
         initialRunRef.current = true;
+        hydratedRef.current = true;
     }, [meta]);
 
     // After URL hydration + meta are ready, auto-run the prediction.
@@ -87,7 +89,9 @@ export default function CollegePredictor() {
     }, [initialRunRef.current, meta.branches.length]);
 
     // Sync state → URL (replaceState, no history spam).
+    // Wait until URL params have been read, so we never clobber a shared link.
     useEffect(() => {
+        if (!hydratedRef.current) return;
         const params = new URLSearchParams();
         params.set('pct', Number(percentile).toFixed(2));
         params.set('cat', category);
@@ -198,13 +202,15 @@ export default function CollegePredictor() {
         }
         setSavingLead(true);
         try {
-            await submitLead({ ...lead, percentile: Number(percentile), category, branches });
+            const data = await submitLead({ ...lead, percentile: Number(percentile), category, branches });
+            if (data?.unlockToken) localStorage.setItem('predictor_unlock_token', data.unlockToken);
             localStorage.setItem('predictor_unlocked', '1');
             track('predictor_lead_submitted', { cat: category });
             localStorage.setItem('predictor_lead_name', lead.name.trim());
             localStorage.setItem('predictor_lead_phone', lead.phone.replace(/\s+/g, ''));
             setUnlocked(true);
             setShowGate(false);
+            doPredict(); // re-fetch the full, ungated list now that we hold the token
             toast.success('Unlocked! Here are all your matches.');
         } catch (err) {
             toast.error(err.message);
@@ -619,7 +625,7 @@ export default function CollegePredictor() {
                                                 <div className="mt-4 space-y-2 text-xs">
                                                     <div className="flex justify-between"><span className="text-slate-400">2024 cutoff</span><b className="text-slate-800">{it.cutoff.toFixed(3)}</b></div>
                                                     <div className="flex justify-between"><span className="text-slate-400">Your margin</span><b className={it.margin >= 2 ? 'text-emerald-600' : it.margin >= 0 ? 'text-amber-600' : 'text-rose-600'}>{it.margin >= 0 ? '+' : ''}{it.margin.toFixed(3)}</b></div>
-                                                    <div className="flex justify-between"><span className="text-slate-400">Via</span><b className="text-slate-800">{it.viaCategory}</b></div>
+                                                    <div className="flex justify-between"><span className="text-slate-400">Via</span><b className="text-slate-800">{it.viaLabel || it.viaCategory}</b></div>
                                                     <div className="flex justify-between"><span className="text-slate-400">Code</span><b className="text-slate-800">{it.code}</b></div>
                                                 </div>
                                             </div>
@@ -735,7 +741,7 @@ function CollegeCard({ item, accent, compareKey, isCompared, onToggleCompare }) 
             </div>
             <div className="mt-3 flex items-center justify-between text-xs">
                 <span className="text-slate-400">Closing: <b className="text-slate-700">{item.cutoff.toFixed(3)}</b></span>
-                <span className="text-slate-400">via <b className="text-slate-600">{item.viaCategory}</b></span>
+                <span className="text-slate-400">via <b className="text-slate-600">{item.viaLabel || item.viaCategory}</b></span>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div className={`h-full ${ACCENT[accent].bar}`} style={{ width: `${pct * 100}%` }} />

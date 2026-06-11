@@ -209,6 +209,22 @@ Route: `/college-predictor` (wired in `App.jsx`; page `frontend/src/pages/Colleg
 
 ---
 
+## Phase 5.E — Audit Fixes ✅ DONE (2026-06-11)
+
+Post-implementation audit findings, all fixed:
+- [x] 5.E.1 **Analytics summary secured** — `GET /api/analytics/summary` now behind `requireAdmin` (was public).
+- [x] 5.E.2 **Lead gate is now server-enforced** — `/predict` caps results to `PREVIEW_LIMIT=3` per bucket while locked; full list only returned with a valid JWT `unlockToken` (issued on lead capture, 30-day, scope `predictor_unlock`). `counts` still reflect true totals for the "unlock N more" CTA. Frontend stores the token and re-fetches on unlock. *(This is the gate the upcoming PAID plan will build on — swap "lead captured" for "payment verified".)*
+- [x] 5.E.3 **Friendly via-category labels** — service returns `viaLabel` (`LOPEN`→"Home-University Open", `LOBC`→"Home-University OBC", …); cards + compare drawer use it; PDF uses compact `HU-OBC` form to fit its column.
+- [x] 5.E.4 **Dead code removed** — unused `getCategories()` dropped from `predictor.model.js`.
+- [x] 5.E.5 **URL-sync ordering fixed** — `hydratedRef` guard prevents the sync effect from writing default params before a shared link is read.
+- [x] Verified: locked=3/bucket vs unlocked=full (451 total) against dev DB; frontend `vite build` clean.
+
+### Pending discussion → PAID plan (next session)
+- Move **share link + PDF download behind payment** (currently free-after-lead).
+- Enrich **Compare** with extra metrics: placement %, infra, **NAAC grade/ranking**, etc. → premium tier. Needs a data source + new `college_meta` table.
+
+---
+
 ## Future Enhancements (design now, build later)
 - **Multi-year data** → trend-based prediction (cutoff drift) instead of single year → tighter Reach band
 - **CAP round number** stored (Round 1 cutoffs > later rounds) → big accuracy gain

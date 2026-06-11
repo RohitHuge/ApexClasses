@@ -5,6 +5,25 @@ import * as PredictorModel from './predictor.model.js';
 export const SAFE_MARGIN = 2.0;   // cutoff <= pct - 2  => High chance
 export const REACH_SLACK = 1.0;   // cutoff <= pct + 1  => still shown (Ambitious)
 
+// Free preview: results shown per bucket before the lead/unlock gate.
+// Enforced server-side so the full list never leaves the server while locked.
+export const PREVIEW_LIMIT = 3;
+
+// Friendly labels for the category that achieved a college's cutoff.
+// L-* columns are the home-university (local) quota.
+const CATEGORY_LABEL = {
+    OPEN: 'Open', OBC: 'OBC', SC: 'SC', ST: 'ST', VJ: 'VJ',
+    NT1: 'NT-1', NT2: 'NT-2', NT3: 'NT-3', SEBC: 'SEBC', EWS: 'EWS', TFWS: 'TFWS',
+};
+const categoryLabel = (raw) => {
+    if (CATEGORY_LABEL[raw]) return CATEGORY_LABEL[raw];
+    if (raw && raw[0] === 'L') {
+        const base = raw.slice(1);
+        return `Home-University ${CATEGORY_LABEL[base] || base}`;
+    }
+    return raw;
+};
+
 // Student-selectable reservation categories (drives the UI dropdown).
 // The L-* (home-university) variants are derived internally, never picked directly.
 export const SELECTABLE_CATEGORIES = [
@@ -51,7 +70,7 @@ const bucketOf = (margin) => {
 /**
  * Run a full prediction and return colleges grouped into safe/moderate/reach.
  */
-export const predict = async ({ percentile, category, homeUniversity, branches, tfws }) => {
+export const predict = async ({ percentile, category, homeUniversity, branches, tfws, unlocked = false }) => {
     const effective = resolveCategories(category, homeUniversity, tfws);
     const branchFilter = branches && branches.length ? branches : null;
 
@@ -71,19 +90,34 @@ export const predict = async ({ percentile, category, homeUniversity, branches, 
             cutoff: r.best_cutoff,
             margin: r.margin,
             viaCategory: r.via_category,
+            viaLabel: categoryLabel(r.via_category),
         };
         buckets[bucketOf(r.margin)].push(item);
     }
 
+    // Counts always reflect the true totals so the UI can show "unlock N more".
+    const counts = {
+        safe: buckets.safe.length,
+        moderate: buckets.moderate.length,
+        reach: buckets.reach.length,
+        total: rows.length,
+    };
+
+    // Gate: while locked, only the free preview ever leaves the server.
+    const visibleBuckets = unlocked
+        ? buckets
+        : {
+            safe: buckets.safe.slice(0, PREVIEW_LIMIT),
+            moderate: buckets.moderate.slice(0, PREVIEW_LIMIT),
+            reach: buckets.reach.slice(0, PREVIEW_LIMIT),
+        };
+
     return {
         query: { percentile, category, homeUniversity: !!homeUniversity, branches: branchFilter, tfws: !!tfws },
         effectiveCategories: effective,
-        counts: {
-            safe: buckets.safe.length,
-            moderate: buckets.moderate.length,
-            reach: buckets.reach.length,
-            total: rows.length,
-        },
-        buckets,
+        counts,
+        buckets: visibleBuckets,
+        locked: !unlocked,
+        previewLimit: PREVIEW_LIMIT,
     };
 };

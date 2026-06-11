@@ -13,16 +13,6 @@ export const getBranches = async () => {
 };
 
 /**
- * Distinct raw categories present in the cutoff data.
- */
-export const getCategories = async () => {
-    const res = await query(
-        `SELECT DISTINCT category FROM cutoffs ORDER BY category ASC`
-    );
-    return res.rows.map((r) => r.category);
-};
-
-/**
  * Core prediction lookup.
  *
  * For each (college, branch) we pick the single best (lowest) closing cutoff

@@ -7,10 +7,13 @@ export async function fetchMeta() {
 }
 
 export async function runPredict(payload) {
+    // Attach the unlock token (set after lead capture) so the server returns the
+    // full list; without it the server caps results to the free preview.
+    const unlockToken = localStorage.getItem('predictor_unlock_token') || undefined;
     const res = await fetch(`${API_BASE}/predictor/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, unlockToken }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Prediction failed');

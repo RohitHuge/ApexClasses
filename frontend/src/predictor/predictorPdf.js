@@ -14,6 +14,9 @@ const BUCKET_COLOR = {
 
 const fmt = (n) => (Number(n) || 0).toFixed(2);
 
+// Compact via-category for the narrow PDF column (L* = home-university quota).
+const viaShort = (raw) => (raw && raw[0] === 'L' ? `HU-${raw.slice(1)}` : raw || '—');
+
 const fmtIndianPhone = (s) => (s || '').replace(/\s+/g, '').replace(/(\d{5})(\d{5})/, '$1 $2');
 
 /**
@@ -155,7 +158,7 @@ export const downloadResultsPdf = ({ query, counts, buckets, leadName, leadPhone
             doc.setTextColor(margin >= 2 ? 16 : margin >= 0 ? 180 : 200, margin >= 2 ? 130 : margin >= 0 ? 83 : 50, margin >= 2 ? 100 : margin >= 0 ? 9 : 70);
             doc.text((margin >= 0 ? '+' : '') + fmt(margin), M + 420, y, { align: 'right' });
             doc.setTextColor(100, 116, 139);
-            doc.text(it.viaCategory || '—', M + 500, y, { align: 'right' });
+            doc.text(viaShort(it.viaCategory), M + 500, y, { align: 'right' });
 
             y += 14;
             doc.setDrawColor(241, 245, 249);
