@@ -40,8 +40,9 @@ export default function CollegePredictor() {
     const [filterBranch, setFilterBranch] = useState('');
     const [sortBy, setSortBy] = useState('cutoff'); // cutoff | margin | name
 
-    // lead gate
-    const [unlocked, setUnlocked] = useState(() => localStorage.getItem('predictor_unlocked') === '1');
+    // lead gate — unlocked iff we hold an unlock token (the server gates on it).
+    // The boolean is also reconciled from each /predict response's `locked` field.
+    const [unlocked, setUnlocked] = useState(() => !!localStorage.getItem('predictor_unlock_token'));
     const [showGate, setShowGate] = useState(false);
     const [lead, setLead] = useState({ name: '', phone: '' });
     const [savingLead, setSavingLead] = useState(false);
@@ -116,6 +117,10 @@ export default function CollegePredictor() {
             const data = await runPredict(payload);
             setResult(data);
             setHasRun(true);
+            // Server is the source of truth: if our token is missing/expired the
+            // response is `locked`, so keep the UI's unlocked state in sync.
+            setUnlocked(!data.locked);
+            if (data.locked) localStorage.removeItem('predictor_unlocked');
             track('predictor_predict_run', {
                 pctBucket: Number(percentile) >= 90 ? '90+' : Number(percentile) >= 75 ? '75-90' : '<75',
                 cat: category,
@@ -396,6 +401,25 @@ export default function CollegePredictor() {
                             <>
                                 {/* summary + filter bar */}
                                 <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-5">
+                                    {/* total found headline */}
+                                    {totalShown > 0 && (
+                                        <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100">
+                                            <div className="flex items-center gap-2">
+                                                <GraduationCap size={20} className="text-indigo-600" />
+                                                <p className="text-sm sm:text-base font-bold text-slate-900">
+                                                    {totalShown} {totalShown === 1 ? 'college' : 'colleges'} match your profile
+                                                </p>
+                                            </div>
+                                            {!unlocked && (
+                                                <button
+                                                    onClick={() => setShowGate(true)}
+                                                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 transition"
+                                                >
+                                                    <Lock size={13} /> Unlock all {totalShown}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="flex flex-wrap items-center gap-3 justify-between">
                                         <div className="flex items-center gap-2 text-sm">
                                             {BUCKETS.map((b) => (
@@ -497,9 +521,12 @@ export default function CollegePredictor() {
                                 <div className="space-y-6">
                                     {BUCKETS.map((b) => {
                                         const items = shape(result.buckets[b.key] || []);
-                                        if (!items.length) return null;
+                                        // True total for this bucket (server caps the array to the
+                                        // free preview while locked, so trust counts, not items.length).
+                                        const bucketTotal = result.counts[b.key] || 0;
+                                        if (!bucketTotal) return null;
                                         const visible = unlocked ? items : items.slice(0, PREVIEW_LIMIT);
-                                        const hiddenCount = items.length - visible.length;
+                                        const hiddenCount = Math.max(0, bucketTotal - visible.length);
                                         const Icon = b.icon;
                                         return (
                                             <div key={b.key}>
