@@ -52,7 +52,8 @@
       "Bash(printf '\\\\n# Database backup dumps \\(keep local, do not commit\\)\\\\nbackups/db_backup_*/\\\\n')",
       "Bash(git check-ignore *)",
       "Bash(export DATABASE_URL='postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db')",
-      "Bash(psql \"postgresql://postgres@82.180.144.69:5432/apex_db\" -c \"\\\\dt\" -c \"\\\\d cutoffs\" -c \"SELECT count\\(*\\) AS users FROM users; SELECT count\\(*\\) AS orders FROM orders;\")"
+      "Bash(psql \"postgresql://postgres@82.180.144.69:5432/apex_db\" -c \"\\\\dt\" -c \"\\\\d cutoffs\" -c \"SELECT count\\(*\\) AS users FROM users; SELECT count\\(*\\) AS orders FROM orders;\")",
+      "Bash(node *)"
     ]
   }
 }

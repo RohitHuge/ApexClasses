@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:5173', 'https://apexclasses.org', 'https://apexclassestrial.pages.dev'];
+const allowedOrigins = ['http://localhost:5173', 'https://apexclasses.org', 'https://apexclassestrial.pages.dev' , 'https://apexclassespreview.pages.dev'];
 
 app.use(cors({
     origin: (origin, cb) => {
