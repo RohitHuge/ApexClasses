@@ -121,3 +121,14 @@ model PredictorLead {
   @@index([phone])
   @@map("predictor_leads")
 }
+
+model AnalyticsEvent {
+  id        BigInt    @id @default(autoincrement())
+  event     String    @db.VarChar(64)
+  props     Json?
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([event])
+  @@index([createdAt])
+  @@map("analytics_events")
+}

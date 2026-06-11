@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/appwrite';
-import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings } from 'lucide-react';
+import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Layout({ children }) {
@@ -40,7 +40,7 @@ export default function Layout({ children }) {
             </span>
           </Link>
           {/* Navigation Links */}
-          <div className="hidden xl:flex items-center gap-8 text-sm font-semibold text-blue-100">
+          <div className="hidden 2xl:flex items-center gap-6 text-[13px] font-semibold text-blue-100 whitespace-nowrap">
             <Link className="hover:text-apexOrangeLight transition-colors" to="/">Home</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/why">Why Counselling</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/services">Services</Link>
@@ -53,8 +53,9 @@ export default function Layout({ children }) {
           {/* CTA & Account Area */}
           <div className="flex items-center gap-4">
             {!user ? (
-               <Link to="/services" className="hidden md:block bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm animate-glow hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30">
-                  Book Counselling
+               <Link to="/college-predictor" className="hidden 2xl:inline-flex items-center gap-1.5 bg-orange-gradient text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:brightness-110 transition-all shadow-md shadow-apexOrange/30 whitespace-nowrap">
+                  <Sparkles size={13} />
+                  Try College Predictor
                </Link>
             ) : (
                 <div 
@@ -105,7 +106,7 @@ export default function Layout({ children }) {
                 </div>
             )}
             {/* Mobile Menu Toggle */}
-            <button className="xl:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <button className="2xl:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
@@ -114,7 +115,7 @@ export default function Layout({ children }) {
         </nav>
         {/* Mobile menu, show/hide based on menu state. */}
         {isMobileMenuOpen && (
-          <div className="xl:hidden bg-apexBlue p-4 space-y-4 border-b border-white/10 shadow-2xl">
+          <div className="2xl:hidden bg-apexBlue p-4 space-y-4 border-b border-white/10 shadow-2xl">
             {user && (
                <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 mb-4">
                   <div className="w-12 h-12 bg-apexOrange rounded-xl flex items-center justify-center shadow-lg shadow-apexOrange/20">
@@ -149,8 +150,9 @@ export default function Layout({ children }) {
                   </button>
                </div>
             ) : (
-               <Link to="/services" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
-                  Book Counselling
+               <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
+                  <Sparkles size={18} />
+                  Try College Predictor
                </Link>
             )}
           </div>

@@ -29,17 +29,13 @@ We normalise this **wide → long**: one row per `(college, branch, category, cu
 
 ---
 
-## Phase 1 — Database Schema & Migration
+## Phase 1 — Database Schema & Migration ✅ DONE
 
 **Goal:** Add predictor tables to `apex_db` via a proper Prisma migration (establishes migration baseline).
 
-- [ ] 1.1 Add models to `backend/prisma/schema.prisma`:
-  - `College` → `id, code (unique), name, city default 'Pune'`
-  - `Cutoff` → `id, collegeId (FK), branch, category, cutoff Decimal(6,3), year default 2024`
-  - Unique constraint `(collegeId, branch, category, year)`
-  - Index `(category, branch, cutoff)` for fast lookups
-- [ ] 1.2 `npx prisma migrate dev --name add_predictor_tables` (baseline existing 5 tables first if needed)
-- [ ] 1.3 Verify tables created in prod via Prisma Studio
+- [x] 1.1 Added models to `backend/prisma/schema.prisma`: `College`, `Cutoff`, plus a 3rd model `PredictorLead` (lead capture). Constraints + indexes as designed.
+- [x] 1.2 Baseline established (`migrations/0_init`) then applied `20260609192934_add_predictor_tables` and `20260609194834_add_predictor_leads` against prod `apex_db`.
+- [x] 1.3 Tables verified in prod.
 
 ```prisma
 model College {
@@ -67,33 +63,26 @@ model Cutoff {
 
 ---
 
-## Phase 2 — ETL (Excel → Database)
+## Phase 2 — ETL (Excel → Database) ✅ DONE
 
 **Goal:** Parse the messy hierarchical sheet and load clean long-form rows.
 
-- [ ] 2.1 Python parser (`clgpredict/etl.py`, pandas already installed):
-  - Walk rows; regex `^\s*\d{4,5}\s` detects a **college header** → split code + name
-  - Subsequent non-empty rows = **branches** under the current college
-  - For each branch row, iterate category columns → emit `(code, name, branch, category, cutoff)`
-  - Skip blanks, `0`, and noise columns (`higest in NT`, duplicate `ST`)
-  - Normalise branch labels (`Comp`/`MECH` casing, `Instru. Control`, `Automob.`)
-- [ ] 2.2 Output `clgpredict/cutoffs_seed.sql` (idempotent `INSERT ... ON CONFLICT DO NOTHING`)
-- [ ] 2.3 Load once via `psql` (or a Node seed script under `backend/scripts/seed-cutoffs.js`)
-- [ ] 2.4 Sanity checks: 77 colleges, branch counts, no cutoff > 100 or < 0, spot-check 3 colleges vs sheet
+- [x] 2.1 Python parser `clgpredict/etl.py` built (header regex, wide→long, category-col map, branch normalisation 79→28 canonical, noise cols skipped, dedupe by MIN cutoff).
+- [x] 2.2 Output `clgpredict/cutoffs_seed.sql` (idempotent `INSERT ... ON CONFLICT DO NOTHING`).
+- [x] 2.3 Loaded into prod → **77 colleges, 5999 cutoffs**.
+- [x] 2.4 Sanity checks passed; live spot-checks confirmed against the sheet.
 
 ---
 
-## Phase 3 — Backend API
+## Phase 3 — Backend API ✅ DONE
 
 **Goal:** Prediction endpoints following the existing module pattern (`auth/`, `order/`, `slots/`).
 
-New folder `backend/src/predictor/`:
-- [ ] 3.1 `predictor.routes.js` mounted in `app.js` → `app.use('/api/predictor', predictorRoutes)`
-- [ ] 3.2 `predictor.controller.js` + `predictor.service.js` (Prisma queries + bucketing logic)
-- [ ] 3.3 Endpoints:
-  - `GET /api/predictor/meta` → distinct branches + category list (for dropdowns)
-  - `POST /api/predictor/predict` → body `{ percentile, category, homeUniversity, branches[], tfws }`
-- [ ] 3.4 Rate-limit using existing `generalLimiter`; validate inputs (0–100 percentile)
+New folder `backend/src/predictor/` (all 4 files present):
+- [x] 3.1 `predictor.routes.js` mounted in `app.js` → `app.use('/api/predictor', predictorRoutes)`.
+- [x] 3.2 `predictor.controller.js` + `predictor.service.js` + `predictor.model.js` (raw SQL via shared `query`; bucketing + L-quota category expansion logic).
+- [x] 3.3 Endpoints live: `GET /meta`, `POST /predict`, **plus** `POST /lead` (lead capture).
+- [x] 3.4 Global `generalLimiter` applied; inputs validated (percentile 0–100, category whitelist, phone regex).
 
 ### Filtering / Prediction logic
 1. **Effective category set:** map `(category + homeUniversity)` → e.g. OBC + Pune → `['OBC','LOBC','OPEN','LOPEN']`; take **MIN(cutoff)** per (college, branch).
@@ -120,11 +109,17 @@ ORDER BY best_cutoff DESC;
 
 ---
 
-## Phase 4 — Frontend (Interactive UI)
+## Phase 4 — Frontend (Interactive UI) ✅ DONE (core)
 
 **Goal:** A polished, guided predictor page (mirrors the existing TrackRecord page style).
 
-Route: `/college-predictor`.
+Route: `/college-predictor` (wired in `App.jsx`; page `frontend/src/pages/CollegePredictor.jsx`, ~431 lines; service `frontend/src/predictor/predictorService.js`).
+
+**Decisions taken:** Single-page (not wizard) · Home-University toggle default ON · Free preview (3/bucket) + lead-gated full list.
+
+**Built:** sticky input panel (percentile slider+number, category buttons, Home-University toggle, TFWS toggle, branch chips) · live **what-if** debounced re-predict (550ms) · filter/sort bar · three colour-coded buckets (High Chance / Likely / Ambitious) with counts · college cards with margin badge + "via L-quota" chip · `PREVIEW_LIMIT=3` free per bucket · lead-gate modal persisting unlock in `localStorage`.
+
+**Deferred (4.3 nice-to-haves, NOT built):** shareable result link · Download-as-PDF · compare tray · empty-state/disclaimer polish — moved to Phase 5.
 
 ### 4.1 Input — a multi-step wizard (feels lighter than one big form)
 - **Step 1 – Score:** large percentile input with a live slider (0–100) + inline validation
@@ -151,14 +146,66 @@ Route: `/college-predictor`.
 
 ---
 
+## Phase 4.5 — Infra: Dev/Prod DB Split & Deploy Setup ✅ DONE
+
+**Goal:** Stop running local dev against production; make Dockerfile-only deploy self-contained.
+
+- [x] 4.5.1 **Dev DB on Supabase** provisioned (`aws-1-ap-southeast-1`). All 3 migrations applied via `prisma migrate deploy`; cutoffs seeded → **77 colleges / 5999 cutoffs** (matches prod).
+- [x] 4.5.2 **Local `backend/.env` re-pointed at Supabase dev.** `DATABASE_URL`=transaction pooler (6543, app), `DIRECT_URL`=session pooler (5432, migrations), `DATABASE_SSL=true`, password URL-encoded (`@`→`%40`). Prod URLs kept commented for switch-back.
+- [x] 4.5.3 **`prisma.config.ts`** now uses `DIRECT_URL` (falls back to `DATABASE_URL`) — migrations can't run through pgbouncer/6543.
+- [x] 4.5.4 **`package.json`**: added `prisma:deploy` (`prisma migrate deploy`, apply-only for prod).
+- [x] 4.5.5 **`backend/Dockerfile`**: added `npx prisma generate` at build; CMD now `prisma migrate deploy && node src/server.js` → future migrations auto-apply on deploy. `.dockerignore` already excludes `.env`/`node_modules`.
+- [x] 4.5.6 **`backend/DATABASE.md`** written — dev/prod flow, migrate-dev vs migrate-deploy, re-seed command.
+
+**Confirmed:** prod = VPS Postgres `82.180.144.69:5432/apex_db` (already migrated + seeded). VPS runs backend via Dockerfile only (no compose). Root dir for deploy = `backend/`.
+
+---
+
+## Phase 4.6 — Discoverability & Homepage Showcase ✅ DONE
+
+**Goal:** Make the predictor findable; replace the stale book-photo hero with an interactive demo.
+
+- [x] 4.6.1 **Header CTA replaced** — `Layout.jsx` "Book Counselling" pill → "Try College Predictor" orange-gradient button (size matched to the 2xl nav row: `text-[13px] px-4 py-2`).
+- [x] 4.6.2 **Duplicate nav link removed** — dropped the standalone "College Predictor" link from desktop nav, mobile menu, and footer Quick Links (the CTA now serves that role; prevents nav overflow/clipping at 1280–1536px).
+- [x] 4.6.3 **Hero illustration removed** — `home.jsx` right-column `Gemini_Generated_Image_r4o6xrr4o6xrr4o6.png` deleted; "Buy Counselling Book" secondary CTA replaced with "Try College Predictor" (routes to `/college-predictor`).
+- [x] 4.6.4 **Hero right column → `<PredictorPreview />`** — a self-running, looping mini-app card. Cycles 5 steps: percentile ticks 70 → 96.42 (animated bar fills), "OBC" category lights up, Pune home-university toggle flips on, "Computer" branch chip highlights, then a "College of Engineering, Pune — Computer Engineering · High Chance · +3.42 margin" result card slides in. Auto-loops indefinitely. Includes a "Open the Predictor" button and a floating "Match found!" toast card.
+- [x] 4.6.5 **"Free Tool 2026" section upgraded** — replaced static list of colleges with a brand-new interactive widget `<PercentileLandscape />`. Real, draggable: 24 representative Pune colleges (COEP, PICT, VIT, PCCOE, WCE, Sinhgad, MIT WPU, …) plotted as dots on a horizontal axis by 2024 closing cutoff. Auto-cycles on load; the moment you touch the slider it stops and you take control. Each dot colour-codes live (emerald Safe / amber Likely / rose Ambitious / grey out-of-range); hover shows tooltip with name + cutoff. Live Safe/Likely/Ambitious counters update on every drag. "Open the Full Predictor" CTA below.
+- [x] 4.6.6 **Trust stat updated** — "Colleges Listed: 450+" → "Pune Colleges Covered: 77" (matches the actual predictor data).
+- [x] 4.6.7 **Build verified** — `vite build` passes clean (47s first build, ~2s incremental).
+
+**Files touched in 4.6:** `frontend/src/components/Layout.jsx`, `frontend/src/pages/home.jsx`. No backend or schema changes.
+
+---
+
 ## Phase 5 — QA, Polish, Launch
 
-- [ ] 5.1 Validate predictions against 5–10 known real cases
-- [ ] 5.2 Edge cases: percentile 100 / very low, reserved categories with no L-quota college, empty branches
-- [ ] 5.3 Mobile responsiveness + loading/skeleton states
-- [ ] 5.4 Analytics events (searches, branches chosen) — product insight + lead gen
-- [ ] 5.5 Deploy: backend route + migration on VPS, frontend build
-- [ ] 5.6 Add to site nav / a landing CTA
+### 5.A Deploy (the only thing blocking go-live) ⏳ REMAINING
+- [ ] 5.A.1 On deploy platform, set root dir = `backend/`, build from `Dockerfile`.
+- [ ] 5.A.2 Set prod env vars on the platform (NOT baked in image): `DATABASE_URL` (VPS apex_db), `DATABASE_SSL=false`, `PORT=5000`, `FRONTEND_URL`, `JWT_SECRET`, `BREVO_API_KEY`, `EMAIL_FROM`, `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET`.
+- [ ] 5.A.3 ⚠️ Swap Razorpay **test** keys → **live** keys for prod.
+- [ ] 5.A.4 Deploy backend image; confirm container logs show `migrate deploy` no-op + `✅ Connected to PostgreSQL`.
+- [ ] 5.A.5 Build & deploy frontend (set `VITE_API_URL` to the prod API base).
+- [ ] 5.A.6 Smoke test prod: `/api/predictor/meta`, `/predict`, `/lead`, and `/college-predictor` page end-to-end.
+
+### 5.B Discoverability
+- [x] 5.B.1 ✅ Hero "Try College Predictor" CTA in `Layout.jsx` header (orange-gradient, sized to nav row). Standalone "College Predictor" nav link removed to prevent overflow.
+- [x] 5.B.2 ✅ Landing-page CTA — `PredictorPreview` (hero right column, animated) + `PercentileLandscape` (replaces "Free Tool 2026" static list, interactive draggable widget).
+- [ ] 5.B.3 *(optional)* Add a footer Quick Link if traffic data shows people want it.
+
+### 5.C QA & correctness
+- [x] 5.C.1 ✅ **Invariants pass** — `backend/scripts/validate_predictor.mjs` covers the SQL contract (no duplicates, year=2024, MIN(cutoff) used, bucket math, sort order, no TFWS leak).
+- [x] 5.C.2 ✅ **Edge cases pass** — `backend/scripts/edge_cases.mjs` runs 15 cases (pct 0/50/100, all categories, homeU on/off, TFWS on/off, empty/specific branch lists). All green.
+- [ ] 5.C.3 Mobile responsiveness + loading/skeleton states. *(not yet manually verified on real devices)*
+- [ ] 5.C.4 Real-case spot-check vs Excel sheet (5–10 known `(college, branch, category)` triples) — pick COEP/PICT/VIT, confirm predicted cutoffs match 2024 sheet values within margin.
+
+### 5.D Deferred 4.3 features (nice-to-have) ✅ ALL DONE
+
+- [x] 5.D.1 ✅ **Disclaimer banner** — amber-tinted card above bucket sections, amber `Info` icon, copy: "Indicative only. Predictions are based on 2024 closing cutoffs and don't guarantee admission — actual cutoffs shift by CAP round, seat movement, and applicant volume each year."
+- [x] 5.D.2 ✅ **Empty-state polish** — dashed-border card with `SearchX` icon, headline "No matches in range", sub-copy explaining the cause, and three recovery actions: **Clear branch filter** · **Try percentile 70** · **Book a counsellor** (links to `/services`). `predictor_empty_state_seen` event fires when `counts.total === 0`.
+- [x] 5.D.3 ✅ **Download-as-PDF branded shortlist** — `frontend/src/predictor/predictorPdf.js` (jsPDF, 186 lines). Apex Classes blue header band, query summary (percentile/cat/homeU/TFWS/branches/student), counts strip, three coloured bucket sections, college rows with margin colour-coded green/amber/rose, page footer disclaimer + page numbers. Filename: `apex-college-shortlist-{pct}-{cat}.pdf`. PDF button is gated behind lead unlock.
+- [x] 5.D.4 ✅ **Shareable result link** — URL params auto-hydrate on first load (`pct`, `cat`, `hu`, `tfws`, `branches`), and any input change calls `history.replaceState` to keep the URL in sync. "Share" button copies the current URL via `navigator.clipboard`, shows "Copied" feedback, fires `predictor_share_link_copied` event.
+- [x] 5.D.5 ✅ **Compare tray** — sticky bottom bar appears with `framer-motion` slide-in when ≥1 college is selected (max 4). Each pill shows college + branch with × to remove. "Compare N" button opens a side-by-side drawer (`<motion.div>` modal, backdrop click to close) with grid of cards showing bucket badge, college, branch, 2024 cutoff, margin (colour-coded), via-category, code. Empty state when <2 selected.
+- [x] 5.D.6 ✅ **Analytics events live** — `frontend/src/analytics/analyticsClient.js` (44 lines): fire-and-forget client with 5s batching buffer, `pagehide`/`beforeunload` flush, `keepalive: true` so events survive navigation. Events firing: `predictor_open`, `predictor_predict_run` (with `pctBucket`, `cat`, `homeU`, `tfws`, `nBranches`, `nResults`), `predictor_branch_toggled`, `predictor_empty_state_seen`, `predictor_lead_submitted`, `predictor_pdf_downloaded`, `predictor_share_link_copied`, `predictor_compare_toggled`.
 
 ---
 
@@ -170,7 +217,66 @@ Route: `/college-predictor`.
 
 ---
 
-## Open Decisions
-1. **Home-University default** — is the audience mostly Pune students (L-quota ON by default) or mixed (toggle)?
-2. **Lead-gen gating** — free results, or gate PDF/full list behind phone number?
-3. **UI approach** — wizard (recommended) vs single-page form.
+## Decisions Made (resolved)
+1. ✅ **Home-University default** — toggle, default **ON** (Pune-first audience).
+2. ✅ **Lead-gen gating** — free preview (3/bucket) + gate **full list** behind name/phone.
+3. ✅ **UI approach** — **single-page** (not wizard).
+4. ✅ **Dev DB** — Supabase; **Prod DB** — VPS Postgres `apex_db`. Deploy = Dockerfile only, root `backend/`.
+5. ✅ **5.B discoverability strategy** — header CTA only, no nav link (avoids nav clipping at 1280–1536px).
+6. ✅ **5.D.6 analytics** — lightweight `predictor_open` event in `predictor_leads`-adjacent table; keep it simple, no funnel tracking yet.
+
+---
+
+## What you can test right now (with dev server already running or restartable)
+
+### Backend (port 5000)
+```bash
+# Health
+curl http://localhost:5000/health
+
+# Predictor meta (categories, branches, year)
+curl http://localhost:5000/api/predictor/meta
+
+# Predict — 95th pct, OBC, Pune, Comp/IT
+curl -X POST http://localhost:5000/api/predictor/predict \
+  -H "Content-Type: application/json" \
+  -d '{"percentile":95,"category":"OBC","homeUniversity":true,"branches":["Computer Engineering","Information Technology"],"tfws":false}'
+
+# Lead capture
+curl -X POST http://localhost:5000/api/predictor/lead \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","phone":"+919999999999","percentile":92,"category":"OPEN"}'
+
+# Analytics
+curl -X POST http://localhost:5000/api/analytics/event \
+  -H "Content-Type: application/json" \
+  -d '{"event":"predictor_open"}'
+curl http://localhost:5000/api/analytics/summary
+```
+
+### Validation scripts
+```bash
+cd backend
+node scripts/validate_predictor.mjs   # SQL-contract invariants
+node scripts/edge_cases.mjs          # 15 edge cases
+```
+
+### Frontend
+- `/` — homepage: hero `PredictorPreview` animates on load, `PercentileLandscape` is draggable
+- `/college-predictor` — full predictor with live what-if re-rank
+- Mobile: resize browser to 375px / 768px to check responsiveness
+
+### Still NOT testable locally
+- 5.A.4–5.A.6: prod deploy (needs platform access)
+- 5.A.3: Razorpay live keys (no test mode for live)
+- 5.C.4: needs a real student/coaching dataset to spot-check against the sheet
+- 5.D.1–5.D.5: not built yet
+
+### To start dev server
+```bash
+# Backend (terminal 1)
+cd E:/PROJECTS/ApexClasses/backend && npm run dev
+
+# Frontend (terminal 2)
+cd E:/PROJECTS/ApexClasses/frontend && npm run dev
+```

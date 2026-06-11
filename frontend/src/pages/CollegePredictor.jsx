@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     GraduationCap, Sparkles, Lock, Search, SlidersHorizontal,
-    ShieldCheck, Gauge, Target, Loader2, MapPin, X,
+    ShieldCheck, Gauge, Target, Loader2, MapPin, X, Info, SearchX, Download, Link2, Check,
 } from 'lucide-react';
 import { fetchMeta, runPredict, submitLead } from '../predictor/predictorService';
+import { downloadResultsPdf } from '../predictor/predictorPdf';
+import { track } from '../analytics/analyticsClient';
 
 const PREVIEW_LIMIT = 3; // free results shown per bucket before the gate
 
@@ -45,12 +47,56 @@ export default function CollegePredictor() {
     const [savingLead, setSavingLead] = useState(false);
 
     const debounceRef = useRef(null);
+    const initialRunRef = useRef(false);
 
     useEffect(() => {
         fetchMeta()
             .then((d) => setMeta({ branches: d.branches || [], categories: d.categories || [] }))
             .catch(() => toast.error('Could not load predictor options'));
+        track('predictor_open');
     }, []);
+
+    // Hydrate state from URL query params on first load, then auto-predict.
+    useEffect(() => {
+        if (initialRunRef.current) return;
+        const params = new URLSearchParams(window.location.search);
+        const pct = params.get('pct');
+        const cat = params.get('cat');
+        const homeU = params.get('hu');
+        const tf = params.get('tfws');
+        const brs = params.get('branches');
+        if (!pct && !cat && !brs) return;
+        if (pct) setPercentile(Number(pct));
+        if (cat) setCategory(cat);
+        if (homeU !== null) setHomeUniversity(homeU === '1');
+        if (tf !== null) setTfws(tf === '1');
+        if (brs) {
+            const list = brs.split(',').map((s) => s.trim()).filter(Boolean);
+            setBranches(list);
+        }
+        initialRunRef.current = true;
+    }, [meta]);
+
+    // After URL hydration + meta are ready, auto-run the prediction.
+    useEffect(() => {
+        if (!initialRunRef.current) return;
+        if (hasRun) return;
+        if (!meta.branches.length) return;
+        doPredict();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialRunRef.current, meta.branches.length]);
+
+    // Sync state → URL (replaceState, no history spam).
+    useEffect(() => {
+        const params = new URLSearchParams();
+        params.set('pct', Number(percentile).toFixed(2));
+        params.set('cat', category);
+        params.set('hu', homeUniversity ? '1' : '0');
+        if (tfws) params.set('tfws', '1');
+        if (branches.length) params.set('branches', branches.join(','));
+        const url = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState(null, '', url);
+    }, [percentile, category, homeUniversity, tfws, branches]);
 
     const doPredict = async (override = {}) => {
         const payload = {
@@ -66,6 +112,15 @@ export default function CollegePredictor() {
             const data = await runPredict(payload);
             setResult(data);
             setHasRun(true);
+            track('predictor_predict_run', {
+                pctBucket: Number(percentile) >= 90 ? '90+' : Number(percentile) >= 75 ? '75-90' : '<75',
+                cat: category,
+                homeU: homeUniversity,
+                tfws,
+                nBranches: branches.length,
+                nResults: data.counts?.total || 0,
+            });
+            if ((data.counts?.total || 0) === 0) track('predictor_empty_state_seen');
         } catch (e) {
             toast.error(e.message);
         } finally {
@@ -82,8 +137,58 @@ export default function CollegePredictor() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [percentile, category, homeUniversity, tfws, branches]);
 
-    const toggleBranch = (b) =>
-        setBranches((prev) => (prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]));
+    const toggleBranch = (b) => {
+        setBranches((prev) => {
+            const adding = !prev.includes(b);
+            track('predictor_branch_toggled', { branch: b.slice(0, 30), adding });
+            return adding ? [...prev, b] : prev.filter((x) => x !== b);
+        });
+    };
+
+    const handleDownloadPdf = () => {
+        if (!result) return;
+        try {
+            const leadName = localStorage.getItem('predictor_lead_name') || '';
+            const leadPhone = localStorage.getItem('predictor_lead_phone') || '';
+            downloadResultsPdf({ query: result.query, counts: result.counts, buckets: result.buckets, leadName, leadPhone });
+            toast.success('Shortlist PDF downloaded');
+            track('predictor_pdf_downloaded', { nResults: result.counts?.total || 0 });
+        } catch (e) {
+            console.error(e);
+            toast.error('Could not generate PDF');
+        }
+    };
+
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [compareIds, setCompareIds] = useState([]); // up to 4 keys: `${code}|${branch}`
+    const [showCompare, setShowCompare] = useState(false);
+
+    const toggleCompare = (key) => {
+        setCompareIds((prev) => {
+            if (prev.includes(key)) {
+                track('predictor_compare_toggled', { key, action: 'remove', n: prev.length - 1 });
+                return prev.filter((k) => k !== key);
+            }
+            if (prev.length >= 4) {
+                toast.error('Compare up to 4 colleges — remove one to add another');
+                return prev;
+            }
+            track('predictor_compare_toggled', { key, action: 'add', n: prev.length + 1 });
+            return [...prev, key];
+        });
+    };
+
+    const handleShareLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setLinkCopied(true);
+            toast.success('Shareable link copied');
+            track('predictor_share_link_copied');
+            setTimeout(() => setLinkCopied(false), 2000);
+        } catch (e) {
+            toast.error('Copy failed — long-press the URL bar instead');
+        }
+    };
 
     const handleLeadSubmit = async (e) => {
         e.preventDefault();
@@ -95,6 +200,9 @@ export default function CollegePredictor() {
         try {
             await submitLead({ ...lead, percentile: Number(percentile), category, branches });
             localStorage.setItem('predictor_unlocked', '1');
+            track('predictor_lead_submitted', { cat: category });
+            localStorage.setItem('predictor_lead_name', lead.name.trim());
+            localStorage.setItem('predictor_lead_phone', lead.phone.replace(/\s+/g, ''));
             setUnlocked(true);
             setShowGate(false);
             toast.success('Unlocked! Here are all your matches.');
@@ -117,6 +225,21 @@ export default function CollegePredictor() {
     };
 
     const totalShown = result?.counts?.total ?? 0;
+
+    // flatten buckets for the compare tray
+    const allItems = result
+        ? [
+            ...result.buckets.safe.map((i) => ({ ...i, _bucket: 'safe' })),
+            ...result.buckets.moderate.map((i) => ({ ...i, _bucket: 'moderate' })),
+            ...result.buckets.reach.map((i) => ({ ...i, _bucket: 'reach' })),
+        ]
+        : [];
+    const compareItems = compareIds
+        .map((k) => {
+            const [code, branch] = k.split('|');
+            return allItems.find((i) => String(i.code) === code && i.branch === branch);
+        })
+        .filter(Boolean);
 
     return (
         <Layout>
@@ -231,11 +354,35 @@ export default function CollegePredictor() {
                     {/* ── Results ── */}
                     <div>
                         {!hasRun && (
-                            <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-slate-300 p-10">
-                                <GraduationCap className="text-indigo-400" size={48} />
-                                <p className="mt-4 text-slate-500 max-w-sm">
-                                    Set your percentile and hit <b>Predict</b> to see your personalised college list.
+                            <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-slate-300 p-8 sm:p-10">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-indigo-100 rounded-full blur-2xl opacity-60" />
+                                    <GraduationCap className="relative text-indigo-500" size={48} />
+                                </div>
+                                <h3 className="mt-5 text-lg font-bold text-slate-800">Your college list, ready in 2 seconds</h3>
+                                <p className="mt-2 text-sm text-slate-500 max-w-sm">
+                                    Set your percentile, category, and home-university status on the left, then
+                                    hit <b className="text-slate-700">Predict</b>. We'll show every Pune
+                                    engineering college you can realistically get into, sorted by your chances.
                                 </p>
+                                <ul className="mt-5 text-left text-xs text-slate-600 space-y-1.5 max-w-xs w-full">
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                                        77 Pune engineering colleges
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                                        Safe · Likely · Ambitious buckets
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
+                                        L-quota &amp; TFWS seats considered
+                                    </li>
+                                </ul>
+                                <div className="mt-6 sm:hidden">
+                                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Tip</p>
+                                    <p className="text-xs text-slate-500 mt-1">Use the slider to fine-tune your percentile</p>
+                                </div>
                             </div>
                         )}
 
@@ -269,6 +416,23 @@ export default function CollegePredictor() {
                                                 <option value="margin">Sort: Safest first</option>
                                                 <option value="name">Sort: College name</option>
                                             </select>
+                                            <button
+                                                onClick={handleDownloadPdf}
+                                                disabled={!unlocked}
+                                                title={unlocked ? 'Download a branded shortlist PDF' : 'Unlock the full list first'}
+                                                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <Download size={13} />
+                                                PDF
+                                            </button>
+                                            <button
+                                                onClick={handleShareLink}
+                                                title="Copy a shareable link that re-hydrates your inputs"
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 hover:border-indigo-500 hover:text-indigo-600 text-slate-700 text-xs font-semibold px-3 py-1.5 transition"
+                                            >
+                                                {linkCopied ? <Check size={13} className="text-emerald-500" /> : <Link2 size={13} />}
+                                                {linkCopied ? 'Copied' : 'Share'}
+                                            </button>
                                         </div>
                                     </div>
                                     {loading && (
@@ -278,9 +442,48 @@ export default function CollegePredictor() {
                                     )}
                                 </div>
 
+                                {/* disclaimer banner (5.D.1) */}
+                                <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-800">
+                                    <Info size={16} className="flex-shrink-0 mt-0.5 text-amber-600" />
+                                    <p className="leading-relaxed">
+                                        <span className="font-bold">Indicative only.</span>{' '}
+                                        Predictions are based on 2024 closing cutoffs and don't guarantee
+                                        admission — actual cutoffs shift by CAP round, seat movement, and
+                                        applicant volume each year.
+                                    </p>
+                                </div>
+
                                 {totalShown === 0 && (
-                                    <div className="text-center bg-white rounded-2xl border border-slate-200 p-10 text-slate-500">
-                                        No matches in range. Try widening branches or lowering filters.
+                                    <div className="text-center bg-white rounded-2xl border border-dashed border-slate-300 p-10">
+                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-100 mb-4">
+                                            <SearchX className="text-slate-400" size={28} />
+                                        </div>
+                                        <h3 className="text-base font-bold text-slate-700 mb-1">No matches in range</h3>
+                                        <p className="text-sm text-slate-500 max-w-sm mx-auto mb-5">
+                                            Your percentile is too low (or branch set too narrow) for any
+                                            2024 cutoff. Try widening branches or lowering the percentile
+                                            to see the closest matches.
+                                        </p>
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            <button
+                                                onClick={() => setBranches([])}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition"
+                                            >
+                                                <X size={12} /> Clear branch filter
+                                            </button>
+                                            <button
+                                                onClick={() => setPercentile(70)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 transition"
+                                            >
+                                                Try percentile 70
+                                            </button>
+                                            <a
+                                                href="/services"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-gradient text-white text-xs font-semibold hover:brightness-110 transition shadow-md shadow-apexOrange/20"
+                                            >
+                                                <Sparkles size={12} /> Book a counsellor
+                                            </a>
+                                        </div>
                                     </div>
                                 )}
 
@@ -304,9 +507,19 @@ export default function CollegePredictor() {
                                                     </div>
                                                 </div>
                                                 <div className="grid sm:grid-cols-2 gap-3">
-                                                    {visible.map((it, i) => (
-                                                        <CollegeCard key={`${it.code}-${it.branch}-${i}`} item={it} accent={b.accent} />
-                                                    ))}
+                                                    {visible.map((it, i) => {
+                                                        const k = `${it.code}|${it.branch}`;
+                                                        return (
+                                                            <CollegeCard
+                                                                key={`${it.code}-${it.branch}-${i}`}
+                                                                item={it}
+                                                                accent={b.accent}
+                                                                compareKey={k}
+                                                                isCompared={compareIds.includes(k)}
+                                                                onToggleCompare={() => toggleCompare(k)}
+                                                            />
+                                                        );
+                                                    })}
                                                 </div>
                                                 {!unlocked && hiddenCount > 0 && (
                                                     <button
@@ -320,16 +533,104 @@ export default function CollegePredictor() {
                                         );
                                     })}
                                 </div>
-
-                                <p className="mt-8 text-xs text-slate-400 text-center max-w-xl mx-auto">
-                                    Predictions are based on 2024 closing cutoffs and are indicative only — not a
-                                    guarantee of admission. Actual cutoffs vary by CAP round and seat movement.
-                                </p>
                             </>
                         )}
                     </div>
                 </section>
             </div>
+
+            {/* ── Compare tray (sticky bottom bar) ── */}
+            <AnimatePresence>
+                {compareIds.length > 0 && (
+                    <motion.div
+                        initial={{ y: 80, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 80, opacity: 0 }}
+                        className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 text-white shadow-2xl"
+                    >
+                        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+                            <span className="text-xs font-bold text-slate-300 hidden sm:inline">Compare:</span>
+                            <div className="flex-1 flex flex-wrap gap-2 overflow-x-auto">
+                                {compareItems.map((it) => (
+                                    <span key={`${it.code}-${it.branch}`} className="inline-flex items-center gap-1.5 rounded-full bg-slate-800 text-white text-xs pl-3 pr-1.5 py-1">
+                                        <span className="font-semibold max-w-[160px] truncate">{it.college}</span>
+                                        <span className="text-slate-400">·</span>
+                                        <span className="text-slate-300">{it.branch}</span>
+                                        <button
+                                            onClick={() => toggleCompare(`${it.code}|${it.branch}`)}
+                                            className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white"
+                                        >
+                                            <X size={11} />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                    onClick={() => setCompareIds([])}
+                                    className="text-xs text-slate-400 hover:text-white px-2 py-1"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    onClick={() => setShowCompare(true)}
+                                    disabled={compareItems.length < 2}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Sparkles size={13} />
+                                    Compare {compareItems.length} ({4 - compareIds.length} slots left)
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Compare drawer (side-by-side) ── */}
+            <AnimatePresence>
+                {showCompare && compareItems.length >= 2 && (
+                    <motion.div
+                        className="fixed inset-0 z-[70] bg-slate-900/70 flex items-center justify-center p-4 sm:p-8"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setShowCompare(false)}
+                    >
+                        <motion.div
+                            className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-auto relative"
+                            initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200 p-4 flex items-center justify-between z-10">
+                                <h3 className="text-lg font-bold text-slate-900">Compare {compareItems.length} colleges</h3>
+                                <button onClick={() => setShowCompare(false)} className="text-slate-400 hover:text-slate-700">
+                                    <X size={22} />
+                                </button>
+                            </div>
+                            <div className="p-4 sm:p-6">
+                                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${compareItems.length}, minmax(0,1fr))` }}>
+                                    {compareItems.map((it) => {
+                                        const acc = ACCENT[it._bucket === 'safe' ? 'emerald' : it._bucket === 'moderate' ? 'amber' : 'rose'];
+                                        return (
+                                            <div key={`${it.code}-${it.branch}`} className={`rounded-xl border-2 p-4 ${acc.ring}`}>
+                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 ${acc.chip}`}>
+                                                    {it._bucket === 'safe' ? 'High Chance' : it._bucket === 'moderate' ? 'Likely' : 'Ambitious'}
+                                                </span>
+                                                <h4 className="text-sm font-bold text-slate-800 leading-snug">{it.college}</h4>
+                                                <p className="text-xs text-slate-500 mt-0.5">{it.branch}</p>
+                                                <div className="mt-4 space-y-2 text-xs">
+                                                    <div className="flex justify-between"><span className="text-slate-400">2024 cutoff</span><b className="text-slate-800">{it.cutoff.toFixed(3)}</b></div>
+                                                    <div className="flex justify-between"><span className="text-slate-400">Your margin</span><b className={it.margin >= 2 ? 'text-emerald-600' : it.margin >= 0 ? 'text-amber-600' : 'text-rose-600'}>{it.margin >= 0 ? '+' : ''}{it.margin.toFixed(3)}</b></div>
+                                                    <div className="flex justify-between"><span className="text-slate-400">Via</span><b className="text-slate-800">{it.viaCategory}</b></div>
+                                                    <div className="flex justify-between"><span className="text-slate-400">Code</span><b className="text-slate-800">{it.code}</b></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Lead gate modal */}
             <AnimatePresence>
@@ -401,16 +702,29 @@ function ToggleRow({ checked, onChange, title, desc, icon: Icon }) {
     );
 }
 
-function CollegeCard({ item, accent }) {
+function CollegeCard({ item, accent, compareKey, isCompared, onToggleCompare }) {
     // confidence bar: how far the student's percentile sits above the cutoff
     const span = 6; // points considered "full confidence"
     const pct = Math.max(0, Math.min(1, (item.margin + 1) / (span + 1)));
     return (
         <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className={`rounded-xl border bg-white p-4 ${ACCENT[accent].ring}`}
+            className={`relative rounded-xl border bg-white p-4 ${ACCENT[accent].ring} ${isCompared ? 'ring-2 ring-indigo-500 border-indigo-300' : ''}`}
         >
-            <div className="flex items-start justify-between gap-2">
+            {onToggleCompare && (
+                <button
+                    onClick={onToggleCompare}
+                    title={isCompared ? 'Remove from compare' : 'Add to compare (up to 4)'}
+                    className={`absolute top-2 right-2 inline-flex items-center justify-center w-6 h-6 rounded-md border transition ${
+                        isCompared
+                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                            : 'bg-white border-slate-300 text-slate-400 hover:border-indigo-500 hover:text-indigo-600'
+                    }`}
+                >
+                    {isCompared ? <Check size={12} /> : <Sparkles size={11} />}
+                </button>
+            )}
+            <div className="flex items-start justify-between gap-2 pr-6">
                 <div>
                     <h4 className="text-sm font-semibold text-slate-800 leading-snug">{item.college}</h4>
                     <p className="text-xs text-slate-500 mt-0.5">{item.branch}</p>

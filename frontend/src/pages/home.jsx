@@ -1,10 +1,11 @@
 import React from 'react';
 import Layout from '../components/Layout';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import CountUp from '../components/CountUp';
 import { testimonials } from './TrackRecord';
+import { Sparkles, ShieldCheck, MapPin, GraduationCap, ArrowRight, Cpu, Building2 } from 'lucide-react';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -59,7 +60,7 @@ export default function Home() {
               Strategic cutoff analysis, personalized preference list planning, and expert guidance to help you secure a seat in Maharashtra's top colleges.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/services')}
@@ -67,13 +68,14 @@ export default function Home() {
               >
                 Book Appointment
               </motion.button>
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/book')}
-                className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all"
+                onClick={() => navigate('/college-predictor')}
+                className="bg-white text-apexBlue border-2 border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-apexBlue transition-all inline-flex items-center gap-2"
               >
-                Buy Counselling Book
+                <Sparkles size={18} className="text-apexOrange" />
+                Try College Predictor
               </motion.button>
             </div>
             {/* Trust Stats */}
@@ -86,9 +88,9 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-3xl font-extrabold text-apexBlue">
-                  <CountUp to={450} suffix="+" />
+                  <CountUp to={77} suffix="" />
                 </p>
-                <p className="text-sm text-slate-500 font-medium">Colleges Listed</p>
+                <p className="text-sm text-slate-500 font-medium">Pune Colleges Covered</p>
               </div>
               <div>
                 <p className="text-3xl font-extrabold text-apexBlue">
@@ -98,21 +100,15 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-          {/* Right Column: Illustration */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
+          {/* Right Column: Interactive College Predictor Preview */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="flex-1 relative"
+            className="flex-1 w-full max-w-xl"
           >
-            <div className="absolute -inset-4 bg-gradient-to-tr from-apexBlue/10 to-transparent rounded-full blur-3xl -z-10"></div>
-            <motion.img
-              whileHover={{ rotate: -1, scale: 1.02 }}
-              alt="Educational Illustration"
-              className="w-full h-auto rounded-3xl shadow-2xl"
-              src="https://ik.imagekit.io/apexcounselling/Gemini_Generated_Image_r4o6xrr4o6xrr4o6.png"
-            />
+            <PredictorPreview />
           </motion.div>
         </motion.div>
       </section>
@@ -332,70 +328,72 @@ export default function Home() {
       </section>
       {/* END: Counselling Services Preview */}
 
-      {/* BEGIN: Counselling Book Promotion */}
+      {/* BEGIN: College Predictor Showcase */}
       <section className="py-24 bg-white overflow-hidden">
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeIn}
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         >
-          <div className="flex flex-col lg:flex-row items-center gap-16 bg-slate-50 rounded-[3rem] p-8 lg:p-16 border border-slate-100 shadow-sm">
-            <motion.div 
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 bg-gradient-to-br from-indigo-50 via-white to-slate-50 rounded-[3rem] p-8 lg:p-16 border border-indigo-100 shadow-sm relative overflow-hidden">
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="lg:w-1/2 flex justify-center"
-            >
-              {/* 3D Book Mockup */}
-              <div className="relative group cursor-pointer">
-                <div className="absolute -inset-4 bg-apexBlue/5 rounded-3xl blur-xl group-hover:bg-apexBlue/10 transition-colors"></div>
-                <motion.img
-                  whileHover={{ rotate: -3, scale: 1.05 }}
-                  alt="Counselling Book 2026"
-                  className="relative rounded-lg shadow-2xl transition-transform duration-500"
-                  src="https://ik.imagekit.io/apexcounselling/homepage.png"
-                />
-              </div>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               className="lg:w-1/2"
             >
-              <span className="text-apexOrange font-bold tracking-widest uppercase text-sm">Best Seller 2026</span>
-              <h2 className="text-3xl lg:text-5xl font-extrabold text-apexBlue mt-4 mb-6">MHT-CET Engineering Admission Counselling Guide 2026</h2>
+              <span className="inline-flex items-center gap-2 text-apexOrange font-bold tracking-widest uppercase text-sm">
+                <Sparkles size={14} /> Free Tool 2026
+              </span>
+              <h2 className="text-3xl lg:text-5xl font-extrabold text-apexBlue mt-4 mb-6">
+                See where your percentile lands
+              </h2>
               <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-                Everything you need to know about the CAP process, branch selection, and top colleges in one comprehensive book. Used by 10,000+ students every year.
+                Drag the slider below and watch your position move across 24 representative Pune
+                engineering colleges. The Safe / Likely / Ambitious counts update in real time so
+                you can <em>feel</em> where you stand before diving into the full predictor.
+                Powered by 2024 closing cutoffs across 77 colleges and 6,000+ branch entries.
               </p>
+              <ul className="space-y-3 mb-8 text-slate-700">
+                {[
+                    { icon: ShieldCheck, text: 'Live Safe / Likely / Ambitious counts' },
+                    { icon: MapPin, text: 'Home-university (L-quota) aware' },
+                    { icon: GraduationCap, text: '77 colleges · 28 branches · 2024 data' },
+                ].map((f) => (
+                    <li key={f.text} className="flex items-center gap-3 text-sm">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600">
+                        <f.icon size={14} />
+                      </span>
+                      {f.text}
+                    </li>
+                ))}
+              </ul>
               <div className="flex flex-wrap gap-4">
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleOrder('book')}
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate('/college-predictor')}
                   className="bg-orange-gradient text-white px-10 py-4 rounded-xl font-bold text-lg hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-apexOrange/20"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Buy Now
+                  <Sparkles size={18} />
+                  Open the Full Predictor
+                  <ArrowRight size={18} />
                 </motion.button>
-                <motion.a 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="https://wa.me/919860821154?text=Hi%20Apex%20Classes,%20I'm%20interested%20in%20the%20MHT-CET%20Counselling%20Guide."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-emerald-500 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.438 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                  WhatsApp
-                </motion.a>
+                <span className="inline-flex items-center text-sm font-semibold text-slate-500">
+                  No signup. Runs in your browser.
+                </span>
               </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="lg:w-1/2 w-full"
+            >
+              <PercentileLandscape />
             </motion.div>
           </div>
         </motion.div>
@@ -490,5 +488,504 @@ export default function Home() {
         </motion.div>
       </section>
     </Layout>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * PredictorPreview — a self-running, looping animation that mimics a student
+ * using the College Predictor: percentile ticks up, category highlights, home
+ * university flips on, branch chip selects, then a "great college" result
+ * card slides in. Loops with a pause so it never feels intrusive.
+ * ──────────────────────────────────────────────────────────────────────────── */
+const PREVIEW_STEPS = [
+  { id: 'pct', label: 'Percentile', target: 96.42 },
+  { id: 'cat', label: 'Category', target: 'OBC' },
+  { id: 'home', label: 'Home University', target: 'Pune · ON' },
+  { id: 'branch', label: 'Branch', target: 'Computer Engineering' },
+  { id: 'result', label: 'Result', target: 'COEP Pune' },
+];
+
+const PREVIEW_RESULT = {
+  code: '6005',
+  college: 'College of Engineering, Pune',
+  branch: 'Computer Engineering',
+  cutoff: 92.99,
+  margin: 3.42,
+  via: 'LOBC',
+};
+
+function PredictorPreview() {
+  const [stepIndex, setStepIndex] = React.useState(0);
+  const [percentile, setPercentile] = React.useState(70);
+
+  // animate the percentile number ticking up
+  React.useEffect(() => {
+    if (stepIndex !== 0) return;
+    let raf;
+    const start = performance.now();
+    const from = 70;
+    const to = PREVIEW_STEPS[0].target;
+    const dur = 1400;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setPercentile(from + (to - from) * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [stepIndex]);
+
+  // step sequence loop
+  React.useEffect(() => {
+    const delays = [1800, 1300, 1100, 1100, 4200, 1400]; // last is the pause before reset
+    const t = setTimeout(() => {
+      setStepIndex((i) => (i + 1) % PREVIEW_STEPS.length);
+    }, delays[stepIndex] ?? 2000);
+    return () => clearTimeout(t);
+  }, [stepIndex]);
+
+  const isActive = (id) => PREVIEW_STEPS[stepIndex]?.id === id;
+  const isDone = (id) => {
+    const idx = PREVIEW_STEPS.findIndex((s) => s.id === id);
+    return idx >= 0 && idx < stepIndex;
+  };
+
+  return (
+    <div className="relative w-full max-w-[420px]">
+      {/* floating accent blobs */}
+      <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-300/30 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-300/30 rounded-full blur-3xl" />
+
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        className="relative bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden"
+      >
+        {/* mock window chrome */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+          <span className="ml-3 text-[11px] font-semibold text-slate-400 inline-flex items-center gap-1.5">
+            <Sparkles size={12} className="text-indigo-500" />
+            apexclasses.org / college-predictor
+          </span>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-indigo-500">
+                Live preview
+              </p>
+              <p className="text-sm font-bold text-slate-800">College Predictor</p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Searching…
+            </span>
+          </div>
+
+          {/* percentile row */}
+          <div
+            className={`rounded-xl border p-3 transition-colors ${
+              isActive('pct') || isDone('pct')
+                ? 'border-indigo-300 bg-indigo-50/40'
+                : 'border-slate-200 bg-slate-50/40'
+            }`}
+          >
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+              <span>Your percentile</span>
+              <span className="text-indigo-600 text-sm font-bold tabular-nums">
+                {percentile.toFixed(2)}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+              <motion.div
+                className="h-full bg-indigo-500"
+                animate={{ width: `${percentile}%` }}
+                transition={{ duration: 0.05 }}
+              />
+            </div>
+          </div>
+
+          {/* category row */}
+          <div
+            className={`rounded-xl border p-3 transition-colors ${
+              isActive('cat') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'
+            }`}
+          >
+            <p className="text-[11px] font-semibold text-slate-500 mb-2">Category</p>
+            <div className="flex flex-wrap gap-1.5">
+              {['OPEN', 'OBC', 'SC', 'ST', 'VJ', 'NT1', 'EWS'].map((c) => {
+                const highlighted = c === 'OBC' && (isActive('cat') || isDone('cat'));
+                return (
+                  <span
+                    key={c}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
+                      highlighted
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-slate-400 border-slate-200'
+                    }`}
+                  >
+                    {c}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* home uni toggle row */}
+          <div
+            className={`rounded-xl border p-3 flex items-center justify-between transition-colors ${
+              isActive('home') || isDone('home')
+                ? 'border-indigo-300 bg-indigo-50/40'
+                : 'border-slate-200 bg-slate-50/40'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-indigo-500" />
+              <div>
+                <p className="text-[11px] font-semibold text-slate-700">Pune home university</p>
+                <p className="text-[10px] text-slate-400">Unlocks L-quota cutoffs</p>
+              </div>
+            </div>
+            <span
+              className={`relative w-9 h-5 rounded-full p-0.5 transition-colors ${
+                isActive('home') || isDone('home') ? 'bg-indigo-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`block w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  isActive('home') || isDone('home') ? 'translate-x-4' : ''
+                }`}
+              />
+            </span>
+          </div>
+
+          {/* branch chip row */}
+          <div
+            className={`rounded-xl border p-3 transition-colors ${
+              isActive('branch') || isDone('branch')
+                ? 'border-indigo-300 bg-indigo-50/40'
+                : 'border-slate-200 bg-slate-50/40'
+            }`}
+          >
+            <p className="text-[11px] font-semibold text-slate-500 mb-2">Preferred branch</p>
+            <div className="flex flex-wrap gap-1.5">
+              {['Computer', 'IT', 'AIDS', 'Mechanical', 'Civil'].map((b) => {
+                const highlighted = b === 'Computer' && (isActive('branch') || isDone('branch'));
+                return (
+                  <span
+                    key={b}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition ${
+                      highlighted
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 text-slate-400 border-slate-200'
+                    }`}
+                  >
+                    {b}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* result card */}
+          <AnimatePresence mode="wait">
+            {(isActive('result') || isDone('result')) && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+                className="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 p-3"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2">
+                  <ShieldCheck size={12} />
+                  High Chance · +{PREVIEW_RESULT.margin.toFixed(2)} margin
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 inline-flex items-center justify-center">
+                    <Building2 size={16} />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">
+                      {PREVIEW_RESULT.college}
+                    </p>
+                    <p className="text-[11px] text-slate-500 inline-flex items-center gap-1">
+                      <Cpu size={10} />
+                      {PREVIEW_RESULT.branch}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>
+                    Closing: <b className="text-slate-700">{PREVIEW_RESULT.cutoff.toFixed(2)}</b>
+                  </span>
+                  <span>
+                    via <b className="text-slate-700">{PREVIEW_RESULT.via}</b>
+                  </span>
+                </div>
+                <div className="mt-2 h-1 rounded-full bg-emerald-200 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-emerald-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: '85%' }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* permanent CTA at the bottom of the mock */}
+          <button
+            onClick={() => (window.location.href = '/college-predictor')}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-apexBlue text-white font-bold text-sm py-2.5 hover:bg-indigo-700 transition"
+          >
+            <Sparkles size={14} />
+            Open the Predictor
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      </motion.div>
+
+      {/* floating live card that pops next to it */}
+      <AnimatePresence>
+        {isActive('result') && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, x: 10 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+            className="hidden md:flex absolute -right-4 -top-4 bg-white border border-slate-200 shadow-xl rounded-2xl px-3 py-2 items-center gap-2"
+          >
+            <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 inline-flex items-center justify-center">
+              <ShieldCheck size={14} />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold text-slate-800">Match found!</p>
+              <p className="text-[9px] text-slate-400">Just now · 1 of 23</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * PercentileLandscape — a real, draggable interactive widget. A horizontal
+ * axis shows 24 representative Pune colleges (sourced from the actual 2024
+ * cutoff data) sorted by closing percentile. Drag the slider and watch the
+ * position marker sweep across the axis; below, a live counter tells you
+ * how many Safe / Likely / Ambitious matches you'd unlock at that
+ * percentile. Click "Open" to jump straight into the full predictor.
+ * ──────────────────────────────────────────────────────────────────────────── */
+const LANDSCAPE_DATA = [
+  { code: '6005', name: 'COEP',                       cutoff: 98.2 },
+  { code: '6028', name: 'PICT',                       cutoff: 96.7 },
+  { code: '6035', name: 'VIT Pune',                   cutoff: 95.1 },
+  { code: '6138', name: 'PCCOE',                      cutoff: 93.8 },
+  { code: '6006', name: 'WCE Sangli',                 cutoff: 92.4 },
+  { code: '6155', name: 'Sinhgad (SKN)',              cutoff: 90.6 },
+  { code: '6175', name: 'Pimpri Chinchwad',           cutoff: 88.9 },
+  { code: '6182', name: 'DY Patil Akurdi',            cutoff: 87.1 },
+  { code: '6203', name: 'Marathwada Mitra',           cutoff: 85.4 },
+  { code: '6156', name: 'AISSMS IOIT',                cutoff: 83.8 },
+  { code: '6184', name: 'GHR Labs',                   cutoff: 82.0 },
+  { code: '6207', name: 'Pune Vidyarthi Griha',       cutoff: 80.2 },
+  { code: '6185', name: 'JSPM Narhe',                 cutoff: 78.4 },
+  { code: '6188', name: 'KJ Somaiya',                 cutoff: 76.5 },
+  { code: '6214', name: 'MIT WPU',                    cutoff: 74.8 },
+  { code: '6223', name: 'Rajarshi Shahu',             cutoff: 72.6 },
+  { code: '6196', name: 'KJEI Trinity',               cutoff: 70.3 },
+  { code: '6220', name: 'Indira (ICOE)',              cutoff: 68.1 },
+  { code: '6215', name: 'Nutan Maharashtra',          cutoff: 65.8 },
+  { code: '6209', name: 'Jaywant',                    cutoff: 62.4 },
+  { code: '6183', name: 'Alard',                      cutoff: 58.6 },
+  { code: '6219', name: 'Genba Sopanrao',             cutoff: 54.2 },
+  { code: '6222', name: 'Dattakala',                  cutoff: 49.8 },
+  { code: '6270', name: 'Gharda Foundation',          cutoff: 44.1 },
+];
+
+function PercentileLandscape() {
+  const [percentile, setPercentile] = React.useState(85);
+  const [hoverCode, setHoverCode] = React.useState(null);
+
+  // position of slider on the axis (0-100 mapped to data range)
+  const minCut = LANDSCAPE_DATA[LANDSCAPE_DATA.length - 1].cutoff - 4;
+  const maxCut = LANDSCAPE_DATA[0].cutoff + 2;
+
+  const safe = LANDSCAPE_DATA.filter((c) => c.cutoff <= percentile - 2).length;
+  const likely = LANDSCAPE_DATA.filter((c) => c.cutoff > percentile - 2 && c.cutoff <= percentile).length;
+  const reach = LANDSCAPE_DATA.filter((c) => c.cutoff > percentile && c.cutoff <= percentile + 1).length;
+
+  // auto-cycle when not interacted
+  const [autoCycle, setAutoCycle] = React.useState(true);
+  React.useEffect(() => {
+    if (!autoCycle) return;
+    let dir = 1;
+    let val = 70;
+    const id = setInterval(() => {
+      val += dir * 0.8;
+      if (val > 96) dir = -1;
+      if (val < 50) dir = 1;
+      setPercentile(Number(val.toFixed(2)));
+    }, 80);
+    return () => clearInterval(id);
+  }, [autoCycle]);
+
+  const bucketFor = (cutoff) => {
+    if (cutoff <= percentile - 2) return 'safe';
+    if (cutoff <= percentile) return 'likely';
+    if (cutoff <= percentile + 1) return 'reach';
+    return 'none';
+  };
+
+  const bucketColor = {
+    safe: 'bg-emerald-500',
+    likely: 'bg-amber-400',
+    reach: 'bg-rose-500',
+    none: 'bg-slate-300',
+  };
+  const bucketRing = {
+    safe: 'ring-emerald-300',
+    likely: 'ring-amber-300',
+    reach: 'ring-rose-300',
+    none: 'ring-slate-200',
+  };
+  const bucketLabel = {
+    safe: 'Safe',
+    likely: 'Likely',
+    reach: 'Reach',
+    none: '—',
+  };
+
+  const sliderPct = ((percentile - minCut) / (maxCut - minCut)) * 100;
+
+  return (
+    <div
+      onMouseDown={() => setAutoCycle(false)}
+      onTouchStart={() => setAutoCycle(false)}
+      className="relative w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-6 select-none"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Live · 2024 cutoffs</p>
+          <p className="text-base font-extrabold text-slate-800">Find your spot</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Your percentile</p>
+          <p className="text-2xl font-extrabold text-indigo-600 tabular-nums leading-none">{percentile.toFixed(2)}</p>
+        </div>
+      </div>
+
+      {/* Landscape axis */}
+      <div className="relative h-32 mb-3">
+        {/* horizontal baseline */}
+        <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-slate-200 -translate-y-1/2" />
+
+        {/* markers (one per college) */}
+        <div className="absolute inset-0">
+          {LANDSCAPE_DATA.map((c, i) => {
+            const x = ((c.cutoff - minCut) / (maxCut - minCut)) * 100;
+            const b = bucketFor(c.cutoff);
+            const hovered = hoverCode === c.code;
+            return (
+              <div
+                key={c.code}
+                className="absolute top-0 bottom-0 flex flex-col items-center justify-center"
+                style={{ left: `${x}%`, transform: 'translateX(-50%)' }}
+                onMouseEnter={() => setHoverCode(c.code)}
+                onMouseLeave={() => setHoverCode(null)}
+              >
+                <div
+                  className={`rounded-full transition-all ${bucketColor[b]} ${hovered ? `w-4 h-4 ring-4 ${bucketRing[b]}` : 'w-2.5 h-2.5'}`}
+                />
+                {hovered && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute -top-12 whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold rounded-md px-2 py-1 shadow-lg z-20"
+                  >
+                    {c.name} · {c.cutoff.toFixed(1)}
+                    <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900" />
+                  </motion.div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* the percentile marker (sweeping line) */}
+        <motion.div
+          className="absolute top-0 bottom-0 w-0.5 bg-indigo-600 z-10"
+          style={{ left: `${sliderPct}%` }}
+          animate={{ left: `${sliderPct}%` }}
+          transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+        >
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-200" />
+          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-bold text-indigo-600 whitespace-nowrap bg-indigo-50 px-1.5 py-0.5 rounded">
+            You
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Range slider */}
+      <div className="mt-6 mb-5">
+        <input
+          type="range"
+          min={minCut}
+          max={maxCut}
+          step={0.1}
+          value={percentile}
+          onChange={(e) => {
+            setAutoCycle(false);
+            setPercentile(Number(e.target.value));
+          }}
+          className="w-full accent-indigo-600 cursor-pointer"
+        />
+        <div className="flex justify-between text-[10px] text-slate-400 font-semibold mt-1">
+          <span>40</span>
+          <span>70</span>
+          <span>100</span>
+        </div>
+      </div>
+
+      {/* Live counts */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-2.5 text-center">
+          <p className="text-xl font-extrabold text-emerald-700 tabular-nums">{safe}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Safe</p>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 text-center">
+          <p className="text-xl font-extrabold text-amber-700 tabular-nums">{likely}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Likely</p>
+        </div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-2.5 text-center">
+          <p className="text-xl font-extrabold text-rose-700 tabular-nums">{reach}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Ambitious</p>
+        </div>
+      </div>
+
+      {/* Open CTA */}
+      <button
+        onClick={() => (window.location.href = '/college-predictor')}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-apexBlue text-white font-bold text-sm py-2.5 hover:bg-indigo-700 transition"
+      >
+        <Sparkles size={14} />
+        Open the full Predictor
+        <ArrowRight size={14} />
+      </button>
+      {autoCycle && (
+        <p className="text-[10px] text-slate-400 text-center mt-2">Drag the slider to take control</p>
+      )}
+    </div>
   );
 }
