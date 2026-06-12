@@ -80,6 +80,10 @@ export default function Layout({ children }) {
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[100]"
                             >
+                                <Link to="/college-predictor" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
+                                    <Sparkles size={18} className="text-apexOrangeLight group-hover:scale-110 transition-transform" />
+                                    College Predictor
+                                </Link>
                                 <Link to="/my-predictions" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
                                     <GraduationCap size={18} className="text-emerald-400 group-hover:scale-110 transition-transform" />
                                     My Predictions
@@ -136,6 +140,10 @@ export default function Layout({ children }) {
             
             {user ? (
                <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white p-4 rounded-xl font-bold shadow-lg shadow-apexOrange/30">
+                     <Sparkles size={20} />
+                     College Predictor
+                  </Link>
                   <Link to="/my-predictions" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
                      <GraduationCap size={20} className="text-emerald-400" />
                      My Predictions

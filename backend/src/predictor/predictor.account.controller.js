@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import * as AccountModel from './predictor.account.model.js';
 import * as PredictorModel from './predictor.model.js';
@@ -11,8 +14,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'changeme-set-in-env';
 const ACCESS_EXPIRES = '15m';
 const REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const PACK_SIZE = 15;       // searches granted per purchase
-export const PACK_PRICE = 99;      // INR
+// Pricing is sourced from the shared products catalog (same as every other
+// product), so it can be adjusted in one place without code changes.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const productsPath = path.join(__dirname, '../order/products.json');
+const PRODUCTS = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+const PREDICTOR_PRODUCT = PRODUCTS.predictor_pack || {};
+
+export const PACK_SIZE = PREDICTOR_PRODUCT.pack ?? 15;    // searches granted per purchase
+export const PACK_PRICE = PREDICTOR_PRODUCT.price ?? 99;  // INR
 
 const signAccess = (u) =>
     jwt.sign({ id: u.id, email: u.email, name: u.name, role: u.role }, JWT_SECRET, { expiresIn: ACCESS_EXPIRES });

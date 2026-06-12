@@ -69,6 +69,17 @@
     "steps": ["Summary", "Batch", "Confirmation", "Payment"],
     "fields": ["batch"]
   },
+  "predictor_pack": {
+    "id": "predictor_pack",
+    "type": "predictor",
+    "mode": "online",
+    "title": "College Predictor — Full Access Pack",
+    "description": "Unlock full ranked college lists, PDF shortlist, and shareable links. Includes 15 saved searches.",
+    "price": 99,
+    "pack": 15,
+    "steps": ["Summary", "Confirmation", "Payment"],
+    "fields": []
+  },
   "admin_test_token": {
     "id": "admin_test_token",
     "type": "testing",

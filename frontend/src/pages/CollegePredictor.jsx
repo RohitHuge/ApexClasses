@@ -373,7 +373,7 @@ export default function CollegePredictor() {
         <Layout>
             <div className="bg-gradient-to-b from-indigo-50 via-white to-slate-50 min-h-screen">
                 {/* Hero */}
-                <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
+                <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12 pb-6">
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
@@ -386,7 +386,7 @@ export default function CollegePredictor() {
                                 </Link>
                             )}
                         </div>
-                        <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">College Predictor</h1>
+                        <h1 className="mt-4 text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">College Predictor</h1>
                         <p className="mt-2 text-slate-600 max-w-2xl">
                             Enter your percentile and preferences to see which colleges and branches you can
                             realistically get — sorted by your chances.
@@ -471,7 +471,7 @@ export default function CollegePredictor() {
                                 {/* summary + filter bar */}
                                 <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-5">
                                     {totalShown > 0 && (
-                                        <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100">
+                                        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3 pb-3 border-b border-slate-100">
                                             <div className="flex items-center gap-2">
                                                 <GraduationCap size={20} className="text-indigo-600" />
                                                 <p className="text-sm sm:text-base font-bold text-slate-900">
@@ -492,38 +492,38 @@ export default function CollegePredictor() {
                                             )}
                                         </div>
                                     )}
-                                    <div className="flex flex-wrap items-center gap-3 justify-between">
-                                        <div className="flex items-center gap-2 text-sm">
+                                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:justify-between">
+                                        <div className="flex items-center gap-1.5 sm:gap-2 text-sm overflow-x-auto -mx-1 px-1 pb-1 sm:pb-0">
                                             {BUCKETS.map((b) => (
-                                                <span key={b.key} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${ACCENT[b.accent].chip}`}>
+                                                <span key={b.key} className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${ACCENT[b.accent].chip}`}>
                                                     <span className={`w-2 h-2 rounded-full ${ACCENT[b.accent].dot}`} />
                                                     {result.counts[b.key]} {b.label}
                                                 </span>
                                             ))}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <SlidersHorizontal size={16} className="text-slate-400" />
+                                            <SlidersHorizontal size={16} className="hidden sm:block text-slate-400 shrink-0" />
                                             <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)}
-                                                className="text-xs rounded-lg border border-slate-300 px-2 py-1.5 focus:outline-none">
+                                                className="flex-1 sm:flex-none min-w-0 text-xs rounded-lg border border-slate-300 px-2 py-2 sm:py-1.5 focus:outline-none">
                                                 <option value="">All branches</option>
                                                 {meta.branches.map((b) => <option key={b} value={b}>{b}</option>)}
                                             </select>
                                             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                                                className="text-xs rounded-lg border border-slate-300 px-2 py-1.5 focus:outline-none">
-                                                <option value="cutoff">Sort: Best first</option>
-                                                <option value="margin">Sort: Safest first</option>
-                                                <option value="name">Sort: College name</option>
+                                                className="flex-1 sm:flex-none min-w-0 text-xs rounded-lg border border-slate-300 px-2 py-2 sm:py-1.5 focus:outline-none">
+                                                <option value="cutoff">Best first</option>
+                                                <option value="margin">Safest first</option>
+                                                <option value="name">College name</option>
                                             </select>
                                             <button onClick={handleDownloadPdf} disabled={!isFull}
                                                 title={isFull ? 'Download a branded shortlist PDF' : 'Reveal the full list first (paid)'}
-                                                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                                                <Download size={13} /> PDF
+                                                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 sm:py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                                <Download size={13} /> <span className="hidden sm:inline">PDF</span>
                                             </button>
                                             <button onClick={handleShareLink} disabled={!isFull}
                                                 title={isFull ? 'Copy a shareable link' : 'Reveal the full list first (paid)'}
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 hover:border-indigo-500 hover:text-indigo-600 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 hover:border-indigo-500 hover:text-indigo-600 text-slate-700 text-xs font-semibold px-3 py-2 sm:py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
                                                 {linkCopied ? <Check size={13} className="text-emerald-500" /> : <Link2 size={13} />}
-                                                {linkCopied ? 'Copied' : 'Share'}
+                                                <span className="hidden sm:inline">{linkCopied ? 'Copied' : 'Share'}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -648,7 +648,7 @@ export default function CollegePredictor() {
                                 <button onClick={() => setCompareIds([])} className="text-xs text-slate-400 hover:text-white px-2 py-1">Clear</button>
                                 <button onClick={() => setShowCompare(true)} disabled={compareItems.length < 2}
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <Sparkles size={13} /> Compare {compareItems.length} ({4 - compareIds.length} slots left)
+                                    <Sparkles size={13} /> Compare {compareItems.length}<span className="hidden sm:inline"> ({4 - compareIds.length} slots left)</span>
                                 </button>
                             </div>
                         </div>
@@ -667,8 +667,8 @@ export default function CollegePredictor() {
                                 <h3 className="text-lg font-bold text-slate-900">Compare {compareItems.length} colleges</h3>
                                 <button onClick={() => setShowCompare(false)} className="text-slate-400 hover:text-slate-700"><X size={22} /></button>
                             </div>
-                            <div className="p-4 sm:p-6">
-                                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${compareItems.length}, minmax(0,1fr))` }}>
+                            <div className="p-4 sm:p-6 overflow-x-auto">
+                                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${compareItems.length}, minmax(150px,1fr))` }}>
                                     {compareItems.map((it) => {
                                         const acc = ACCENT[it._bucket === 'safe' ? 'emerald' : it._bucket === 'moderate' ? 'amber' : 'rose'];
                                         return (

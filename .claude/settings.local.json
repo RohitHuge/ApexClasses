@@ -53,7 +53,9 @@
       "Bash(git check-ignore *)",
       "Bash(export DATABASE_URL='postgresql://postgres:strongpassword@82.180.144.69:5432/apex_db')",
       "Bash(psql \"postgresql://postgres@82.180.144.69:5432/apex_db\" -c \"\\\\dt\" -c \"\\\\d cutoffs\" -c \"SELECT count\\(*\\) AS users FROM users; SELECT count\\(*\\) AS orders FROM orders;\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(curl -s -m 20 https://apex.rohithuge.online/api/predictor/meta)",
+      "Bash(curl -s -m 20 -X POST https://apex.rohithuge.online/api/predictor/guest -H \"Content-Type: application/json\" -d '{\"name\":\"DB Probe\",\"phone\":\"9999000011\"}')"
     ]
   }
 }
