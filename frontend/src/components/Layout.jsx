@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles, GraduationCap, LogIn } from 'lucide-react';
+import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles, GraduationCap, LogIn, FileText, ArrowRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Official admission-process / counselling-session document (ImageKit-hosted).
+const ADMISSION_PROCESS_PDF = 'https://ik.imagekit.io/apexcounselling/sakal%20vidya%20(1).pdf';
 
 export default function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [showPromoBanner, setShowPromoBanner] = useState(true);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const dismissPromoBanner = () => setShowPromoBanner(false);
 
   const handleLogout = async () => {
     await logout();
@@ -177,6 +183,89 @@ export default function Layout({ children }) {
         )}
       </header>
       {/* END: Sticky Header */}
+
+      {/* BEGIN: Global Promo Banner (admission PDF + College Predictor) */}
+      <AnimatePresence>
+        {showPromoBanner && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+            className="relative z-40 overflow-hidden bg-gradient-to-r from-[#1A1A40] via-[#27275f] to-[#1A1A40]"
+          >
+            {/* animated sheen */}
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-20deg] bg-white/10 blur-md"
+              animate={{ x: ['0%', '450%'] }}
+              transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.4 }}
+            />
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+                {/* Left: label + text */}
+                <div className="flex items-start gap-3 pr-8 lg:pr-0">
+                  <motion.span
+                    className="mt-0.5 flex-shrink-0 grid place-items-center h-8 w-8 rounded-full bg-apexOrange/20 text-apexOrangeLight"
+                    animate={{ scale: [1, 1.12, 1] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <FileText className="h-4 w-4" />
+                  </motion.span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-apexOrange px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white"></span>
+                        </span>
+                        New
+                      </span>
+                      <span className="text-sm sm:text-base font-bold text-white">
+                        Sakal Vidya Admission Session 2026
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs sm:text-sm text-blue-100">
+                      View the official admission process &amp; check which colleges you can target with our Predictor.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: actions */}
+                <div className="flex flex-shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                  <a
+                    href={ADMISSION_PROCESS_PDF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-sm font-bold text-white border border-white/20 transition-all hover:bg-white/20"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Admission PDF
+                  </a>
+                  <Link
+                    to="/college-predictor"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-orange-gradient px-4 py-2 text-sm font-bold text-white shadow-md shadow-apexOrange/30 transition-transform hover:scale-[1.03] active:scale-95"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Try College Predictor
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Dismiss */}
+            <button
+              onClick={dismissPromoBanner}
+              aria-label="Dismiss notification"
+              className="absolute right-2 top-2 lg:right-3 lg:top-1/2 lg:-translate-y-1/2 grid place-items-center h-7 w-7 rounded-full text-blue-200 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* END: Global Promo Banner */}
 
       <main className="flex-grow">
         {children}

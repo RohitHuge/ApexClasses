@@ -6,7 +6,7 @@ import { getCurrentUser } from '../utils/appwrite';
 import { orderService } from '../order/orderService';
 import AuthModal from '../order/components/AuthModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, Sparkles, ArrowRight } from 'lucide-react';
 
 // Sample pages from the printed guide (ImageKit-hosted previews).
 const PREVIEW_PAGES = [
@@ -328,6 +328,52 @@ export default function CounsellingBook() {
                   </Link>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* College Predictor CTA */}
+          <section className="py-16 sm:py-20 bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5 }}
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A1A40] to-[#27275f] px-6 py-10 sm:px-10 sm:py-12 shadow-xl"
+              >
+                {/* floating glow */}
+                <motion.div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-16 -right-10 h-56 w-56 rounded-full bg-[#FF6600]/20 blur-3xl"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <div className="relative flex flex-col items-center gap-6 text-center lg:flex-row lg:items-center lg:justify-between lg:text-left">
+                  <div className="max-w-2xl">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FF6600]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF6600]">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      New Tool
+                    </span>
+                    <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
+                      Not sure which college you'll get?
+                    </h2>
+                    <p className="mt-3 text-sm sm:text-base text-slate-300">
+                      Try our <span className="font-semibold text-white">College Predictor</span> — enter your percentile and category to see ranked Pune-region engineering colleges you can realistically target.
+                    </p>
+                  </div>
+                  <Link to="/college-predictor" className="flex-shrink-0">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.96 }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#FF6600] px-7 py-4 text-base font-bold text-white shadow-lg shadow-[#FF6600]/30"
+                    >
+                      <Sparkles className="h-5 w-5" />
+                      Predict My College
+                      <ArrowRight className="h-5 w-5" />
+                    </motion.button>
+                  </Link>
+                </div>
+              </motion.div>
             </div>
           </section>
 
