@@ -2,7 +2,9 @@
 // POST; we intentionally don't await or surface errors. The transport can be
 // swapped (Plausible/PostHog/GA) by replacing this file.
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// VITE_API_URL already includes the `/api` prefix (e.g. http://localhost:5000/api),
+// matching predictorService / auth. Don't add another `/api` segment here.
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const buffer = [];
 const FLUSH_MS = 5000;
@@ -13,7 +15,7 @@ const flush = () => {
     if (!buffer.length) return;
     const batch = buffer.splice(0, buffer.length);
     for (const evt of batch) {
-        fetch(`${API_BASE}/api/analytics/event`, {
+        fetch(`${API_BASE}/analytics/event`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(evt),

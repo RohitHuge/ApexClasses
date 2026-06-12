@@ -28,7 +28,7 @@ const ACCENT = {
 };
 
 export default function CollegePredictor() {
-    const { user, loginAsGuest } = useAuth();
+    const { user, loginAsGuest, isGuest } = useAuth();
     const navigate = useNavigate();
 
     const [meta, setMeta] = useState({ branches: [], categories: [] });
@@ -236,6 +236,13 @@ export default function CollegePredictor() {
 
     // ── Payment ──
     const handlePay = async () => {
+        if (isGuest) {
+            toast.error('Please login or register to purchase searches.');
+            const currentSearch = window.location.search;
+            const redirectPath = '/college-predictor' + currentSearch + (currentSearch ? '&' : '?') + 'triggerPay=1';
+            navigate('/login?redirect=' + encodeURIComponent(redirectPath));
+            return;
+        }
         try {
             const ok = await loadRazorpayScript();
             if (!ok) return toast.error('Could not load the payment window');
@@ -272,6 +279,18 @@ export default function CollegePredictor() {
             toast.error(e.message || 'Could not start payment');
         }
     };
+
+    useEffect(() => {
+        if (!user || isGuest) return;
+        const params = new URLSearchParams(window.location.search);
+        const triggerPay = params.get('triggerPay');
+        if (triggerPay === '1') {
+            params.delete('triggerPay');
+            const newSearch = params.toString();
+            window.history.replaceState(null, '', `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`);
+            handlePay();
+        }
+    }, [user, isGuest]);
 
     const toggleBranch = (b) => {
         setBranches((prev) => {

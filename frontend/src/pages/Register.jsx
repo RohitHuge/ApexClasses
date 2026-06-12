@@ -7,13 +7,25 @@ import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 export default function Register() {
-    const { register, user } = useAuth();
+    const { register, user, isGuest } = useAuth();
     const navigate = useNavigate();
     const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
     const [showPw, setShowPw] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    if (user) { navigate('/dashboard'); return null; }
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectUrl = searchParams.get('redirect');
+
+    // Guests (phone-only) still need to register a full account here.
+    const isAuthed = user && !isGuest;
+
+    React.useEffect(() => {
+        if (isAuthed) {
+            navigate(redirectUrl || '/dashboard');
+        }
+    }, [isAuthed, navigate, redirectUrl]);
+
+    if (isAuthed) return null;
 
     const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -27,7 +39,11 @@ export default function Register() {
         try {
             const u = await register(form.name, form.email, form.phone, form.password);
             toast.success('Account created! Welcome to Apex Classes.');
-            navigate('/dashboard');
+            if (redirectUrl) {
+                navigate(redirectUrl);
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err) {
             toast.error(err.message || 'Registration failed');
         } finally {
@@ -82,7 +98,7 @@ export default function Register() {
 
                         <p className="text-center mt-6 text-sm text-gray-500">
                             Already have an account?{' '}
-                            <Link to="/login" className="font-bold text-indigo-600 hover:underline">Log In</Link>
+                            <Link to={`/login${redirectUrl ? '?redirect=' + encodeURIComponent(redirectUrl) : ''}`} className="font-bold text-indigo-600 hover:underline">Log In</Link>
                         </p>
                     </div>
                 </motion.div>

@@ -7,14 +7,27 @@ import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 export default function Login() {
-    const { login, user } = useAuth();
+    const { login, user, isGuest } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPw, setShowPw] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    if (user) { navigate('/dashboard'); return null; }
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectUrl = searchParams.get('redirect');
+
+    // A guest (phone-only, no email) is NOT a fully authenticated user — they
+    // must still log in here (e.g. to complete a payment), so don't auto-redirect.
+    const isAuthed = user && !isGuest;
+
+    React.useEffect(() => {
+        if (isAuthed) {
+            navigate(redirectUrl || '/dashboard');
+        }
+    }, [isAuthed, navigate, redirectUrl]);
+
+    if (isAuthed) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,7 +35,11 @@ export default function Login() {
         try {
             const u = await login(email, password);
             toast.success(`Welcome back, ${u.name.split(' ')[0]}!`);
-            navigate(u.role === 'admin' ? '/admin/nexus-terminal' : '/dashboard');
+            if (redirectUrl) {
+                navigate(redirectUrl);
+            } else {
+                navigate(u.role === 'admin' ? '/admin/nexus-terminal' : '/dashboard');
+            }
         } catch (err) {
             if (err.code === 'PASSWORD_NOT_SET') {
                 toast.error('Please set your password first.', { duration: 6000 });
@@ -86,7 +103,7 @@ export default function Login() {
 
                         <p className="text-center mt-6 text-sm text-gray-500">
                             Don't have an account?{' '}
-                            <Link to="/register" className="font-bold text-indigo-600 hover:underline">Sign Up</Link>
+                            <Link to={`/register${redirectUrl ? '?redirect=' + encodeURIComponent(redirectUrl) : ''}`} className="font-bold text-indigo-600 hover:underline">Sign Up</Link>
                         </p>
                     </div>
                 </motion.div>

@@ -18,7 +18,7 @@ const toQuery = (inputs) => {
 };
 
 export default function MyPredictions() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, isGuest } = useAuth();
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [price, setPrice] = useState(99);
@@ -45,6 +45,11 @@ export default function MyPredictions() {
     }, [user, authLoading, navigate]);
 
     const handleBuy = async () => {
+        if (isGuest) {
+            toast.error('Please login or register to purchase searches.');
+            navigate('/login?redirect=' + encodeURIComponent('/my-predictions'));
+            return;
+        }
         try {
             const ok = await loadRazorpayScript();
             if (!ok) return toast.error('Could not load the payment window');
