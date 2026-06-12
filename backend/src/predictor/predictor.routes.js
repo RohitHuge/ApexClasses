@@ -1,7 +1,7 @@
 import express from 'express';
 import * as PredictorController from './predictor.controller.js';
 import * as AccountController from './predictor.account.controller.js';
-import { requireAuth } from '../middleware/auth.middleware.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -20,5 +20,8 @@ router.get('/searches/:id', requireAuth, AccountController.searchDetail);
 // ── Payment (₹99 / 15-search pack) ──
 router.post('/pay/create', requireAuth, AccountController.payCreate);
 router.post('/pay/verify', requireAuth, AccountController.payVerify);
+
+// ── Admin ──
+router.get('/admin/stats', requireAdmin, AccountController.adminStats);
 
 export default router;

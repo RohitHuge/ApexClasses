@@ -119,6 +119,23 @@ export const createPayment = async ({ userId, razorpayOrderId, amount, searchesG
     return res.rows[0];
 };
 
+// ── Admin stats ──────────────────────────────────────────────────────────────
+
+// Aggregate business metrics across the predictor tables (admin dashboard).
+export const adminStats = async () => {
+    const res = await query(`
+        SELECT
+          (SELECT COUNT(*) FROM predictor_profiles)                                      AS total_profiles,
+          (SELECT COUNT(*) FROM predictor_profiles WHERE plan = 'paid')                  AS paid_profiles,
+          (SELECT COALESCE(SUM(searches_used), 0) FROM predictor_profiles)               AS searches_used,
+          (SELECT COALESCE(SUM(searches_limit), 0) FROM predictor_profiles)              AS searches_granted,
+          (SELECT COUNT(*) FROM predictor_searches)                                      AS saved_searches,
+          (SELECT COUNT(*) FROM predictor_payments WHERE status = 'PAID')                AS paid_payments,
+          (SELECT COALESCE(SUM(amount), 0) FROM predictor_payments WHERE status = 'PAID') AS total_revenue
+    `);
+    return res.rows[0];
+};
+
 // Mark paid exactly once (status guard prevents double-granting on retry).
 export const markPaymentPaid = async ({ userId, razorpayOrderId, razorpayPayId }) => {
     const res = await query(

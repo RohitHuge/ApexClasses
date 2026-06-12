@@ -20,7 +20,16 @@ const DELIVERY_STATUSES = [
     { value: 'DELIVERED', label: 'Delivered', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
 ];
 
-const TABS = ['Orders', 'Slots', 'Users'];
+const TABS = ['Orders', 'Predictor', 'Slots', 'Users'];
+
+// Predictor funnel steps, mapped to analytics event names.
+const PREDICTOR_FUNNEL = [
+    { event: 'predictor_open', label: 'Opened predictor' },
+    { event: 'predictor_predict_run', label: 'Ran a prediction' },
+    { event: 'predictor_lead_submitted', label: 'Submitted phone (lead)' },
+    { event: 'predictor_reveal', label: 'Revealed full list' },
+    { event: 'predictor_payment_success', label: 'Paid' },
+];
 
 export default function AdminDashboard() {
     const { user, logout } = useAuth();
@@ -31,6 +40,9 @@ export default function AdminDashboard() {
     const [orders, setOrders] = useState([]);
     const [users, setUsers] = useState([]);
     const [slots, setSlots] = useState([]);
+    const [predictorStats, setPredictorStats] = useState(null);
+    const [analyticsEvents, setAnalyticsEvents] = useState(null); // raw [{event,hour,n}]
+    const [predictorLoading, setPredictorLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
@@ -73,10 +85,36 @@ export default function AdminDashboard() {
         } catch { toast.error('Failed to load slots'); }
     };
 
+    const fetchPredictor = async () => {
+        setPredictorLoading(true);
+        try {
+            const [statsRes, analyticsRes] = await Promise.all([
+                orderService.getPredictorStats(),
+                orderService.getAnalyticsSummary(),
+            ]);
+            if (statsRes.success) setPredictorStats(statsRes.stats);
+            if (analyticsRes.success) setAnalyticsEvents(analyticsRes.data || []);
+        } catch {
+            toast.error('Failed to load predictor analytics');
+        } finally {
+            setPredictorLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'Users' && users.length === 0) fetchUsers();
         if (activeTab === 'Slots' && slots.length === 0) fetchSlots();
+        if (activeTab === 'Predictor' && !predictorStats) fetchPredictor();
     }, [activeTab]);
+
+    // Aggregate analytics events → totals per event name over the window.
+    const eventTotals = useMemo(() => {
+        const m = {};
+        (analyticsEvents || []).forEach((r) => {
+            m[r.event] = (m[r.event] || 0) + Number(r.n);
+        });
+        return m;
+    }, [analyticsEvents]);
 
     const handleUpdateDelivery = async (orderId, status) => {
         const tracking = trackingInput[orderId] || '';
@@ -334,6 +372,115 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    )}
+
+                    {/* ── PREDICTOR TAB ── */}
+                    {activeTab === 'Predictor' && (
+                        <div className="space-y-8">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-black uppercase tracking-tight">College Predictor</h3>
+                                <button onClick={fetchPredictor} disabled={predictorLoading}
+                                    className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50">
+                                    <RefreshCw size={16} className={`text-slate-400 ${predictorLoading ? 'animate-spin' : ''}`} />
+                                </button>
+                            </div>
+
+                            {predictorLoading && !predictorStats ? (
+                                <div className="flex items-center gap-3 text-slate-400 text-sm font-bold py-16 justify-center">
+                                    <Loader2 size={18} className="animate-spin" /> Loading analytics…
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Business stat cards */}
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {[
+                                            { label: 'Predictor Revenue', value: `₹${Number(predictorStats?.totalRevenue || 0).toLocaleString()}`, icon: <TrendingUp className="text-green-400" size={20} /> },
+                                            { label: 'Paid Users', value: predictorStats?.paidProfiles || 0, icon: <CreditCard className="text-indigo-400" size={20} /> },
+                                            { label: 'Total Users', value: predictorStats?.totalProfiles || 0, icon: <Users className="text-blue-400" size={20} /> },
+                                            { label: 'Paid Packs', value: predictorStats?.paidPayments || 0, icon: <CheckCircle2 className="text-emerald-400" size={20} /> },
+                                            { label: 'Searches Used', value: predictorStats?.searchesUsed || 0, icon: <Search className="text-orange-400" size={20} /> },
+                                            { label: 'Searches Granted', value: predictorStats?.searchesGranted || 0, icon: <Zap className="text-yellow-400" size={20} /> },
+                                            { label: 'Saved Searches', value: predictorStats?.savedSearches || 0, icon: <Package className="text-purple-400" size={20} /> },
+                                            {
+                                                label: 'Conversion',
+                                                value: `${predictorStats?.totalProfiles ? Math.round((predictorStats.paidProfiles / predictorStats.totalProfiles) * 100) : 0}%`,
+                                                icon: <TrendingUp className="text-pink-400" size={20} />,
+                                            },
+                                        ].map((s) => (
+                                            <div key={s.label} className="bg-white/5 p-5 rounded-[24px] border border-white/10 flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center shrink-0">{s.icon}</div>
+                                                <div>
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{s.label}</p>
+                                                    <p className="text-xl font-black">{s.value}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Funnel (last 7 days, from analytics events) */}
+                                    <div className="bg-white/5 rounded-[32px] border border-white/10 p-6 md:p-10">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h4 className="text-sm font-black uppercase tracking-widest text-slate-300">Usage Funnel</h4>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Last 7 days</span>
+                                        </div>
+                                        {(() => {
+                                            const top = eventTotals['predictor_open'] || 0;
+                                            return (
+                                                <div className="space-y-3">
+                                                    {PREDICTOR_FUNNEL.map((step) => {
+                                                        const n = eventTotals[step.event] || 0;
+                                                        const pct = top ? Math.round((n / top) * 100) : 0;
+                                                        return (
+                                                            <div key={step.event}>
+                                                                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                                                                    <span className="text-slate-300">{step.label}</span>
+                                                                    <span className="text-slate-400 tabular-nums">{n.toLocaleString()} <span className="text-slate-600">· {pct}%</span></span>
+                                                                </div>
+                                                                <div className="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                                                                    <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {top === 0 && (
+                                                        <p className="text-center text-slate-500 text-xs font-bold py-6">No predictor events recorded in the last 7 days.</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    {/* All events breakdown */}
+                                    <div className="bg-white/5 rounded-[32px] border border-white/10 overflow-hidden">
+                                        <div className="p-6 border-b border-white/5">
+                                            <h4 className="text-sm font-black uppercase tracking-widest text-slate-300">All Events (7-day totals)</h4>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full min-w-[400px]">
+                                                <thead>
+                                                    <tr className="bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-left">
+                                                        <th className="px-8 py-4">Event</th>
+                                                        <th className="px-8 py-4 text-right">Count</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-white/5">
+                                                    {Object.keys(eventTotals).length === 0 ? (
+                                                        <tr><td colSpan="2" className="px-8 py-12 text-center text-slate-500 font-bold text-sm">No events yet</td></tr>
+                                                    ) : Object.entries(eventTotals)
+                                                        .sort((a, b) => b[1] - a[1])
+                                                        .map(([ev, n]) => (
+                                                            <tr key={ev} className="hover:bg-white/[0.02] transition-colors">
+                                                                <td className="px-8 py-3.5 text-sm font-mono text-slate-300">{ev}</td>
+                                                                <td className="px-8 py-3.5 text-sm font-black text-right tabular-nums">{n.toLocaleString()}</td>
+                                                            </tr>
+                                                        ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 

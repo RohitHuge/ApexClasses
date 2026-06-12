@@ -99,6 +99,16 @@ export const orderService = {
         return res.json();
     },
 
+    getPredictorStats: async () => {
+        const res = await apiFetch(`${API_BASE}/predictor/admin/stats`);
+        return res.json();
+    },
+
+    getAnalyticsSummary: async () => {
+        const res = await apiFetch(`${API_BASE}/analytics/summary`);
+        return res.json();
+    },
+
     sendMigrationEmails: async () => {
         const res = await apiFetch(`${API_BASE}/orders/admin/send-migration-emails`, {
             method: 'POST',

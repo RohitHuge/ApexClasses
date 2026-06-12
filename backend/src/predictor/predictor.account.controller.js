@@ -177,6 +177,28 @@ export const searchDetail = async (req, res) => {
     }
 };
 
+/** GET /api/predictor/admin/stats (admin) — business metrics across predictor tables. */
+export const adminStats = async (_req, res) => {
+    try {
+        const s = await AccountModel.adminStats();
+        res.json({
+            success: true,
+            stats: {
+                totalProfiles: Number(s.total_profiles),
+                paidProfiles: Number(s.paid_profiles),
+                searchesUsed: Number(s.searches_used),
+                searchesGranted: Number(s.searches_granted),
+                savedSearches: Number(s.saved_searches),
+                paidPayments: Number(s.paid_payments),
+                totalRevenue: Number(s.total_revenue),
+            },
+        });
+    } catch (err) {
+        console.error('Predictor admin stats error:', err.message);
+        res.status(500).json({ error: 'Failed to load predictor stats' });
+    }
+};
+
 /** POST /api/predictor/pay/create (auth) — start a ₹99 / 15-search purchase. */
 export const payCreate = async (req, res) => {
     try {
