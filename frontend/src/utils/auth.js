@@ -110,6 +110,25 @@ export const login = async (email, password) => {
     return data.user;
 };
 
+// Password-less guest login from the predictor phone panel.
+// Throws with .code='ACCOUNT_EXISTS' if the phone is tied to a real account.
+export const predictorGuest = async (name, phone) => {
+    const res = await fetch(`${API_BASE}/predictor/guest`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        const err = new Error(data.error || 'Could not start your session');
+        err.code = data.code;
+        throw err;
+    }
+    storeSession(data.accessToken, data.user);
+    return data.user;
+};
+
 export const logout = async () => {
     await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' });
     clearSession();

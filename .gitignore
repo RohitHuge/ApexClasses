@@ -142,3 +142,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Database backup dumps (keep local, do not commit)
+backups/db_backup_*/

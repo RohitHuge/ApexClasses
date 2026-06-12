@@ -1,27 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logout } from '../utils/appwrite';
-import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { User, LogOut, ShoppingBag, LayoutDashboard, ChevronDown, Settings, Sparkles, GraduationCap, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const u = await getCurrentUser();
-    setUser(u);
-  };
 
   const handleLogout = async () => {
     await logout();
-    setUser(null);
     navigate('/');
   };
 
@@ -40,7 +30,7 @@ export default function Layout({ children }) {
             </span>
           </Link>
           {/* Navigation Links */}
-          <div className="hidden xl:flex items-center gap-8 text-sm font-semibold text-blue-100">
+          <div className="hidden 2xl:flex items-center gap-6 text-[13px] font-semibold text-blue-100 whitespace-nowrap">
             <Link className="hover:text-apexOrangeLight transition-colors" to="/">Home</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/why">Why Counselling</Link>
             <Link className="hover:text-apexOrangeLight transition-colors" to="/services">Services</Link>
@@ -53,9 +43,16 @@ export default function Layout({ children }) {
           {/* CTA & Account Area */}
           <div className="flex items-center gap-4">
             {!user ? (
-               <Link to="/services" className="hidden md:block bg-orange-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm animate-glow hover:scale-105 transition-transform shadow-lg shadow-apexOrange/30">
-                  Book Counselling
-               </Link>
+               <div className="hidden md:flex items-center gap-2">
+                  <Link to="/college-predictor" className="hidden 2xl:inline-flex items-center gap-1.5 bg-orange-gradient text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:brightness-110 transition-all shadow-md shadow-apexOrange/30 whitespace-nowrap">
+                     <Sparkles size={13} />
+                     Try College Predictor
+                  </Link>
+                  <Link to="/login" className="inline-flex items-center gap-1.5 bg-white/10 text-white px-4 py-2 rounded-full font-semibold text-[13px] hover:bg-white/20 transition-all border border-white/20 whitespace-nowrap">
+                     <LogIn size={14} />
+                     Account
+                  </Link>
+               </div>
             ) : (
                 <div 
                     className="relative hidden md:block"
@@ -83,6 +80,14 @@ export default function Layout({ children }) {
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[100]"
                             >
+                                <Link to="/college-predictor" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
+                                    <Sparkles size={18} className="text-apexOrangeLight group-hover:scale-110 transition-transform" />
+                                    College Predictor
+                                </Link>
+                                <Link to="/my-predictions" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
+                                    <GraduationCap size={18} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                                    My Predictions
+                                </Link>
                                 <Link to="/orders" className="flex items-center gap-3 w-full p-3 text-sm font-bold text-blue-100 hover:bg-white/10 rounded-xl transition-all group">
                                     <ShoppingBag size={18} className="text-apexOrange group-hover:scale-110 transition-transform" />
                                     My Orders
@@ -105,7 +110,7 @@ export default function Layout({ children }) {
                 </div>
             )}
             {/* Mobile Menu Toggle */}
-            <button className="xl:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <button className="2xl:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
@@ -114,7 +119,7 @@ export default function Layout({ children }) {
         </nav>
         {/* Mobile menu, show/hide based on menu state. */}
         {isMobileMenuOpen && (
-          <div className="xl:hidden bg-apexBlue p-4 space-y-4 border-b border-white/10 shadow-2xl">
+          <div className="2xl:hidden bg-apexBlue p-4 space-y-4 border-b border-white/10 shadow-2xl">
             {user && (
                <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 mb-4">
                   <div className="w-12 h-12 bg-apexOrange rounded-xl flex items-center justify-center shadow-lg shadow-apexOrange/20">
@@ -135,6 +140,14 @@ export default function Layout({ children }) {
             
             {user ? (
                <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white p-4 rounded-xl font-bold shadow-lg shadow-apexOrange/30">
+                     <Sparkles size={20} />
+                     College Predictor
+                  </Link>
+                  <Link to="/my-predictions" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
+                     <GraduationCap size={20} className="text-emerald-400" />
+                     My Predictions
+                  </Link>
                   <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full bg-white/10 text-white p-4 rounded-xl font-bold">
                      <LayoutDashboard size={20} className="text-blue-400" />
                      Dashboard
@@ -149,9 +162,16 @@ export default function Layout({ children }) {
                   </button>
                </div>
             ) : (
-               <Link to="/services" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
-                  Book Counselling
-               </Link>
+               <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Link to="/college-predictor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-orange-gradient text-white px-6 py-4 rounded-xl font-bold text-center shadow-lg shadow-apexOrange/30">
+                     <Sparkles size={18} />
+                     Try College Predictor
+                  </Link>
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-white/10 text-white px-6 py-4 rounded-xl font-bold text-center border border-white/20">
+                     <LogIn size={18} />
+                     Login / Register
+                  </Link>
+               </div>
             )}
           </div>
         )}

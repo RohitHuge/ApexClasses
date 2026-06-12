@@ -1,0 +1,11 @@
+import 'dotenv/config';
+import pg from 'pg';
+import fs from 'fs';
+const { Client } = pg;
+const c = new Client({ connectionString: process.env.DIRECT_URL });
+await c.connect();
+const sql = fs.readFileSync(new URL('../prisma/migrations/20260611000000_add_analytics_events/migration.sql', import.meta.url), 'utf8');
+console.log('Applying migration...');
+await c.query(sql);
+console.log('Done.');
+await c.end();

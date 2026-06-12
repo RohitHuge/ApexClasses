@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/Layout';
 import { useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { getCurrentUser } from '../utils/appwrite';
 import { orderService } from '../order/orderService';
 import AuthModal from '../order/components/AuthModal';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+
+// Sample pages from the printed guide (ImageKit-hosted previews).
+const PREVIEW_PAGES = [
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095044.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095103.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095122.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095157.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095214.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095224.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095237.png',
+  'https://ik.imagekit.io/apexcounselling/Screenshot%202026-06-12%20095244.png',
+];
 
 export default function CounsellingBook() {
   const navigate = useNavigate();
@@ -14,6 +27,27 @@ export default function CounsellingBook() {
   const [hasBoughtOnline, setHasBoughtOnline] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(null); // null = lightbox closed
+
+  const closePreview = useCallback(() => setPreviewIndex(null), []);
+  const nextPreview = useCallback(() => setPreviewIndex((i) => (i + 1) % PREVIEW_PAGES.length), []);
+  const prevPreview = useCallback(() => setPreviewIndex((i) => (i - 1 + PREVIEW_PAGES.length) % PREVIEW_PAGES.length), []);
+
+  // Keyboard nav + body scroll lock while the lightbox is open.
+  useEffect(() => {
+    if (previewIndex === null) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closePreview();
+      else if (e.key === 'ArrowRight') nextPreview();
+      else if (e.key === 'ArrowLeft') prevPreview();
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [previewIndex, closePreview, nextPreview, prevPreview]);
 
   useEffect(() => {
     checkUserStatus();
@@ -215,6 +249,54 @@ export default function CounsellingBook() {
             </div>
           </section>
 
+          {/* Book Preview Section */}
+          <section className="py-16 sm:py-24 bg-slate-50 border-t border-slate-100">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-10 sm:mb-14">
+                <span className="inline-block px-3 py-1 rounded-full bg-[#FF6600]/10 text-[#FF6600] text-xs font-bold uppercase tracking-widest mb-4">
+                  Take a look inside
+                </span>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1A1A40] mb-3">Book Preview</h2>
+                <p className="text-slate-600 max-w-2xl mx-auto text-base sm:text-lg">
+                  A few sample pages from the guide. Tap any page to view it full-screen.
+                </p>
+              </div>
+
+              {/* Responsive thumbnail grid: 2 cols (mobile) → 3 (sm) → 4 (lg) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+                {PREVIEW_PAGES.map((src, i) => (
+                  <motion.button
+                    key={src}
+                    type="button"
+                    onClick={() => setPreviewIndex(i)}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-40px' }}
+                    transition={{ duration: 0.4, delay: (i % 4) * 0.05 }}
+                    className="group relative block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:border-[#FF6600]/50 transition-all focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
+                  >
+                    <img
+                      src={src}
+                      alt={`Guide preview page ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-auto aspect-[3/4] object-cover object-top group-hover:scale-[1.03] transition-transform duration-300"
+                    />
+                    <span className="absolute inset-0 bg-[#1A1A40]/0 group-hover:bg-[#1A1A40]/30 transition-colors flex items-center justify-center">
+                      <ZoomIn size={26} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                    </span>
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#1A1A40]/80 text-white text-[10px] font-bold tracking-wide">
+                      {i + 1}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+
+              <p className="text-center text-xs text-slate-400 mt-8">
+                Preview pages are watermark-free samples — the full guide contains the complete content.
+              </p>
+            </div>
+          </section>
+
           {/* Benefits Section */}
           <section className="py-24 bg-slate-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -278,8 +360,8 @@ export default function CounsellingBook() {
         </div>
       </div>
 
-      <AuthModal 
-        isOpen={showAuthModal} 
+      <AuthModal
+        isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={() => {
           setShowAuthModal(false);
@@ -287,6 +369,51 @@ export default function CounsellingBook() {
           navigate('/dashboard');
         }}
       />
+
+      {/* Book Preview Lightbox */}
+      <AnimatePresence>
+        {previewIndex !== null && (
+          <motion.div
+            className="fixed inset-0 z-[80] bg-black/90 flex items-center justify-center p-3 sm:p-6"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={closePreview}
+          >
+            {/* Close */}
+            <button onClick={closePreview}
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 inline-flex items-center justify-center w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white transition">
+              <X size={22} />
+            </button>
+
+            {/* Prev */}
+            <button onClick={(e) => { e.stopPropagation(); prevPreview(); }}
+              className="absolute left-2 sm:left-5 z-10 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white transition">
+              <ChevronLeft size={26} />
+            </button>
+
+            {/* Image */}
+            <motion.img
+              key={previewIndex}
+              src={PREVIEW_PAGES[previewIndex]}
+              alt={`Guide preview page ${previewIndex + 1}`}
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="max-h-[88vh] max-w-[88vw] w-auto object-contain rounded-lg shadow-2xl"
+            />
+
+            {/* Next */}
+            <button onClick={(e) => { e.stopPropagation(); nextPreview(); }}
+              className="absolute right-2 sm:right-5 z-10 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white transition">
+              <ChevronRight size={26} />
+            </button>
+
+            {/* Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold tracking-wide">
+              {previewIndex + 1} / {PREVIEW_PAGES.length}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

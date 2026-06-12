@@ -7,17 +7,23 @@ WORKDIR /app
 # Copy package management files first to capitalize on Docker's layer caching
 COPY package*.json ./
 
-# Install dependencies including production only (optional, can be modified)
+# Install dependencies (includes prisma CLI — needed for migrate deploy at startup)
 RUN npm install
 
-# Copy the rest of the application source code
+# Copy the rest of the application source code (prisma/, src/, prisma.config.ts, scripts/)
 COPY . .
 
-# Expose the application port (defaults to 5000 in your server.js)
+# Generate the Prisma client (no-op for runtime today, but keeps the image correct
+# if any code starts importing src/db/prisma.js later)
+RUN npx prisma generate
+
+# Expose the application port (server.js uses process.env.PORT, defaults to 5000)
 EXPOSE 5000
 
-# Set environment to production (optional, can be overridden)
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["node", "src/server.js"]
+# Apply any pending DB migrations, then start the server.
+# prisma.config.ts uses DIRECT_URL, falling back to DATABASE_URL — so on the VPS
+# (direct Postgres) only DATABASE_URL needs to be set. Migrate deploy is apply-only
+# and a no-op when the DB is already up to date.
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
