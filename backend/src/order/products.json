@@ -80,6 +80,15 @@
     "steps": ["Summary", "Confirmation", "Payment"],
     "fields": []
   },
+  "rank_predictor_pack": {
+    "id": "rank_predictor_pack",
+    "type": "predictor",
+    "mode": "online",
+    "title": "Rank Predictor — Full Access Pack",
+    "description": "3 rank-based college predictions with full list, PDF option form & probability scores.",
+    "price": 50,
+    "pack": 3
+  },
   "admin_test_token": {
     "id": "admin_test_token",
     "type": "testing",

@@ -78,12 +78,12 @@ export const getSearchByCombo = async (userId, comboHash) => {
     return res.rows[0] || null;
 };
 
-export const insertSearch = async ({ userId, comboHash, inputs, result }) => {
+export const insertSearch = async ({ userId, comboHash, inputs, result, mode = 'percentile' }) => {
     const res = await query(
-        `INSERT INTO predictor_searches (user_id, combo_hash, inputs, result)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO predictor_searches (user_id, combo_hash, inputs, result, mode)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING id, created_at`,
-        [userId, comboHash, JSON.stringify(inputs), JSON.stringify(result)]
+        [userId, comboHash, JSON.stringify(inputs), JSON.stringify(result), mode]
     );
     return res.rows[0];
 };
@@ -107,14 +107,50 @@ export const getSearch = async (userId, id) => {
     return res.rows[0] || null;
 };
 
+// ── Rank quota ───────────────────────────────────────────────────────────────
+
+export const getRankProfile = async (userId) => {
+    const res = await query(
+        `SELECT user_id, plan, rank_searches_limit, rank_searches_used
+         FROM predictor_profiles WHERE user_id = $1`,
+        [userId]
+    );
+    return res.rows[0] || null;
+};
+
+export const incrementRankUsed = async (userId) => {
+    const res = await query(
+        `UPDATE predictor_profiles
+         SET rank_searches_used = rank_searches_used + 1, updated_at = NOW()
+         WHERE user_id = $1
+         RETURNING user_id, plan, rank_searches_limit, rank_searches_used`,
+        [userId]
+    );
+    return res.rows[0];
+};
+
+export const grantRankSearches = async (userId, n) => {
+    const res = await query(
+        `INSERT INTO predictor_profiles (user_id, plan, rank_searches_limit)
+         VALUES ($1, 'paid', $2)
+         ON CONFLICT (user_id) DO UPDATE
+           SET rank_searches_limit = predictor_profiles.rank_searches_limit + $2,
+               plan = 'paid',
+               updated_at = NOW()
+         RETURNING user_id, plan, rank_searches_limit, rank_searches_used`,
+        [userId, n]
+    );
+    return res.rows[0];
+};
+
 // ── Payments ─────────────────────────────────────────────────────────────────
 
-export const createPayment = async ({ userId, razorpayOrderId, amount, searchesGranted }) => {
+export const createPayment = async ({ userId, razorpayOrderId, amount, searchesGranted, productType = 'percentile' }) => {
     const res = await query(
-        `INSERT INTO predictor_payments (user_id, razorpay_order_id, amount, searches_granted)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO predictor_payments (user_id, razorpay_order_id, amount, searches_granted, product_type)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING id`,
-        [userId, razorpayOrderId, amount, searchesGranted]
+        [userId, razorpayOrderId, amount, searchesGranted, productType]
     );
     return res.rows[0];
 };
@@ -125,24 +161,30 @@ export const createPayment = async ({ userId, razorpayOrderId, amount, searchesG
 export const adminStats = async () => {
     const res = await query(`
         SELECT
-          (SELECT COUNT(*) FROM predictor_profiles)                                      AS total_profiles,
-          (SELECT COUNT(*) FROM predictor_profiles WHERE plan = 'paid')                  AS paid_profiles,
-          (SELECT COALESCE(SUM(searches_used), 0) FROM predictor_profiles)               AS searches_used,
-          (SELECT COALESCE(SUM(searches_limit), 0) FROM predictor_profiles)              AS searches_granted,
-          (SELECT COUNT(*) FROM predictor_searches)                                      AS saved_searches,
-          (SELECT COUNT(*) FROM predictor_payments WHERE status = 'PAID')                AS paid_payments,
-          (SELECT COALESCE(SUM(amount), 0) FROM predictor_payments WHERE status = 'PAID') AS total_revenue
+          (SELECT COUNT(*) FROM predictor_profiles)                                                           AS total_profiles,
+          (SELECT COUNT(*) FROM predictor_profiles WHERE plan = 'paid')                                       AS paid_profiles,
+          (SELECT COALESCE(SUM(searches_used), 0) FROM predictor_profiles)                                    AS searches_used,
+          (SELECT COALESCE(SUM(searches_limit), 0) FROM predictor_profiles)                                   AS searches_granted,
+          (SELECT COALESCE(SUM(rank_searches_used), 0) FROM predictor_profiles)                               AS rank_searches_used,
+          (SELECT COALESCE(SUM(rank_searches_limit), 0) FROM predictor_profiles)                              AS rank_searches_granted,
+          (SELECT COUNT(*) FROM predictor_searches WHERE mode = 'percentile')                                 AS saved_pct_searches,
+          (SELECT COUNT(*) FROM predictor_searches WHERE mode = 'rank')                                       AS saved_rank_searches,
+          (SELECT COUNT(*) FROM predictor_payments WHERE status = 'PAID')                                     AS paid_payments,
+          (SELECT COUNT(*) FROM predictor_payments WHERE status = 'PAID' AND product_type = 'rank')           AS paid_rank_payments,
+          (SELECT COALESCE(SUM(amount), 0) FROM predictor_payments WHERE status = 'PAID')                     AS total_revenue,
+          (SELECT COALESCE(SUM(amount), 0) FROM predictor_payments WHERE status = 'PAID' AND product_type = 'rank') AS rank_revenue
     `);
     return res.rows[0];
 };
 
 // Mark paid exactly once (status guard prevents double-granting on retry).
+// Returns searches_granted AND product_type so the caller knows which quota to top up.
 export const markPaymentPaid = async ({ userId, razorpayOrderId, razorpayPayId }) => {
     const res = await query(
         `UPDATE predictor_payments
          SET status = 'PAID', razorpay_payment_id = $3
          WHERE user_id = $1 AND razorpay_order_id = $2 AND status = 'CREATED'
-         RETURNING id, searches_granted`,
+         RETURNING id, searches_granted, product_type`,
         [userId, razorpayOrderId, razorpayPayId]
     );
     return res.rows[0] || null;

@@ -97,11 +97,22 @@ export const guest = async (req, res) => {
     }
 };
 
-/** GET /api/predictor/profile (auth) — plan + quota. */
+/** GET /api/predictor/profile (auth) — plan + percentile quota + rank quota. */
 export const profile = async (req, res) => {
     try {
         const p = await AccountModel.getOrCreateProfile(req.user.id);
-        res.json({ success: true, profile: publicProfile(p), price: PACK_PRICE, pack: PACK_SIZE });
+        const rankRemaining = Math.max(0, (p.rank_searches_limit || 0) - (p.rank_searches_used || 0));
+        res.json({
+            success: true,
+            profile: publicProfile(p),
+            rankProfile: {
+                used: p.rank_searches_used || 0,
+                limit: p.rank_searches_limit || 0,
+                remaining: rankRemaining,
+            },
+            price: PACK_PRICE,
+            pack: PACK_SIZE,
+        });
     } catch (err) {
         console.error('Predictor profile error:', err.message);
         res.status(500).json({ error: 'Failed to load profile' });
@@ -186,11 +197,19 @@ export const adminStats = async (_req, res) => {
             stats: {
                 totalProfiles: Number(s.total_profiles),
                 paidProfiles: Number(s.paid_profiles),
+                // Percentile
                 searchesUsed: Number(s.searches_used),
                 searchesGranted: Number(s.searches_granted),
-                savedSearches: Number(s.saved_searches),
+                savedPctSearches: Number(s.saved_pct_searches),
+                // Rank
+                rankSearchesUsed: Number(s.rank_searches_used),
+                rankSearchesGranted: Number(s.rank_searches_granted),
+                savedRankSearches: Number(s.saved_rank_searches),
+                // Payments
                 paidPayments: Number(s.paid_payments),
+                paidRankPayments: Number(s.paid_rank_payments),
                 totalRevenue: Number(s.total_revenue),
+                rankRevenue: Number(s.rank_revenue),
             },
         });
     } catch (err) {

@@ -57,7 +57,8 @@
       "Bash(curl -s -m 20 https://apex.rohithuge.online/api/predictor/meta)",
       "Bash(curl -s -m 20 -X POST https://apex.rohithuge.online/api/predictor/guest -H \"Content-Type: application/json\" -d '{\"name\":\"DB Probe\",\"phone\":\"9999000011\"}')",
       "Bash(npx vite *.)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(python -c ' *)"
     ]
   }
 }

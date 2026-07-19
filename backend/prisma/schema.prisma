@@ -86,11 +86,12 @@ model users {
 }
 
 model College {
-  id      Int      @id @default(autoincrement())
-  code    String   @unique @db.VarChar(10)
-  name    String
-  city    String   @default("Pune") @db.VarChar(60)
-  cutoffs Cutoff[]
+  id          Int          @id @default(autoincrement())
+  code        String       @unique @db.VarChar(10)
+  name        String
+  city        String       @default("Pune") @db.VarChar(60)
+  cutoffs     Cutoff[]
+  rankCutoffs RankCutoff[]
 
   @@map("colleges")
 }
@@ -133,26 +134,47 @@ model AnalyticsEvent {
   @@map("analytics_events")
 }
 
-// Per-user predictor entitlement: plan + full-search quota.
-// Each ₹99 purchase adds 15 to searchesLimit.
+// Rank-based cutoffs (MHT-CET closing rank per college/branch/category).
+// Category codes carry a university-type suffix:
+//   H = home-university (Pune-affiliated college), S = state (other university),
+//   O = open quota (no university restriction), no suffix = TFWS / EWS.
+model RankCutoff {
+  id          Int     @id @default(autoincrement())
+  collegeId   Int     @map("college_id")
+  branch      String  @db.VarChar(60)
+  category    String  @db.VarChar(20)
+  closingRank Int     @map("closing_rank")
+  year        Int     @default(2024) @db.SmallInt
+  college     College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([collegeId, branch, category, year])
+  @@index([category, branch, closingRank])
+  @@map("rank_cutoffs")
+}
+
+// Per-user predictor entitlement: separate quotas for percentile and rank packs.
 model PredictorProfile {
-  id            Int      @id @default(autoincrement())
-  userId        String   @unique @map("user_id") @db.VarChar(255)
-  plan          String   @default("free") @db.VarChar(20)
-  searchesLimit Int      @default(0) @map("searches_limit")
-  searchesUsed  Int      @default(0) @map("searches_used")
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                Int      @id @default(autoincrement())
+  userId            String   @unique @map("user_id") @db.VarChar(255)
+  plan              String   @default("free") @db.VarChar(20)
+  searchesLimit     Int      @default(0) @map("searches_limit")
+  searchesUsed      Int      @default(0) @map("searches_used")
+  rankSearchesLimit Int      @default(0) @map("rank_searches_limit")
+  rankSearchesUsed  Int      @default(0) @map("rank_searches_used")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("predictor_profiles")
 }
 
 // A consumed full search: inputs + a frozen snapshot of the result matrix.
 // comboHash dedupes so re-opening the same combo is free.
+// mode = 'percentile' | 'rank'
 model PredictorSearch {
   id        Int      @id @default(autoincrement())
   userId    String   @map("user_id") @db.VarChar(255)
   comboHash String   @map("combo_hash") @db.VarChar(64)
+  mode      String   @default("percentile") @db.VarChar(20)
   inputs    Json
   result    Json
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -162,7 +184,8 @@ model PredictorSearch {
   @@map("predictor_searches")
 }
 
-// Razorpay purchase of a 15-search pack.
+// Razorpay purchase of a search pack.
+// productType = 'percentile' | 'rank'
 model PredictorPayment {
   id              Int      @id @default(autoincrement())
   userId          String   @map("user_id") @db.VarChar(255)
@@ -170,6 +193,7 @@ model PredictorPayment {
   razorpayPayId   String?  @map("razorpay_payment_id") @db.VarChar(255)
   amount          Decimal  @db.Decimal(10, 2)
   searchesGranted Int      @default(15) @map("searches_granted")
+  productType     String   @default("percentile") @map("product_type") @db.VarChar(20)
   status          String   @default("CREATED") @db.VarChar(20)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
