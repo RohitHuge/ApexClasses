@@ -3,7 +3,7 @@ import { SELECTABLE_CATEGORIES } from './predictor.service.js';
 
 // Starting slack for reach query; expands dynamically if < 10 reach colleges found.
 export const REACH_RANK_SLACK = 3000;
-const REACH_SLACK_LADDER = [3000, 5000, 8000, 12000];
+const REACH_SLACK_LADDER = [3000, 5000, 8000, 12000, 20000, 999999];
 
 const MAX_REACH = 10;
 const MAX_SAFE  = 20;
@@ -108,45 +108,43 @@ export const resolveRankCategories = (category, homeUniversity, tfws) => {
 export { SELECTABLE_CATEGORIES };
 
 export const predictByRank = async ({ rank, category, homeUniversity, branches, tfws, unlocked = false }) => {
-    const effective  = resolveRankCategories(category, homeUniversity, tfws);
+    const effective    = resolveRankCategories(category, homeUniversity, tfws);
     const branchFilter = branches && branches.length ? branches : null;
 
-    // Dynamic reach expansion: widen slack until >= 10 reach colleges found
-    let rows = [];
+    // ── Reach: expand slack until >= MAX_REACH colleges found ────────────────
+    // Include ALL reach colleges regardless of probability — even 0% ambitions
+    // belong in the CAP option form. Colleges are already sorted ASC by
+    // closing_rank, which puts the most ambitious (lowest rank) first.
+    let reachRows = [];
     for (const slack of REACH_SLACK_LADDER) {
-        rows = await RankModel.findEligibleByRank(rank, effective, branchFilter, slack);
-        const reachCount = rows.filter(r => r.margin < 0 && calcProbability(rank, r.best_rank) > 0).length;
-        if (reachCount >= MAX_REACH) break;
+        reachRows = await RankModel.findReachByRank(rank, effective, branchFilter, slack);
+        if (reachRows.length >= MAX_REACH) break;
     }
 
-    // Build flat items, filtering out probability = 0 (> 35% rank drop)
-    const allItems = rows
-        .map(r => ({
-            code:        r.code,
-            college:     r.name,
-            branch:      r.branch,
-            closingRank: r.best_rank,
-            margin:      r.margin,
-            probability: calcProbability(rank, r.best_rank),
-            viaCategory: r.via_category,
-            viaLabel:    rankCategoryLabel(r.via_category),
-            type:        r.margin < 0 ? 'reach' : 'safe',
-        }))
-        .filter(item => item.probability > 0);
+    // ── Safe: independent query — no upper bound, never misses distant safe ──
+    const safeRows = await RankModel.findSafeByRank(rank, effective, branchFilter);
 
-    // Model already sorts closing_rank ASC so within each group the order is correct:
-    //   reach: hardest (lowest closingRank) first
-    //   safe:  narrowest margin (lowest closingRank) first
-    const reachAll = allItems.filter(i => i.type === 'reach');
-    const safeAll  = allItems.filter(i => i.type === 'safe');
+    const toItem = (r) => ({
+        code:        r.code,
+        college:     r.name,
+        branch:      r.branch,
+        closingRank: r.best_rank,
+        margin:      r.margin,
+        probability: calcProbability(rank, r.best_rank),
+        viaCategory: r.via_category,
+        viaLabel:    rankCategoryLabel(r.via_category),
+        type:        r.margin < 0 ? 'reach' : 'safe',
+    });
+
+    const reachAll = reachRows.map(toItem);   // already sorted: hardest (lowest rank) first
+    const safeAll  = safeRows.map(toItem);    // already sorted: narrowest margin first
 
     const counts = {
         reach: reachAll.length,
         safe:  safeAll.length,
-        total: allItems.length,
+        total: reachAll.length + safeAll.length,
     };
 
-    // Cap at 10 reach + 20 safe for the option-form layout
     const fullResults = [
         ...reachAll.slice(0, MAX_REACH),
         ...safeAll.slice(0, MAX_SAFE),

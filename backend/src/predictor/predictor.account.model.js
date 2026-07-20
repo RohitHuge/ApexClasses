@@ -27,7 +27,8 @@ export const getOrCreateProfile = async (userId) => {
         `INSERT INTO predictor_profiles (user_id)
          VALUES ($1)
          ON CONFLICT (user_id) DO UPDATE SET user_id = EXCLUDED.user_id
-         RETURNING user_id, plan, searches_limit, searches_used`,
+         RETURNING user_id, plan, searches_limit, searches_used,
+                   rank_searches_limit, rank_searches_used`,
         [userId]
     );
     return res.rows[0];
