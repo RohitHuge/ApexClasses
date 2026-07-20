@@ -108,7 +108,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="flex-1 w-full max-w-xl"
           >
-            <PredictorPreview />
+            <RankPreview />
           </motion.div>
         </motion.div>
       </section>
@@ -348,17 +348,17 @@ export default function Home() {
                 <Sparkles size={14} /> Free Tool 2026
               </span>
               <h2 className="text-3xl lg:text-5xl font-extrabold text-apexBlue mt-4 mb-6">
-                See where your percentile lands
+                See where your rank lands
               </h2>
               <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-                Drag the slider below and watch your position move across 24 representative Pune
-                engineering colleges. The Safe / Likely / Ambitious counts update in real time so
-                you can <em>feel</em> where you stand before diving into the full predictor.
-                Powered by 2024 closing cutoffs across 77 colleges and 6,000+ branch entries.
+                Drag the slider below and watch your rank move across 24 representative Pune
+                engineering colleges. The Reach / Safe counts update in real time so you can{' '}
+                <em>feel</em> where you stand before diving into the full predictor.
+                Powered by 2024 closing ranks across 77 colleges and 6,000+ branch entries.
               </p>
               <ul className="space-y-3 mb-8 text-slate-700">
                 {[
-                    { icon: ShieldCheck, text: 'Live Safe / Likely / Ambitious counts' },
+                    { icon: ShieldCheck, text: 'Live Reach / Safe counts at any rank' },
                     { icon: MapPin, text: 'Home-university (L-quota) aware' },
                     { icon: GraduationCap, text: '77 colleges · 28 branches · 2024 data' },
                 ].map((f) => (
@@ -393,7 +393,7 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="lg:w-1/2 w-full"
             >
-              <PercentileLandscape />
+              <RankLandscape />
             </motion.div>
           </div>
         </motion.div>
@@ -492,68 +492,62 @@ export default function Home() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * PredictorPreview — a self-running, looping animation that mimics a student
- * using the College Predictor: percentile ticks up, category highlights, home
- * university flips on, branch chip selects, then a "great college" result
- * card slides in. Loops with a pause so it never feels intrusive.
+ * RankPreview — animated mock showing rank input, category, HU toggle, and
+ * a rank-based result card. Self-running loop, never feels intrusive.
  * ──────────────────────────────────────────────────────────────────────────── */
-const PREVIEW_STEPS = [
-  { id: 'pct', label: 'Percentile', target: 96.42 },
-  { id: 'cat', label: 'Category', target: 'OBC' },
-  { id: 'home', label: 'Home University', target: 'Pune · ON' },
-  { id: 'branch', label: 'Branch', target: 'Computer Engineering' },
-  { id: 'result', label: 'Result', target: 'COEP Pune' },
+const RANK_PREVIEW_STEPS = [
+  { id: 'rank',   label: 'Rank',            target: 12450 },
+  { id: 'cat',    label: 'Category',        target: 'OBC' },
+  { id: 'home',   label: 'Home University', target: 'Pune · ON' },
+  { id: 'branch', label: 'Branch',          target: 'Computer' },
+  { id: 'result', label: 'Result',          target: 'COEP Pune' },
 ];
 
-const PREVIEW_RESULT = {
-  code: '6005',
+const RANK_PREVIEW_RESULT = {
   college: 'College of Engineering, Pune',
   branch: 'Computer Engineering',
-  cutoff: 92.99,
-  margin: 3.42,
-  via: 'LOBC',
+  closingRank: 14230,
+  probability: 87,
+  via: 'LOBCH',
 };
 
-function PredictorPreview() {
+function RankPreview() {
   const [stepIndex, setStepIndex] = React.useState(0);
-  const [percentile, setPercentile] = React.useState(70);
+  const [displayRank, setDisplayRank] = React.useState(5000);
 
-  // animate the percentile number ticking up
   React.useEffect(() => {
     if (stepIndex !== 0) return;
     let raf;
     const start = performance.now();
-    const from = 70;
-    const to = PREVIEW_STEPS[0].target;
+    const from = 5000;
+    const to = RANK_PREVIEW_STEPS[0].target;
     const dur = 1400;
     const tick = (now) => {
       const t = Math.min(1, (now - start) / dur);
       const eased = 1 - Math.pow(1 - t, 3);
-      setPercentile(from + (to - from) * eased);
+      setDisplayRank(Math.round(from + (to - from) * eased));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [stepIndex]);
 
-  // step sequence loop
   React.useEffect(() => {
-    const delays = [1800, 1300, 1100, 1100, 4200, 1400]; // last is the pause before reset
+    const delays = [1800, 1300, 1100, 1100, 4200, 1400];
     const t = setTimeout(() => {
-      setStepIndex((i) => (i + 1) % PREVIEW_STEPS.length);
+      setStepIndex((i) => (i + 1) % RANK_PREVIEW_STEPS.length);
     }, delays[stepIndex] ?? 2000);
     return () => clearTimeout(t);
   }, [stepIndex]);
 
-  const isActive = (id) => PREVIEW_STEPS[stepIndex]?.id === id;
-  const isDone = (id) => {
-    const idx = PREVIEW_STEPS.findIndex((s) => s.id === id);
+  const isActive = (id) => RANK_PREVIEW_STEPS[stepIndex]?.id === id;
+  const isDone   = (id) => {
+    const idx = RANK_PREVIEW_STEPS.findIndex((s) => s.id === id);
     return idx >= 0 && idx < stepIndex;
   };
 
   return (
     <div className="relative w-full max-w-[420px]">
-      {/* floating accent blobs */}
       <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-300/30 rounded-full blur-3xl" />
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-300/30 rounded-full blur-3xl" />
 
@@ -562,7 +556,6 @@ function PredictorPreview() {
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         className="relative bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden"
       >
-        {/* mock window chrome */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50/80">
           <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -574,13 +567,10 @@ function PredictorPreview() {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* header */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-indigo-500">
-                Live preview
-              </p>
-              <p className="text-sm font-bold text-slate-800">College Predictor</p>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-indigo-500">Live preview</p>
+              <p className="text-sm font-bold text-slate-800">Rank Predictor</p>
             </div>
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -588,48 +578,22 @@ function PredictorPreview() {
             </span>
           </div>
 
-          {/* percentile row */}
-          <div
-            className={`rounded-xl border p-3 transition-colors ${
-              isActive('pct') || isDone('pct')
-                ? 'border-indigo-300 bg-indigo-50/40'
-                : 'border-slate-200 bg-slate-50/40'
-            }`}
-          >
+          {/* Rank input */}
+          <div className={`rounded-xl border p-3 transition-colors ${isActive('rank') || isDone('rank') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'}`}>
             <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span>Your percentile</span>
-              <span className="text-indigo-600 text-sm font-bold tabular-nums">
-                {percentile.toFixed(2)}
-              </span>
-            </div>
-            <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-              <motion.div
-                className="h-full bg-indigo-500"
-                animate={{ width: `${percentile}%` }}
-                transition={{ duration: 0.05 }}
-              />
+              <span>Your MHT-CET rank</span>
+              <span className="text-indigo-600 text-sm font-bold tabular-nums">{displayRank.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
-          {/* category row */}
-          <div
-            className={`rounded-xl border p-3 transition-colors ${
-              isActive('cat') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'
-            }`}
-          >
+          {/* Category */}
+          <div className={`rounded-xl border p-3 transition-colors ${isActive('cat') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'}`}>
             <p className="text-[11px] font-semibold text-slate-500 mb-2">Category</p>
             <div className="flex flex-wrap gap-1.5">
               {['OPEN', 'OBC', 'SC', 'ST', 'VJ', 'NT1', 'EWS'].map((c) => {
                 const highlighted = c === 'OBC' && (isActive('cat') || isDone('cat'));
                 return (
-                  <span
-                    key={c}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
-                      highlighted
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-slate-400 border-slate-200'
-                    }`}
-                  >
+                  <span key={c} className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${highlighted ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-400 border-slate-200'}`}>
                     {c}
                   </span>
                 );
@@ -637,14 +601,8 @@ function PredictorPreview() {
             </div>
           </div>
 
-          {/* home uni toggle row */}
-          <div
-            className={`rounded-xl border p-3 flex items-center justify-between transition-colors ${
-              isActive('home') || isDone('home')
-                ? 'border-indigo-300 bg-indigo-50/40'
-                : 'border-slate-200 bg-slate-50/40'
-            }`}
-          >
+          {/* Home university toggle */}
+          <div className={`rounded-xl border p-3 flex items-center justify-between transition-colors ${isActive('home') || isDone('home') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'}`}>
             <div className="flex items-center gap-2">
               <MapPin size={14} className="text-indigo-500" />
               <div>
@@ -652,40 +610,19 @@ function PredictorPreview() {
                 <p className="text-[10px] text-slate-400">Unlocks L-quota cutoffs</p>
               </div>
             </div>
-            <span
-              className={`relative w-9 h-5 rounded-full p-0.5 transition-colors ${
-                isActive('home') || isDone('home') ? 'bg-indigo-600' : 'bg-slate-300'
-              }`}
-            >
-              <span
-                className={`block w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                  isActive('home') || isDone('home') ? 'translate-x-4' : ''
-                }`}
-              />
+            <span className={`relative w-9 h-5 rounded-full p-0.5 transition-colors ${isActive('home') || isDone('home') ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+              <span className={`block w-4 h-4 rounded-full bg-white shadow transition-transform ${isActive('home') || isDone('home') ? 'translate-x-4' : ''}`} />
             </span>
           </div>
 
-          {/* branch chip row */}
-          <div
-            className={`rounded-xl border p-3 transition-colors ${
-              isActive('branch') || isDone('branch')
-                ? 'border-indigo-300 bg-indigo-50/40'
-                : 'border-slate-200 bg-slate-50/40'
-            }`}
-          >
+          {/* Branch chips */}
+          <div className={`rounded-xl border p-3 transition-colors ${isActive('branch') || isDone('branch') ? 'border-indigo-300 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/40'}`}>
             <p className="text-[11px] font-semibold text-slate-500 mb-2">Preferred branch</p>
             <div className="flex flex-wrap gap-1.5">
-              {['Computer', 'IT', 'AIDS', 'Mechanical', 'Civil'].map((b) => {
+              {['Computer', 'IT', 'AIDS', 'Mech', 'Civil'].map((b) => {
                 const highlighted = b === 'Computer' && (isActive('branch') || isDone('branch'));
                 return (
-                  <span
-                    key={b}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition ${
-                      highlighted
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-slate-50 text-slate-400 border-slate-200'
-                    }`}
-                  >
+                  <span key={b} className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition ${highlighted ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
                     {b}
                   </span>
                 );
@@ -693,7 +630,7 @@ function PredictorPreview() {
             </div>
           </div>
 
-          {/* result card */}
+          {/* Result card */}
           <AnimatePresence mode="wait">
             {(isActive('result') || isDone('result')) && (
               <motion.div
@@ -704,37 +641,30 @@ function PredictorPreview() {
                 transition={{ type: 'spring', stiffness: 220, damping: 22 }}
                 className="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 p-3"
               >
-                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2">
-                  <ShieldCheck size={12} />
-                  High Chance · +{PREVIEW_RESULT.margin.toFixed(2)} margin
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-700 uppercase tracking-widest">
+                    <ShieldCheck size={12} />
+                    Safe · Closing rank {RANK_PREVIEW_RESULT.closingRank.toLocaleString('en-IN')}
+                  </div>
+                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">{RANK_PREVIEW_RESULT.probability}%</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="shrink-0 w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 inline-flex items-center justify-center">
                     <Building2 size={16} />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 truncate">
-                      {PREVIEW_RESULT.college}
-                    </p>
+                    <p className="text-sm font-bold text-slate-800 truncate">{RANK_PREVIEW_RESULT.college}</p>
                     <p className="text-[11px] text-slate-500 inline-flex items-center gap-1">
                       <Cpu size={10} />
-                      {PREVIEW_RESULT.branch}
+                      {RANK_PREVIEW_RESULT.branch}
                     </p>
                   </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>
-                    Closing: <b className="text-slate-700">{PREVIEW_RESULT.cutoff.toFixed(2)}</b>
-                  </span>
-                  <span>
-                    via <b className="text-slate-700">{PREVIEW_RESULT.via}</b>
-                  </span>
                 </div>
                 <div className="mt-2 h-1 rounded-full bg-emerald-200 overflow-hidden">
                   <motion.div
                     className="h-full bg-emerald-500"
                     initial={{ width: 0 }}
-                    animate={{ width: '85%' }}
+                    animate={{ width: `${RANK_PREVIEW_RESULT.probability}%` }}
                     transition={{ duration: 0.9, ease: 'easeOut' }}
                   />
                 </div>
@@ -742,7 +672,6 @@ function PredictorPreview() {
             )}
           </AnimatePresence>
 
-          {/* permanent CTA at the bottom of the mock */}
           <button
             onClick={() => (window.location.href = '/college-predictor')}
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-apexBlue text-white font-bold text-sm py-2.5 hover:bg-indigo-700 transition"
@@ -754,7 +683,6 @@ function PredictorPreview() {
         </div>
       </motion.div>
 
-      {/* floating live card that pops next to it */}
       <AnimatePresence>
         {isActive('result') && (
           <motion.div
@@ -769,7 +697,7 @@ function PredictorPreview() {
             </span>
             <div>
               <p className="text-[10px] font-bold text-slate-800">Match found!</p>
-              <p className="text-[9px] text-slate-400">Just now · 1 of 23</p>
+              <p className="text-[9px] text-slate-400">Just now · 1 of 30</p>
             </div>
           </motion.div>
         )}
@@ -779,94 +707,71 @@ function PredictorPreview() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * PercentileLandscape — a real, draggable interactive widget. A horizontal
- * axis shows 24 representative Pune colleges (sourced from the actual 2024
- * cutoff data) sorted by closing percentile. Drag the slider and watch the
- * position marker sweep across the axis; below, a live counter tells you
- * how many Safe / Likely / Ambitious matches you'd unlock at that
- * percentile. Click "Open" to jump straight into the full predictor.
+ * RankLandscape — interactive rank slider showing reach/safe counts.
+ * 24 representative Pune colleges sorted by closing rank (lower = harder).
  * ──────────────────────────────────────────────────────────────────────────── */
 const LANDSCAPE_DATA = [
-  { code: '6005', name: 'COEP',                       cutoff: 98.2 },
-  { code: '6028', name: 'PICT',                       cutoff: 96.7 },
-  { code: '6035', name: 'VIT Pune',                   cutoff: 95.1 },
-  { code: '6138', name: 'PCCOE',                      cutoff: 93.8 },
-  { code: '6006', name: 'WCE Sangli',                 cutoff: 92.4 },
-  { code: '6155', name: 'Sinhgad (SKN)',              cutoff: 90.6 },
-  { code: '6175', name: 'Pimpri Chinchwad',           cutoff: 88.9 },
-  { code: '6182', name: 'DY Patil Akurdi',            cutoff: 87.1 },
-  { code: '6203', name: 'Marathwada Mitra',           cutoff: 85.4 },
-  { code: '6156', name: 'AISSMS IOIT',                cutoff: 83.8 },
-  { code: '6184', name: 'GHR Labs',                   cutoff: 82.0 },
-  { code: '6207', name: 'Pune Vidyarthi Griha',       cutoff: 80.2 },
-  { code: '6185', name: 'JSPM Narhe',                 cutoff: 78.4 },
-  { code: '6188', name: 'KJ Somaiya',                 cutoff: 76.5 },
-  { code: '6214', name: 'MIT WPU',                    cutoff: 74.8 },
-  { code: '6223', name: 'Rajarshi Shahu',             cutoff: 72.6 },
-  { code: '6196', name: 'KJEI Trinity',               cutoff: 70.3 },
-  { code: '6220', name: 'Indira (ICOE)',              cutoff: 68.1 },
-  { code: '6215', name: 'Nutan Maharashtra',          cutoff: 65.8 },
-  { code: '6209', name: 'Jaywant',                    cutoff: 62.4 },
-  { code: '6183', name: 'Alard',                      cutoff: 58.6 },
-  { code: '6219', name: 'Genba Sopanrao',             cutoff: 54.2 },
-  { code: '6222', name: 'Dattakala',                  cutoff: 49.8 },
-  { code: '6270', name: 'Gharda Foundation',          cutoff: 44.1 },
+  { code: '6005', name: 'COEP',              rank: 320  },
+  { code: '6028', name: 'PICT',              rank: 1200 },
+  { code: '6035', name: 'VIT Pune',          rank: 2400 },
+  { code: '6138', name: 'PCCOE',             rank: 4100 },
+  { code: '6006', name: 'WCE Sangli',        rank: 5800 },
+  { code: '6155', name: 'Sinhgad (SKN)',     rank: 8200 },
+  { code: '6175', name: 'Pimpri Chinchwad',  rank: 10500 },
+  { code: '6182', name: 'DY Patil Akurdi',   rank: 13100 },
+  { code: '6203', name: 'Marathwada Mitra',  rank: 16400 },
+  { code: '6156', name: 'AISSMS IOIT',       rank: 20000 },
+  { code: '6184', name: 'GHR Labs',          rank: 24500 },
+  { code: '6207', name: 'PVG',               rank: 29000 },
+  { code: '6185', name: 'JSPM Narhe',        rank: 34000 },
+  { code: '6188', name: 'KJ Somaiya',        rank: 40000 },
+  { code: '6214', name: 'MIT WPU',           rank: 47000 },
+  { code: '6223', name: 'Rajarshi Shahu',    rank: 55000 },
+  { code: '6196', name: 'KJEI Trinity',      rank: 65000 },
+  { code: '6220', name: 'Indira ICOE',       rank: 77000 },
+  { code: '6215', name: 'Nutan Maharashtra', rank: 92000 },
+  { code: '6209', name: 'Jaywant',           rank: 108000 },
+  { code: '6183', name: 'Alard',             rank: 128000 },
+  { code: '6219', name: 'Genba Sopanrao',    rank: 152000 },
+  { code: '6222', name: 'Dattakala',         rank: 178000 },
+  { code: '6270', name: 'Gharda Foundation', rank: 210000 },
 ];
 
-function PercentileLandscape() {
-  const [percentile, setPercentile] = React.useState(85);
+function RankLandscape() {
+  const MIN_RANK = 300;
+  const MAX_RANK = 220000;
+  const [rank, setRank] = React.useState(15000);
   const [hoverCode, setHoverCode] = React.useState(null);
-
-  // position of slider on the axis (0-100 mapped to data range)
-  const minCut = LANDSCAPE_DATA[LANDSCAPE_DATA.length - 1].cutoff - 4;
-  const maxCut = LANDSCAPE_DATA[0].cutoff + 2;
-
-  const safe = LANDSCAPE_DATA.filter((c) => c.cutoff <= percentile - 2).length;
-  const likely = LANDSCAPE_DATA.filter((c) => c.cutoff > percentile - 2 && c.cutoff <= percentile).length;
-  const reach = LANDSCAPE_DATA.filter((c) => c.cutoff > percentile && c.cutoff <= percentile + 1).length;
-
-  // auto-cycle when not interacted
   const [autoCycle, setAutoCycle] = React.useState(true);
+
   React.useEffect(() => {
     if (!autoCycle) return;
     let dir = 1;
-    let val = 70;
+    let val = 8000;
     const id = setInterval(() => {
-      val += dir * 0.8;
-      if (val > 96) dir = -1;
-      if (val < 50) dir = 1;
-      setPercentile(Number(val.toFixed(2)));
+      val += dir * 600;
+      if (val > 180000) dir = -1;
+      if (val < 2000) dir = 1;
+      setRank(Math.round(val));
     }, 80);
     return () => clearInterval(id);
   }, [autoCycle]);
 
-  const bucketFor = (cutoff) => {
-    if (cutoff <= percentile - 2) return 'safe';
-    if (cutoff <= percentile) return 'likely';
-    if (cutoff <= percentile + 1) return 'reach';
+  const reach = LANDSCAPE_DATA.filter((c) => c.rank < rank && c.rank >= rank * 0.65).length;
+  const safe  = LANDSCAPE_DATA.filter((c) => c.rank >= rank).length;
+
+  const bucketFor = (colRank) => {
+    if (colRank >= rank) return 'safe';
+    if (colRank >= rank * 0.65) return 'reach';
     return 'none';
   };
 
-  const bucketColor = {
-    safe: 'bg-emerald-500',
-    likely: 'bg-amber-400',
-    reach: 'bg-rose-500',
-    none: 'bg-slate-300',
-  };
-  const bucketRing = {
-    safe: 'ring-emerald-300',
-    likely: 'ring-amber-300',
-    reach: 'ring-rose-300',
-    none: 'ring-slate-200',
-  };
-  const bucketLabel = {
-    safe: 'Safe',
-    likely: 'Likely',
-    reach: 'Reach',
-    none: '—',
-  };
+  const bucketColor = { safe: 'bg-emerald-500', reach: 'bg-rose-500', none: 'bg-slate-300' };
+  const bucketRing  = { safe: 'ring-emerald-300', reach: 'ring-rose-300', none: 'ring-slate-200' };
 
-  const sliderPct = ((percentile - minCut) / (maxCut - minCut)) * 100;
+  // log scale position for the axis (rank axis is log-distributed)
+  const toX = (r) => (Math.log(r) - Math.log(MIN_RANK)) / (Math.log(MAX_RANK) - Math.log(MIN_RANK)) * 100;
+  const sliderX = toX(rank);
 
   return (
     <div
@@ -877,25 +782,22 @@ function PercentileLandscape() {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Live · 2024 cutoffs</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Live · 2024 closing ranks</p>
           <p className="text-base font-extrabold text-slate-800">Find your spot</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Your percentile</p>
-          <p className="text-2xl font-extrabold text-indigo-600 tabular-nums leading-none">{percentile.toFixed(2)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Your rank</p>
+          <p className="text-2xl font-extrabold text-indigo-600 tabular-nums leading-none">{rank.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
-      {/* Landscape axis */}
+      {/* Axis */}
       <div className="relative h-32 mb-3">
-        {/* horizontal baseline */}
         <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-slate-200 -translate-y-1/2" />
-
-        {/* markers (one per college) */}
         <div className="absolute inset-0">
-          {LANDSCAPE_DATA.map((c, i) => {
-            const x = ((c.cutoff - minCut) / (maxCut - minCut)) * 100;
-            const b = bucketFor(c.cutoff);
+          {LANDSCAPE_DATA.map((c) => {
+            const x = toX(c.rank);
+            const b = bucketFor(c.rank);
             const hovered = hoverCode === c.code;
             return (
               <div
@@ -905,16 +807,14 @@ function PercentileLandscape() {
                 onMouseEnter={() => setHoverCode(c.code)}
                 onMouseLeave={() => setHoverCode(null)}
               >
-                <div
-                  className={`rounded-full transition-all ${bucketColor[b]} ${hovered ? `w-4 h-4 ring-4 ${bucketRing[b]}` : 'w-2.5 h-2.5'}`}
-                />
+                <div className={`rounded-full transition-all ${bucketColor[b]} ${hovered ? `w-4 h-4 ring-4 ${bucketRing[b]}` : 'w-2.5 h-2.5'}`} />
                 {hovered && (
                   <motion.div
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="absolute -top-12 whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold rounded-md px-2 py-1 shadow-lg z-20"
                   >
-                    {c.name} · {c.cutoff.toFixed(1)}
+                    {c.name} · {c.rank.toLocaleString('en-IN')}
                     <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900" />
                   </motion.div>
                 )}
@@ -922,12 +822,10 @@ function PercentileLandscape() {
             );
           })}
         </div>
-
-        {/* the percentile marker (sweeping line) */}
         <motion.div
           className="absolute top-0 bottom-0 w-0.5 bg-indigo-600 z-10"
-          style={{ left: `${sliderPct}%` }}
-          animate={{ left: `${sliderPct}%` }}
+          style={{ left: `${sliderX}%` }}
+          animate={{ left: `${sliderX}%` }}
           transition={{ type: 'spring', stiffness: 220, damping: 28 }}
         >
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-200" />
@@ -937,44 +835,36 @@ function PercentileLandscape() {
         </motion.div>
       </div>
 
-      {/* Range slider */}
+      {/* Slider */}
       <div className="mt-6 mb-5">
         <input
           type="range"
-          min={minCut}
-          max={maxCut}
-          step={0.1}
-          value={percentile}
-          onChange={(e) => {
-            setAutoCycle(false);
-            setPercentile(Number(e.target.value));
-          }}
+          min={MIN_RANK}
+          max={MAX_RANK}
+          step={100}
+          value={rank}
+          onChange={(e) => { setAutoCycle(false); setRank(Number(e.target.value)); }}
           className="w-full accent-indigo-600 cursor-pointer"
         />
         <div className="flex justify-between text-[10px] text-slate-400 font-semibold mt-1">
-          <span>40</span>
-          <span>70</span>
-          <span>100</span>
+          <span>Top 300</span>
+          <span>50k</span>
+          <span>2 lakh+</span>
         </div>
       </div>
 
       {/* Live counts */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-2.5 text-center">
+          <p className="text-xl font-extrabold text-rose-700 tabular-nums">{reach}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Reach / Ambitious</p>
+        </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-2.5 text-center">
           <p className="text-xl font-extrabold text-emerald-700 tabular-nums">{safe}</p>
           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Safe</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 text-center">
-          <p className="text-xl font-extrabold text-amber-700 tabular-nums">{likely}</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Likely</p>
-        </div>
-        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-2.5 text-center">
-          <p className="text-xl font-extrabold text-rose-700 tabular-nums">{reach}</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Ambitious</p>
-        </div>
       </div>
 
-      {/* Open CTA */}
       <button
         onClick={() => (window.location.href = '/college-predictor')}
         className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-apexBlue text-white font-bold text-sm py-2.5 hover:bg-indigo-700 transition"
