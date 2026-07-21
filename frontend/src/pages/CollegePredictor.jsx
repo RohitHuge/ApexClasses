@@ -27,7 +27,7 @@ const probBadge = (p) => {
 };
 
 export default function CollegePredictor() {
-    const { user, loginAsGuest, isGuest } = useAuth();
+    const { user, loginAsShadow, isGuest, isShadow } = useAuth();
     const navigate = useNavigate();
 
     const [meta, setMeta] = useState({ branches: [], categories: [] });
@@ -52,8 +52,11 @@ export default function CollegePredictor() {
     // ── UI gates ─────────────────────────────────────────────────────────────
     const [showPhone, setShowPhone] = useState(false);
     const [showPay, setShowPay] = useState(false);
-    const [phoneForm, setPhoneForm] = useState({ name: '', phone: '' });
+    const [phoneForm, setPhoneForm] = useState({ phone: '' });
     const [busy, setBusy] = useState(false);
+    const [shadowBannerDismissed, setShadowBannerDismissed] = useState(
+        () => sessionStorage.getItem('shadow_banner_dismissed') === '1'
+    );
     const pendingRef = useRef(null);
 
     const hydratedRef = useRef(false);
@@ -189,15 +192,16 @@ export default function CollegePredictor() {
     // ── Phone panel ───────────────────────────────────────────────────────────
     const handlePhoneSubmit = async (e) => {
         e.preventDefault();
-        if (!phoneForm.name.trim() || !/^[0-9+]{7,15}$/.test(phoneForm.phone.replace(/\s+/g, ''))) {
-            toast.error('Please enter your name and a valid phone number');
+        const phone = phoneForm.phone.replace(/\s+/g, '');
+        if (!/^[0-9+]{7,15}$/.test(phone)) {
+            toast.error('Please enter a valid phone number');
             return;
         }
         setBusy(true);
         try {
-            await loginAsGuest(phoneForm.name.trim(), phoneForm.phone.replace(/\s+/g, ''));
+            await loginAsShadow(phone);
             setShowPhone(false);
-            track('predictor_lead_submitted', { cat: category });
+            track('predictor_shadow_submitted', { cat: category });
             const prof = await loadProfile();
             const intent = pendingRef.current; pendingRef.current = null;
             if (intent === 'reveal') {
@@ -208,7 +212,7 @@ export default function CollegePredictor() {
             }
         } catch (err) {
             if (err.code === 'ACCOUNT_EXISTS') {
-                toast.error('You already have an account — please log in.');
+                toast.error('This number is linked to an account. Please sign in.');
                 navigate('/login');
             } else {
                 toast.error(err.message);
@@ -220,11 +224,6 @@ export default function CollegePredictor() {
 
     // ── Payment ───────────────────────────────────────────────────────────────
     const handlePay = async () => {
-        if (isGuest) {
-            toast.error('Please login or register to purchase searches.');
-            navigate('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
-            return;
-        }
         try {
             const ok = await loadRazorpayScript();
             if (!ok) return toast.error('Could not load the payment window');
@@ -324,6 +323,25 @@ export default function CollegePredictor() {
                         </p>
                     </motion.div>
                 </section>
+
+                {/* Shadow account banner */}
+                {isShadow && !shadowBannerDismissed && (
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-2">
+                        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            <span>
+                                Your results are saved on <strong>this device only.</strong>{' '}
+                                <button className="underline font-semibold hover:text-amber-900" onClick={() => navigate('/login')}>
+                                    Sign in with Google
+                                </button>{' '}
+                                to access them anywhere.
+                            </span>
+                            <button onClick={() => { setShadowBannerDismissed(true); sessionStorage.setItem('shadow_banner_dismissed', '1'); }}
+                                className="flex-shrink-0 text-amber-500 hover:text-amber-700">
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 grid lg:grid-cols-[380px_1fr] gap-6">
                     {/* ── Input panel ── */}
@@ -611,13 +629,10 @@ export default function CollegePredictor() {
                             <button onClick={() => setShowPhone(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 mb-3"><GraduationCap size={22} /></div>
                             <h3 className="text-xl font-bold text-slate-900">See your college matches</h3>
-                            <p className="text-sm text-slate-500 mt-1">Enter your details to view your free preview. We'll save your searches to your profile.</p>
+                            <p className="text-sm text-slate-500 mt-1">Enter your mobile number to view your personalised college list — no sign-up needed.</p>
                             <form onSubmit={handlePhoneSubmit} className="mt-5 space-y-3">
-                                <input type="text" placeholder="Full name" value={phoneForm.name}
-                                    onChange={(e) => setPhoneForm({ ...phoneForm, name: e.target.value })}
-                                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                                <input type="tel" placeholder="Phone number" value={phoneForm.phone}
-                                    onChange={(e) => setPhoneForm({ ...phoneForm, phone: e.target.value })}
+                                <input type="tel" placeholder="Mobile number" value={phoneForm.phone}
+                                    onChange={(e) => setPhoneForm({ phone: e.target.value })}
                                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                                 <button type="submit" disabled={busy}
                                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 transition disabled:opacity-60">
@@ -625,7 +640,9 @@ export default function CollegePredictor() {
                                 </button>
                             </form>
                             <p className="text-[11px] text-slate-400 mt-3 text-center">
-                                Already have an account? <Link to="/login" className="text-indigo-600 font-semibold">Log in</Link>
+                                Have an account?{' '}
+                                <Link to="/login" className="text-indigo-600 font-semibold">Sign in</Link>
+                                {' '}to sync across devices.
                             </p>
                         </motion.div>
                     </motion.div>

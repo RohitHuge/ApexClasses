@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../db/db.js';
 
 // ── Users / accounts ─────────────────────────────────────────────────────────
@@ -104,6 +105,42 @@ export const getSearch = async (userId, id) => {
         `SELECT id, inputs, result, created_at
          FROM predictor_searches WHERE user_id = $1 AND id = $2`,
         [userId, id]
+    );
+    return res.rows[0] || null;
+};
+
+// ── Shadow accounts ──────────────────────────────────────────────────────────
+
+export const findShadowByPhone = async (phone) => {
+    const res = await query(
+        `SELECT id, phone, name, role, account_type, shadow_expires_at, shadow_device_token
+         FROM users WHERE phone = $1 AND account_type IN ('shadow', 'registered')`,
+        [phone]
+    );
+    return res.rows[0] || null;
+};
+
+export const createShadowUser = async (phone) => {
+    const deviceToken = crypto.randomUUID();
+    const res = await query(
+        `INSERT INTO users (id, phone, name, role, account_type, shadow_expires_at, shadow_device_token)
+         VALUES (gen_random_uuid()::text, $1, 'Student', 'user', 'shadow',
+                 NOW() + INTERVAL '30 days', $2)
+         RETURNING id, phone, name, role, account_type, shadow_device_token`,
+        [phone, deviceToken]
+    );
+    return res.rows[0];
+};
+
+export const findShadowByToken = async (phone, deviceToken) => {
+    const res = await query(
+        `SELECT id, phone, name, role, account_type, shadow_expires_at
+         FROM users
+         WHERE phone = $1
+           AND account_type = 'shadow'
+           AND shadow_device_token = $2
+           AND shadow_expires_at > NOW()`,
+        [phone, deviceToken]
     );
     return res.rows[0] || null;
 };

@@ -10,7 +10,9 @@ const router = express.Router();
 router.get('/meta', PredictorController.getMeta);
 router.post('/predict', PredictorController.predict);   // 3/3/2 preview + counts
 router.post('/lead', PredictorController.captureLead);  // legacy lead capture
-router.post('/guest', AccountController.guest);         // phone panel → guest login
+router.post('/guest', AccountController.guest);               // legacy: phone+name guest login
+router.post('/shadow-guest', AccountController.shadowGuest);  // phone-only shadow account
+router.post('/shadow-refresh', AccountController.shadowRefresh); // device-bound token refresh
 
 // ── Percentile predictor — authenticated ────────────────────────────────────
 router.get('/profile', requireAuth, AccountController.profile);

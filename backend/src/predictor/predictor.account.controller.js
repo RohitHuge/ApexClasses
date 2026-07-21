@@ -97,6 +97,77 @@ export const guest = async (req, res) => {
     }
 };
 
+/**
+ * POST /api/predictor/shadow-guest  { phone }
+ * Phone-only frictionless entry. Creates a 30-day shadow account.
+ * Returns a deviceToken the frontend stores in localStorage — that token is the
+ * only way to refresh the session on the same device. No refresh cookie issued.
+ * If the phone already has a registered account the user is told to sign in via Google.
+ */
+export const shadowGuest = async (req, res) => {
+    try {
+        const phoneStr = String(req.body?.phone || '').replace(/\s+/g, '');
+        if (!/^[0-9+]{7,15}$/.test(phoneStr)) {
+            return res.status(400).json({ error: 'A valid phone number is required' });
+        }
+
+        const existing = await AccountModel.findShadowByPhone(phoneStr);
+        if (existing) {
+            if (existing.account_type === 'registered') {
+                return res.status(409).json({
+                    error: 'This number is linked to an account. Sign in with Google to access it.',
+                    code: 'ACCOUNT_EXISTS',
+                });
+            }
+            // Returning shadow user on same device — re-issue token, keep same deviceToken
+            await AccountModel.getOrCreateProfile(existing.id);
+            const accessToken = signAccess({ ...existing, isShadow: true });
+            const safe = { id: existing.id, name: existing.name, phone: existing.phone, role: existing.role, isShadow: true };
+            return res.json({ success: true, accessToken, deviceToken: existing.shadow_device_token, user: safe });
+        }
+
+        const user = await AccountModel.createShadowUser(phoneStr);
+        await AccountModel.getOrCreateProfile(user.id);
+
+        const accessToken = signAccess({ ...user, isShadow: true });
+        const safe = { id: user.id, name: user.name, phone: user.phone, role: user.role, isShadow: true };
+        res.status(201).json({ success: true, accessToken, deviceToken: user.shadow_device_token, user: safe });
+    } catch (err) {
+        console.error('Shadow guest error:', err.message);
+        res.status(500).json({ error: 'Could not start your session' });
+    }
+};
+
+/**
+ * POST /api/predictor/shadow-refresh  { phone, deviceToken }
+ * Re-issues a short-lived access token for a shadow user on the same device.
+ * No cookie required — the deviceToken stored in localStorage is the credential.
+ */
+export const shadowRefresh = async (req, res) => {
+    try {
+        const phoneStr = String(req.body?.phone || '').replace(/\s+/g, '');
+        const { deviceToken } = req.body || {};
+        if (!phoneStr || !deviceToken) {
+            return res.status(400).json({ error: 'phone and deviceToken are required' });
+        }
+
+        const user = await AccountModel.findShadowByToken(phoneStr, deviceToken);
+        if (!user) {
+            return res.status(401).json({
+                error: 'Access not available on this device. Sign in with Google to continue.',
+                code: 'DEVICE_MISMATCH',
+            });
+        }
+
+        const accessToken = signAccess({ ...user, isShadow: true });
+        const safe = { id: user.id, name: user.name, phone: user.phone, role: user.role, isShadow: true };
+        res.json({ success: true, accessToken, user: safe });
+    } catch (err) {
+        console.error('Shadow refresh error:', err.message);
+        res.status(500).json({ error: 'Could not refresh session' });
+    }
+};
+
 /** GET /api/predictor/profile (auth) — plan + percentile quota + rank quota. */
 export const profile = async (req, res) => {
     try {

@@ -5,6 +5,7 @@ import { authLimiter, forgotPasswordLimiter } from '../middleware/rateLimit.midd
 
 const router = express.Router();
 
+router.post('/logto/callback', AuthController.logtoCallback);
 router.post('/register', authLimiter, AuthController.register);
 router.post('/login', authLimiter, AuthController.login);
 router.post('/refresh', AuthController.refresh);
@@ -12,5 +13,6 @@ router.post('/logout', AuthController.logout);
 router.get('/me', requireAuth, AuthController.me);
 router.post('/forgot-password', forgotPasswordLimiter, AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
+router.post('/merge-shadow', requireAuth, AuthController.mergeShadow);
 
 export default router;
