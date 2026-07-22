@@ -79,3 +79,54 @@ export async function verifyPayment(payload) {
     if (!res.ok) throw new Error(data.error || 'Payment verification failed');
     return data; // { profile }
 }
+
+// ── Rank predictor (no auth for predict/meta; auth for reveal + payment) ─────
+
+export async function fetchRankMeta() {
+    const res = await fetch(`${API_BASE}/predictor/rank/meta`);
+    if (!res.ok) throw new Error('Failed to load rank options');
+    return res.json();
+}
+
+export async function runRankPredict(payload) {
+    const res = await fetch(`${API_BASE}/predictor/rank/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Rank prediction failed');
+    return data;
+}
+
+export async function revealRankResults(payload) {
+    const res = await apiFetch(`${API_BASE}/predictor/rank/reveal`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        const err = new Error(data.error || 'Could not reveal rank results');
+        err.code = data.code;
+        err.rankProfile = data.rankProfile;
+        throw err;
+    }
+    return data;
+}
+
+export async function createRankPayment() {
+    const res = await apiFetch(`${API_BASE}/predictor/rank/pay/create`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not start rank payment');
+    return data; // { orderId, amount, currency, keyId, pack }
+}
+
+export async function verifyRankPayment(payload) {
+    const res = await apiFetch(`${API_BASE}/predictor/rank/pay/verify`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Rank payment verification failed');
+    return data; // { rankProfile }
+}

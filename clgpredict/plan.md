@@ -1,345 +1,483 @@
-# College Predictor — Implementation Plan
+# ApexClasses — Master Execution Plan
 
-> MHT-CET (Pune region) college predictor for the ApexClasses website.
-> Student enters their **percentile + category + preferences** → gets a ranked list of
-> colleges/branches they can realistically get, bucketed by probability.
-
----
-
-## 0. Current State (done)
-
-- ✅ Full backups of `apex_db`, `jeet_db`, `logto` taken → `backups/db_backup_20260609_234503/`
-- ✅ Prisma 7 introspected from live `apex_db` (5 models) → `backend/prisma/schema.prisma`
-- ✅ Prisma client singleton wired (`backend/src/db/prisma.js`) + verified against prod
-- ✅ Source data analysed: `pune data final for book wih branch ready.xlsx`,
-  sheet `remove other university` → **77 colleges, 483 branch rows, ~20 category columns**
+> Reference for domain logic, category codes, and probability formula: `clgpredict/logic.md`
+> DB: Neon (dev) | VPS Postgres `82.180.144.69` (prod, 186 users)
+> Branch: `dev` → merge to `main` triggers Coolify prod rebuild
+> Last updated: 2026-07-21
+> **Ship order:** Phase 1 (Shadow Phone) → Phase 2 (Logto Auth) → Phase 3 (Verify & Ship All)
 
 ---
 
-## Data Shape (recap)
+## What Is Already Done
 
-The sheet is **hierarchical/wide**, not tabular:
-- A **college header row** = `code + name` (e.g. `06004  Government College of Engineering & Research, Avasari`)
-- Followed by **branch rows** (Civil, Comp, IT, Mech, ETC…) underneath it
-- Each branch row holds the **closing percentile per category column**:
-  `OPEN, LOPEN, OBC, LOBC, SC, LSC, ST, VJ, SEBC, LSEBC, EWS, TFWS, GOPENO, NT1, NT2, NT3, LST, LOPENO`
-- The `L*` columns = **Home-University (local) quota** → lower cutoffs. Core domain rule.
-
-We normalise this **wide → long**: one row per `(college, branch, category, cutoff, year)`.
-
----
-
-## Phase 1 — Database Schema & Migration ✅ DONE
-
-**Goal:** Add predictor tables to `apex_db` via a proper Prisma migration (establishes migration baseline).
-
-- [x] 1.1 Added models to `backend/prisma/schema.prisma`: `College`, `Cutoff`, plus a 3rd model `PredictorLead` (lead capture). Constraints + indexes as designed.
-- [x] 1.2 Baseline established (`migrations/0_init`) then applied `20260609192934_add_predictor_tables` and `20260609194834_add_predictor_leads` against prod `apex_db`.
-- [x] 1.3 Tables verified in prod.
-
-```prisma
-model College {
-  id      Int      @id @default(autoincrement())
-  code    String   @unique @db.VarChar(10)
-  name    String
-  city    String   @default("Pune") @db.VarChar(60)
-  cutoffs Cutoff[]
-  @@map("colleges")
-}
-
-model Cutoff {
-  id        Int      @id @default(autoincrement())
-  collegeId Int      @map("college_id")
-  branch    String   @db.VarChar(60)
-  category  String   @db.VarChar(10)
-  cutoff    Decimal  @db.Decimal(6, 3)
-  year      Int      @default(2024) @db.SmallInt
-  college   College  @relation(fields: [collegeId], references: [id])
-  @@unique([collegeId, branch, category, year])
-  @@index([category, branch, cutoff])
-  @@map("cutoffs")
-}
-```
+| Area | Status |
+|---|---|
+| Rank cutoffs ETL + seed (5,971 rows, 77 colleges, 28 branches) | ✅ |
+| DB migration (rank_cutoffs table, rank quota columns on predictor_profiles) | ✅ |
+| `predictor.rank.model.js` — two-query design (findReachByRank + findSafeByRank) | ✅ |
+| `predictor.rank.service.js` — probability formula, slack ladder, 0% colleges kept | ✅ |
+| `predictor.rank.controller.js` — predict + reveal + pay/create + pay/verify | ✅ |
+| `predictor.account.model.js` — rank quota functions (getRankProfile, incrementRankUsed, grantRankSearches) | ✅ |
+| `predictor.account.controller.js` — profile returns rankProfile, adminStats includes rank metrics | ✅ |
+| `predictor.routes.js` — all 5 rank routes wired | ✅ |
+| `frontend/src/predictor/branchGroups.js` | ✅ |
+| `frontend/src/predictor/predictorService.js` — rank API functions | ✅ |
+| `frontend/src/predictor/predictorPdf.js` — rank mode | ✅ |
+| `frontend/src/pages/CollegePredictor.jsx` — rank-only rewrite | ✅ |
+| `frontend/src/pages/MyPredictions.jsx` — mode badges + rank quota | ✅ |
+| `frontend/src/pages/home.jsx` — RankLandscape + RankPreview widgets | ✅ |
+| DB grants: rohitrhuge@gmail.com → 50 rank searches, tushar1382@gmail.com → 50 rank searches | ✅ |
+| Bug fix: `getOrCreateProfile` now returns `rank_searches_limit, rank_searches_used` | ✅ |
+| Bug fix: reach query split into two separate queries — COEP now appears for rank 500 | ✅ |
 
 ---
 
-## Phase 2 — ETL (Excel → Database) ✅ DONE
+## Phase 1 — Shadow Phone Flow (Frictionless Entry)
 
-**Goal:** Parse the messy hierarchical sheet and load clean long-form rows.
+**Goal:** User enters phone only → instant shadow account → can pay and predict → data saved in localStorage + DB. Zero name/email/password required. Cross-device access deliberately not supported — intentional friction to push users toward Google login.
 
-- [x] 2.1 Python parser `clgpredict/etl.py` built (header regex, wide→long, category-col map, branch normalisation 79→28 canonical, noise cols skipped, dedupe by MIN cutoff).
-- [x] 2.2 Output `clgpredict/cutoffs_seed.sql` (idempotent `INSERT ... ON CONFLICT DO NOTHING`).
-- [x] 2.3 Loaded into prod → **77 colleges, 5999 cutoffs**.
-- [x] 2.4 Sanity checks passed; live spot-checks confirmed against the sheet.
+### 1.1 — DB Migration
 
----
+- [ ] Write migration SQL `backend/prisma/migrations/YYYYMMDD_shadow_logto/migration.sql`:
+  ```sql
+  ALTER TABLE users ADD COLUMN account_type VARCHAR(20) NOT NULL DEFAULT 'registered';
+  ALTER TABLE users ADD COLUMN shadow_expires_at TIMESTAMPTZ;
+  ALTER TABLE users ADD COLUMN shadow_device_token VARCHAR(255);
+  -- account_type values: 'registered' (existing), 'shadow' (phone-only temp)
+  ```
+- [ ] Apply migration to Neon dev DB
+- [ ] Verify existing users have `account_type = 'registered'` (default applies cleanly)
 
-## Phase 3 — Backend API ✅ DONE
+### 1.2 — Backend: Shadow Account Endpoint
 
-**Goal:** Prediction endpoints following the existing module pattern (`auth/`, `order/`, `slots/`).
+- [ ] Create `POST /api/predictor/shadow-guest` (no auth required):
+  - Input: `{ phone }` — phone only, no name
+  - Validate: 7–15 digits
+  - If phone exists with `account_type = 'shadow'` → return existing user (do NOT re-create)
+  - If phone exists with `account_type = 'registered'` → return `{ code: 'ACCOUNT_EXISTS', error: 'This number has a registered account. Sign in via Google to access it.' }`
+  - If new: `INSERT INTO users (id, phone, name, role, account_type, shadow_expires_at, shadow_device_token) VALUES (uuid, phone, 'Student', 'user', 'shadow', NOW() + INTERVAL '30 days', gen_random_uuid()::text)`
+  - Call `getOrCreateProfile(userId)` to create quota row
+  - Issue JWT (15 min) — returned in response body only, no refresh cookie
+  - Response: `{ success: true, accessToken, deviceToken: <shadow_device_token>, userId, isShadow: true }`
+- [ ] Add `POST /shadow-guest` route to `predictor.routes.js`
+- [ ] Add `shadowGuest()` handler in `predictor.account.controller.js`
+- [ ] Add `createShadowUser()`, `findShadowByPhone()` in `predictor.account.model.js`
 
-New folder `backend/src/predictor/` (all 4 files present):
-- [x] 3.1 `predictor.routes.js` mounted in `app.js` → `app.use('/api/predictor', predictorRoutes)`.
-- [x] 3.2 `predictor.controller.js` + `predictor.service.js` + `predictor.model.js` (raw SQL via shared `query`; bucketing + L-quota category expansion logic).
-- [x] 3.3 Endpoints live: `GET /meta`, `POST /predict`, **plus** `POST /lead` (lead capture).
-- [x] 3.4 Global `generalLimiter` applied; inputs validated (percentile 0–100, category whitelist, phone regex).
+### 1.3 — Backend: Shadow Token Refresh
 
-### Filtering / Prediction logic
-1. **Effective category set:** map `(category + homeUniversity)` → e.g. OBC + Pune → `['OBC','LOBC','OPEN','LOPEN']`; take **MIN(cutoff)** per (college, branch).
-2. **Branch filter** if provided; **TFWS** only if opted in.
-3. **Margin** = `percentile − cutoff`; bucket:
-   | Bucket | Condition | Label |
-   |---|---|---|
-   | 🟢 Safe | `cutoff ≤ pct − 2.0` | High chance |
-   | 🟡 Moderate | `pct − 2.0 < cutoff ≤ pct` | Likely |
-   | 🟠 Reach | `pct < cutoff ≤ pct + 1.0` | Ambitious |
-   | hidden | `cutoff > pct + 1.0` | not shown |
-4. Sort by bucket, then cutoff desc (best college first). Thresholds in one config constant for tuning.
+- [ ] Create `POST /api/predictor/shadow-refresh` (no auth required):
+  - Input: `{ phone, deviceToken }`
+  - Lookup user by phone AND `account_type = 'shadow'`
+  - Verify `deviceToken` matches `shadow_device_token` column AND `shadow_expires_at > NOW()`
+  - If match: issue new access JWT
+  - If mismatch: `{ code: 'DEVICE_MISMATCH', error: 'Access not available on this device. Sign in with Google to continue.' }`
+- [ ] Add `POST /shadow-refresh` route to `predictor.routes.js`
+- [ ] Add `shadowRefresh()` handler in `predictor.account.controller.js`
+- [ ] Add `findShadowByToken()` in `predictor.account.model.js`
 
-```sql
-SELECT c.code, c.name, cu.branch, MIN(cu.cutoff) AS best_cutoff,
-       ROUND($1::numeric - MIN(cu.cutoff), 3) AS margin
-FROM cutoffs cu JOIN colleges c ON c.id = cu.college_id
-WHERE cu.year = 2024 AND cu.category = ANY($2)
-  AND ($3::text[] IS NULL OR cu.branch = ANY($3))
-  AND cu.cutoff <= $1 + 1.0
-GROUP BY c.code, c.name, cu.branch
-ORDER BY best_cutoff DESC;
-```
+### 1.4 — Backend: Shadow Cleanup Script
 
----
+- [ ] Create `backend/scripts/cleanup_shadow_accounts.mjs`:
+  - `DELETE FROM users WHERE account_type = 'shadow' AND shadow_expires_at < NOW()`
+  - Logs count of deleted rows
+- [ ] Register as daily cron in Coolify (or call from server startup for simplicity)
 
-## Phase 4 — Frontend (Interactive UI) ✅ DONE (core)
+### 1.5 — Frontend: Phone-Only Modal
 
-**Goal:** A polished, guided predictor page (mirrors the existing TrackRecord page style).
+- [ ] Update `CollegePredictor.jsx` phone panel:
+  - Remove `name` input field entirely
+  - Keep only `phone` input (label: "Your Mobile Number")
+  - On submit: call `/api/predictor/shadow-guest`
+  - On success: store `deviceToken` in `localStorage['apex_shadow_<phone_last4>']`; keep `accessToken` in memory only (not in `localStorage['apex_token']`)
+  - On `ACCOUNT_EXISTS` error: show "This number is linked to a Google account. Sign in with Google to continue." + Google login button
+- [ ] Update `AuthContext.jsx`:
+  - Add `loginAsShadow(phone)` function
+  - Add `isShadow` derived state: `!!user?.isShadow`
+  - Shadow access token stored in React state / memory only — not persisted in localStorage
+  - On 401: try shadow refresh via `/api/predictor/shadow-refresh` using stored deviceToken; if fails, show "Sign in with Google" prompt
 
-Route: `/college-predictor` (wired in `App.jsx`; page `frontend/src/pages/CollegePredictor.jsx`, ~431 lines; service `frontend/src/predictor/predictorService.js`).
+### 1.6 — Frontend: Shadow User Banner
 
-**Decisions taken:** Single-page (not wizard) · Home-University toggle default ON · Free preview (3/bucket) + lead-gated full list.
+- [ ] Add persistent banner for shadow users on `CollegePredictor.jsx` and `MyPredictions.jsx`:
+  - Text: "Your results are saved on this device only. Sign in with Google to access them anywhere."
+  - CTA: "Save Permanently" → triggers Google login (Phase 2)
+  - Dismissable per session via `sessionStorage` flag
 
-**Built:** sticky input panel (percentile slider+number, category buttons, Home-University toggle, TFWS toggle, branch chips) · live **what-if** debounced re-predict (550ms) · filter/sort bar · three colour-coded buckets (High Chance / Likely / Ambitious) with counts · college cards with margin badge + "via L-quota" chip · `PREVIEW_LIMIT=3` free per bucket · lead-gate modal persisting unlock in `localStorage`.
+### 1.7 — Shadow → Full Account Merge
 
-**Deferred (4.3 nice-to-haves, NOT built):** shareable result link · Download-as-PDF · compare tray · empty-state/disclaimer polish — moved to Phase 5.
-
-### 4.1 Input — a multi-step wizard (feels lighter than one big form)
-- **Step 1 – Score:** large percentile input with a live slider (0–100) + inline validation
-- **Step 2 – Category:** segmented buttons / dropdown (OPEN, OBC, SC, ST, VJ, NT1-3, EWS…)
-  + a **"Home University = Pune?"** toggle (unlocks L-quota) with a tooltip explaining it
-- **Step 3 – Preferences:** multi-select branch chips (Comp, IT, Mech…), TFWS toggle
-- Sticky **"Predict my colleges"** CTA; progress dots between steps
-
-### 4.2 Results — interactive, not a flat table
-- **Three colour-coded sections**: 🟢 Safe · 🟡 Moderate · 🟠 Reach, with counts
-- Each result = an expandable **college card**: name, branch, closing cutoff, **your margin** badge,
-  and "qualified via *Home-University OBC*" chip explaining *why*
-- **Filter/sort bar** on results: by branch, by margin, by college name (client-side, instant)
-- **Probability gauge** per card (margin → visual bar)
-- **Compare tray:** select up to 3–4 colleges → side-by-side compare drawer
-- Empty state ("No matches — try widening branches / lowering threshold")
-- **Disclaimer banner:** "Based on 2024 closing cutoffs; not a guarantee of admission."
-
-### 4.3 Nice-to-have interactions
-- **Shareable result link** (encodes inputs in query params) → for counselling/marketing
-- **Download as PDF** (reuse the existing PDF component) — branded shortlist
-- **"What-if" slider** on results page: drag percentile to see the list re-rank live
-- Lead capture: gate PDF download behind name/phone → feeds your existing `users` flow
-
----
-
-## Phase 4.5 — Infra: Dev/Prod DB Split & Deploy Setup ✅ DONE
-
-**Goal:** Stop running local dev against production; make Dockerfile-only deploy self-contained.
-
-- [x] 4.5.1 **Dev DB on Supabase** provisioned (`aws-1-ap-southeast-1`). All 3 migrations applied via `prisma migrate deploy`; cutoffs seeded → **77 colleges / 5999 cutoffs** (matches prod).
-- [x] 4.5.2 **Local `backend/.env` re-pointed at Supabase dev.** `DATABASE_URL`=transaction pooler (6543, app), `DIRECT_URL`=session pooler (5432, migrations), `DATABASE_SSL=true`, password URL-encoded (`@`→`%40`). Prod URLs kept commented for switch-back.
-- [x] 4.5.3 **`prisma.config.ts`** now uses `DIRECT_URL` (falls back to `DATABASE_URL`) — migrations can't run through pgbouncer/6543.
-- [x] 4.5.4 **`package.json`**: added `prisma:deploy` (`prisma migrate deploy`, apply-only for prod).
-- [x] 4.5.5 **`backend/Dockerfile`**: added `npx prisma generate` at build; CMD now `prisma migrate deploy && node src/server.js` → future migrations auto-apply on deploy. `.dockerignore` already excludes `.env`/`node_modules`.
-- [x] 4.5.6 **`backend/DATABASE.md`** written — dev/prod flow, migrate-dev vs migrate-deploy, re-seed command.
-
-**Confirmed:** prod = VPS Postgres `82.180.144.69:5432/apex_db` (already migrated + seeded). VPS runs backend via Dockerfile only (no compose). Root dir for deploy = `backend/`.
+- [ ] Create `POST /api/auth/merge-shadow` (auth required — called after Google login):
+  - Input: `{ phone, deviceToken }`
+  - Find shadow user by phone + deviceToken
+  - Transfer `predictor_profiles` quota to the newly registered user (`UPDATE ... SET user_id = newId`)
+  - Transfer `predictor_searches` rows (`UPDATE predictor_searches SET user_id = newId WHERE user_id = shadowId`)
+  - Transfer `predictor_payments` rows
+  - `DELETE FROM users WHERE id = shadowId`
+  - Response: `{ success: true, transferred: { searches, payments } }`
+- [ ] In `AuthCallback.jsx` (Phase 2): after successful login, check localStorage for any `apex_shadow_*` key → if found, call `merge-shadow` automatically
 
 ---
 
-## Phase 4.6 — Discoverability & Homepage Showcase ✅ DONE
+## Phase 2 — Logto Auth Migration
 
-**Goal:** Make the predictor findable; replace the stale book-photo hero with an interactive demo.
+**Goal:** Move all authentication to self-hosted Logto. Existing 103 registered users imported via Management API with plain-text passwords (Logto auto-upgrades to bcrypt on first login). Google login becomes the primary new-user path. Forgot password handled entirely by Logto + Brevo connector.
 
-- [x] 4.6.1 **Header CTA replaced** — `Layout.jsx` "Book Counselling" pill → "Try College Predictor" orange-gradient button (size matched to the 2xl nav row: `text-[13px] px-4 py-2`).
-- [x] 4.6.2 **Duplicate nav link removed** — dropped the standalone "College Predictor" link from desktop nav, mobile menu, and footer Quick Links (the CTA now serves that role; prevents nav overflow/clipping at 1280–1536px).
-- [x] 4.6.3 **Hero illustration removed** — `home.jsx` right-column `Gemini_Generated_Image_r4o6xrr4o6xrr4o6.png` deleted; "Buy Counselling Book" secondary CTA replaced with "Try College Predictor" (routes to `/college-predictor`).
-- [x] 4.6.4 **Hero right column → `<PredictorPreview />`** — a self-running, looping mini-app card. Cycles 5 steps: percentile ticks 70 → 96.42 (animated bar fills), "OBC" category lights up, Pune home-university toggle flips on, "Computer" branch chip highlights, then a "College of Engineering, Pune — Computer Engineering · High Chance · +3.42 margin" result card slides in. Auto-loops indefinitely. Includes a "Open the Predictor" button and a floating "Match found!" toast card.
-- [x] 4.6.5 **"Free Tool 2026" section upgraded** — replaced static list of colleges with a brand-new interactive widget `<PercentileLandscape />`. Real, draggable: 24 representative Pune colleges (COEP, PICT, VIT, PCCOE, WCE, Sinhgad, MIT WPU, …) plotted as dots on a horizontal axis by 2024 closing cutoff. Auto-cycles on load; the moment you touch the slider it stops and you take control. Each dot colour-codes live (emerald Safe / amber Likely / rose Ambitious / grey out-of-range); hover shows tooltip with name + cutoff. Live Safe/Likely/Ambitious counters update on every drag. "Open the Full Predictor" CTA below.
-- [x] 4.6.6 **Trust stat updated** — "Colleges Listed: 450+" → "Pune Colleges Covered: 77" (matches the actual predictor data).
-- [x] 4.6.7 **Build verified** — `vite build` passes clean (47s first build, ~2s incremental).
+### DB state going in (prod):
+- 103 registered users (email + plain-text password) → bulk import to Logto
+- 75 phone-only guests → converted to shadow accounts by Phase 1 migration
+- 8 email-no-password users → import to Logto, force password reset on first login
 
-**Files touched in 4.6:** `frontend/src/components/Layout.jsx`, `frontend/src/pages/home.jsx`. No backend or schema changes.
+### 2.1 — DB Migration for Logto
 
----
+- [ ] Add to the same migration file from Phase 1 (or a new file if Phase 1 is already deployed):
+  ```sql
+  ALTER TABLE users ADD COLUMN logto_sub VARCHAR(255) UNIQUE;
+  ALTER TABLE users ADD COLUMN avatar_url TEXT;
+  ```
+- [ ] Apply to Neon dev DB
 
-## Phase 5 — QA, Polish, Launch
+### 2.2 — Logto Instance Setup (Rohit does this on VPS)
 
-### 5.A Deploy (the only thing blocking go-live) ⏳ REMAINING
-- [ ] 5.A.1 On deploy platform, set root dir = `backend/`, build from `Dockerfile`.
-- [ ] 5.A.2 Set prod env vars on the platform (NOT baked in image): `DATABASE_URL` (VPS apex_db), `DATABASE_SSL=false`, `PORT=5000`, `FRONTEND_URL`, `JWT_SECRET`, `BREVO_API_KEY`, `EMAIL_FROM`, `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET`.
-- [ ] 5.A.3 ⚠️ Swap Razorpay **test** keys → **live** keys for prod.
-- [ ] 5.A.4 Deploy backend image; confirm container logs show `migrate deploy` no-op + `✅ Connected to PostgreSQL`.
-- [ ] 5.A.5 Build & deploy frontend (set `VITE_API_URL` to the prod API base).
-- [ ] 5.A.6 Smoke test prod: `/api/predictor/meta`, `/predict`, `/lead`, and `/college-predictor` page end-to-end.
+- [ ] Install Logto on VPS: `docker run -d --name logto -p 3001:3001 -p 3002:3002 svhd/logto`
+- [ ] Expose admin console at `auth-admin.apexclasses.org` (port 3002) via Traefik — restrict to VPN/IP
+- [ ] Expose OIDC endpoint at `auth.apexclasses.org` (port 3001) via Traefik — public
+- [ ] Open Logto admin console → complete initial setup wizard
+- [ ] Create application → type "Traditional Web" → note `App ID` and `App Secret`
+- [ ] Set allowed redirect URIs: `https://apexclasses.org/auth/callback`, `https://dev.apexclasses.org/auth/callback`
+- [ ] Configure email connector → SMTP → Brevo host + API key from `.env`
+- [ ] Configure Google connector → create OAuth app in Google Cloud Console → paste Client ID + Secret into Logto
 
-### 5.B Discoverability
-- [x] 5.B.1 ✅ Hero "Try College Predictor" CTA in `Layout.jsx` header (orange-gradient, sized to nav row). Standalone "College Predictor" nav link removed to prevent overflow.
-- [x] 5.B.2 ✅ Landing-page CTA — `PredictorPreview` (hero right column, animated) + `PercentileLandscape` (replaces "Free Tool 2026" static list, interactive draggable widget).
-- [ ] 5.B.3 *(optional)* Add a footer Quick Link if traffic data shows people want it.
+### 2.3 — User Import Script
 
-### 5.C QA & correctness
-- [x] 5.C.1 ✅ **Invariants pass** — `backend/scripts/validate_predictor.mjs` covers the SQL contract (no duplicates, year=2024, MIN(cutoff) used, bucket math, sort order, no TFWS leak).
-- [x] 5.C.2 ✅ **Edge cases pass** — `backend/scripts/edge_cases.mjs` runs 15 cases (pct 0/50/100, all categories, homeU on/off, TFWS on/off, empty/specific branch lists). All green.
-- [ ] 5.C.3 Mobile responsiveness + loading/skeleton states. *(not yet manually verified on real devices)*
-- [ ] 5.C.4 Real-case spot-check vs Excel sheet (5–10 known `(college, branch, category)` triples) — pick COEP/PICT/VIT, confirm predicted cutoffs match 2024 sheet values within margin.
+- [ ] Create `backend/scripts/import_users_to_logto.mjs`:
+  - Get Logto Management API token: `POST https://auth.apexclasses.org/oidc/token` with `client_credentials` grant
+  - Query prod DB: `SELECT id, name, email, phone, password FROM users WHERE password IS NOT NULL`
+  - For each user:
+    ```js
+    POST https://auth.apexclasses.org/api/users
+    {
+      primaryEmail: user.email,
+      name: user.name,
+      customData: { apex_user_id: user.id },
+      passwordEncryptionMethod: 'Plain',
+      passwordEncrypted: user.password
+    }
+    ```
+  - On success: `UPDATE users SET logto_sub = <logto_id> WHERE id = <apex_id>`
+  - Log each result: success / already_exists / error
+  - Dry-run flag: print what would be imported, make no API calls
+- [ ] Run dry-run first → inspect output
+- [ ] Run live on dev → verify users appear in Logto console
+- [ ] Run live on prod after Phase 2 is deployed (Rohit runs manually)
+- [ ] For 8 email-no-password users: import with `passwordEncrypted: null` → Logto forces reset on first login
 
-### 5.D Deferred 4.3 features (nice-to-have) ✅ ALL DONE
+### 2.4 — Backend: Logto Callback Endpoint
 
-- [x] 5.D.1 ✅ **Disclaimer banner** — amber-tinted card above bucket sections, amber `Info` icon, copy: "Indicative only. Predictions are based on 2024 closing cutoffs and don't guarantee admission — actual cutoffs shift by CAP round, seat movement, and applicant volume each year."
-- [x] 5.D.2 ✅ **Empty-state polish** — dashed-border card with `SearchX` icon, headline "No matches in range", sub-copy explaining the cause, and three recovery actions: **Clear branch filter** · **Try percentile 70** · **Book a counsellor** (links to `/services`). `predictor_empty_state_seen` event fires when `counts.total === 0`.
-- [x] 5.D.3 ✅ **Download-as-PDF branded shortlist** — `frontend/src/predictor/predictorPdf.js` (jsPDF, 186 lines). Apex Classes blue header band, query summary (percentile/cat/homeU/TFWS/branches/student), counts strip, three coloured bucket sections, college rows with margin colour-coded green/amber/rose, page footer disclaimer + page numbers. Filename: `apex-college-shortlist-{pct}-{cat}.pdf`. PDF button is gated behind lead unlock.
-- [x] 5.D.4 ✅ **Shareable result link** — URL params auto-hydrate on first load (`pct`, `cat`, `hu`, `tfws`, `branches`), and any input change calls `history.replaceState` to keep the URL in sync. "Share" button copies the current URL via `navigator.clipboard`, shows "Copied" feedback, fires `predictor_share_link_copied` event.
-- [x] 5.D.5 ✅ **Compare tray** — sticky bottom bar appears with `framer-motion` slide-in when ≥1 college is selected (max 4). Each pill shows college + branch with × to remove. "Compare N" button opens a side-by-side drawer (`<motion.div>` modal, backdrop click to close) with grid of cards showing bucket badge, college, branch, 2024 cutoff, margin (colour-coded), via-category, code. Empty state when <2 selected.
-- [x] 5.D.6 ✅ **Analytics events live** — `frontend/src/analytics/analyticsClient.js` (44 lines): fire-and-forget client with 5s batching buffer, `pagehide`/`beforeunload` flush, `keepalive: true` so events survive navigation. Events firing: `predictor_open`, `predictor_predict_run` (with `pctBucket`, `cat`, `homeU`, `tfws`, `nBranches`, `nResults`), `predictor_branch_toggled`, `predictor_empty_state_seen`, `predictor_lead_submitted`, `predictor_pdf_downloaded`, `predictor_share_link_copied`, `predictor_compare_toggled`.
+- [ ] Add to `backend/.env`: `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_ENDPOINT=https://auth.apexclasses.org`
+- [ ] Create `POST /api/auth/logto/callback` in `auth.controller.js`:
+  - Input: `{ code, redirectUri }`
+  - Exchange code: `POST /oidc/token` at Logto
+  - Fetch identity: `GET /oidc/userinfo` → get `sub`, `email`, `name`, `picture`
+  - Lookup by `logto_sub` → if found, log in
+  - Lookup by `email` → if found, link `logto_sub` + `avatar_url`, log in
+  - If neither: `INSERT INTO users` as new registered user (`account_type = 'registered'`)
+  - Issue JWT + refresh cookie (same mechanics as current login)
+  - Response: `{ success: true, accessToken, user: { id, name, email, phone, role } }`
+- [ ] Add `upsertLogtoUser()`, `linkLogtoSub()` to `auth.model.js`
+- [ ] Add route `POST /api/auth/logto/callback` to `auth.routes.js`
 
----
+### 2.5 — Backend: Remove Old Auth Endpoints
 
-## Phase 5.E — Audit Fixes ✅ DONE (2026-06-11)
+- [ ] Remove `POST /api/auth/register` controller logic and route
+- [ ] Remove `POST /api/auth/forgot-password` and `POST /api/auth/reset-password` routes
+- [ ] Change `POST /api/auth/login`: return `{ error: 'Login is now handled via Google sign-in', redirect: '/login' }` — keeps old bookmarks from 404ing
+- [ ] Keep unchanged: `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me`
 
-Post-implementation audit findings, all fixed:
-- [x] 5.E.1 **Analytics summary secured** — `GET /api/analytics/summary` now behind `requireAdmin` (was public).
-- [x] 5.E.2 **Lead gate is now server-enforced** — `/predict` caps results to `PREVIEW_LIMIT=3` per bucket while locked; full list only returned with a valid JWT `unlockToken` (issued on lead capture, 30-day, scope `predictor_unlock`). `counts` still reflect true totals for the "unlock N more" CTA. Frontend stores the token and re-fetches on unlock. *(This is the gate the upcoming PAID plan will build on — swap "lead captured" for "payment verified".)*
-- [x] 5.E.3 **Friendly via-category labels** — service returns `viaLabel` (`LOPEN`→"Home-University Open", `LOBC`→"Home-University OBC", …); cards + compare drawer use it; PDF uses compact `HU-OBC` form to fit its column.
-- [x] 5.E.4 **Dead code removed** — unused `getCategories()` dropped from `predictor.model.js`.
-- [x] 5.E.5 **URL-sync ordering fixed** — `hydratedRef` guard prevents the sync effect from writing default params before a shared link is read.
-- [x] Verified: locked=3/bucket vs unlocked=full (451 total) against dev DB; frontend `vite build` clean.
+### 2.6 — Frontend: Auth Callback Page
 
-### Pending discussion → PAID plan (next session)
-- Move **share link + PDF download behind payment** (currently free-after-lead).
-- Enrich **Compare** with extra metrics: placement %, infra, **NAAC grade/ranking**, etc. → premium tier. Needs a data source + new `college_meta` table.
+- [ ] Create `frontend/src/pages/AuthCallback.jsx`:
+  - Read `?code=...` from URL
+  - `POST /api/auth/logto/callback` with `{ code, redirectUri: window.location.origin + '/auth/callback' }`
+  - On success: store token + user in `localStorage['apex_token']` + `localStorage['apex_user']`; redirect to `/`
+  - On error: show error + "Try again" link back to `/login`
+  - Check localStorage for any `apex_shadow_*` key → if found, call `POST /api/auth/merge-shadow` automatically
+- [ ] Add route `path="/auth/callback"` in `App.jsx`
 
----
+### 2.7 — Frontend: Replace Login / Register Pages
 
-## Phase 6 — Accounts, Paywall, Quota & Saved Searches ⏳ IN PROGRESS
+- [ ] Update `Login.jsx`:
+  - Remove email/password form entirely
+  - Show two buttons:
+    - "Continue with Google" → `https://auth.apexclasses.org/oidc/auth?...&direct_sign_in=social:google`
+    - "Continue with Email" → `https://auth.apexclasses.org/oidc/auth?...&interaction_mode=signIn`
+  - Both redirect URIs point to `https://apexclasses.org/auth/callback`
+  - Keep `scope=openid profile email phone`
+- [ ] Delete `Register.jsx` and remove its route from `App.jsx`
+- [ ] Delete `ForgotPassword.jsx` and `ResetPassword.jsx` and remove their routes
+- [ ] Grep for links to `/register`, `/forgot-password`, `/reset-password` and remove them
 
-**Goal:** Turn the predictor into an account-based, paid product. Reuses existing auth (`users`, JWT + `apex_refresh` cookie, `AuthContext`) and Razorpay (`order/payment.service.js`).
+### 2.8 — Frontend: AuthContext Update
 
-### Decisions (interview, 2026-06-11)
-- **Tiers:** Free (anon-lead OR logged-in unpaid) = unlimited **3/3/2 previews + total count**, nothing else. Paid = full list + PDF + share + saved searches.
-- **Plan:** one-time **₹99 → 15 lifetime full searches**; re-buy another ₹99/15 pack when exhausted.
-- **Search consumption:** live preview + slider what-if always free. Clicking **"Reveal full list"** consumes **1 of 15** for a *new unique combo* (normalized `percentile|cat|homeU|tfws|sortedBranches`); re-opening a saved combo is free.
-- **Anon flow:** phone panel → create/link a **guest account** (phone-keyed, no password) + lead → issue JWT → show 3/3/2. Guest **upgrades to email+password** to return.
-- **Account merge:** phone matching a **guest (no password)** → reuse it. Phone matching a **password account** → DO NOT auto-login; prompt "account exists, please log in" (security).
-- **Profile:** Dashboard card + dedicated **`/my-predictions`** page (quota, plan, saved searches, re-buy CTA).
-- **Header:** an **Account** button beside "Try College Predictor" (Login/Register when logged out; name/profile menu when logged in).
+- [ ] Remove `register()` function
+- [ ] Remove direct `login(email, password)` call
+- [ ] Add `loginWithLogto(mode)` → constructs Logto authorize URL and redirects (`mode`: `'google'` or `'email'`)
+- [ ] Keep `logout()` unchanged
+- [ ] Add `isShadow` derived state (feeds from Phase 1)
 
-### 6.1 Data model (new migration) ✅ DONE
-- [x] `predictor_profiles`, `predictor_searches` (unique `user_id,combo_hash`), `predictor_payments` — migration `20260611120000_add_predictor_accounts` applied to dev. Prisma models added.
+### 2.9 — Frontend: Env Vars
 
-### 6.2 Backend ✅ DONE
-- [x] `predictor.account.model.js` + `predictor.account.controller.js`; routes added.
-- [x] `POST /guest` (create/reuse guest, block password accounts, issue JWT + refresh cookie, lead row).
-- [x] `GET /profile`, `POST /reveal` (auth + quota; dedupe by combo_hash; consume 1 on new; snapshot). `/predict` is now **preview-only** (full list never leaves server without auth+quota).
-- [x] `GET /searches`, `GET /searches/:id`.
-- [x] `POST /pay/create` + `POST /pay/verify` (reuse `payment.service.js`; HMAC verify; one-time grant via status guard → `searches_limit += 15`, plan='paid').
-- [x] PDF/share are paid-only by construction (data only exists after a paid reveal).
-
-### 6.3 Frontend ✅ MOSTLY DONE
-- [x] `Layout.jsx`: Account button (logged-out) + "My Predictions" in menu; switched to reactive `useAuth()`.
-- [x] `CollegePredictor.jsx`: reworked — anon → phone panel (guest) → 3/3/2; "Reveal" consumes quota; paywall modal (Razorpay); upsell banner; PDF/share gated to `isFull`.
-- [x] Razorpay checkout (reuses `order/utils/loadRazorpay`).
-- [x] `/my-predictions` page: plan, X/15, saved searches (re-open via query params = free), re-buy.
-- [ ] Dashboard **card** summary (detail page done; small card on `Dashboard.jsx` still pending).
-- [ ] **Guest→full-account upgrade/merge**: a guest who registers with the same phone currently creates a NEW account (register doesn't merge by phone). Needs an upgrade path that sets email+password on the existing guest row.
-
-### 6.4 Verify
-- [x] Guest → token → preview 3/3/2 (HTTP: 201 / locked / total 61 / 3 visible). ✅
-- [x] Free user reveal → `402 QUOTA_EXHAUSTED`. ✅
-- [x] Model-level: pay grant → 15; reveal new combo → used 1/15 + saved; re-open same combo → free. ✅
-- [x] Frontend `vite build` clean. ✅
-- [ ] Live Razorpay test-key checkout in browser (needs manual click-through).
-- [ ] 15 used → re-buy adds 15 (logic ready; browser-verify).
-
-### Known follow-ups / risks
-- ⚠️ Auth stores **passwords in plaintext** (pre-existing) — should hash before this goes paid/live.
-- Guest→full upgrade/merge (6.3) not yet built.
-- Dashboard summary card (6.3) not yet built.
-
----
-
-## Future Enhancements (design now, build later)
-- **Multi-year data** → trend-based prediction (cutoff drift) instead of single year → tighter Reach band
-- **CAP round number** stored (Round 1 cutoffs > later rounds) → big accuracy gain
-- **More regions** beyond Pune (the `city` column already supports it)
-- **Save / login** to persist a student's shortlist
+- [ ] Add to `frontend/.env`:
+  ```
+  VITE_LOGTO_APP_ID=<from Logto console>
+  VITE_LOGTO_ENDPOINT=https://auth.apexclasses.org
+  ```
 
 ---
 
-## Decisions Made (resolved)
-1. ✅ **Home-University default** — toggle, default **ON** (Pune-first audience).
-2. ✅ **Lead-gen gating** — free preview (3/bucket) + gate **full list** behind name/phone.
-3. ✅ **UI approach** — **single-page** (not wizard).
-4. ✅ **Dev DB** — Supabase; **Prod DB** — VPS Postgres `apex_db`. Deploy = Dockerfile only, root `backend/`.
-5. ✅ **5.B discoverability strategy** — header CTA only, no nav link (avoids nav clipping at 1280–1536px).
-6. ✅ **5.D.6 analytics** — lightweight `predictor_open` event in `predictor_leads`-adjacent table; keep it simple, no funnel tracking yet.
+## Phase 3 — Verify & Ship Everything
+
+**Goal:** With Phases 1 and 2 complete on `dev`, run the full verification checklist across rank predictor + shadow flow + Logto auth, then merge to `main` in one release.
+
+### 3.1 — Rank Predictor Smoke Test
+
+- [ ] Restart backend dev server (`npm run dev` in `backend/`)
+- [ ] Hard-refresh browser (Ctrl+Shift+R)
+- [ ] Login as `rohitrhuge@gmail.com` via Google (Logto) → profile shows 50 rank searches remaining
+- [ ] Run: rank 500, OBC, HU=true, branch=Computer → COEP appears in reach section with 0% probability
+- [ ] Click Unlock → 1 search consumed (49 remaining), no paywall
+
+### 3.2 — Rank Predictor API Checks
+
+- [ ] `GET /api/predictor/rank/meta` → `{ branches: [...28], categories: [...] }`
+- [ ] `POST /api/predictor/rank/predict` `{ rank: 8000, category: "OBC", homeUniversity: true }` → `{ counts: { reach, safe }, locked: true, results: [] }`
+- [ ] `POST /api/predictor/rank/predict` with `rank: 0` → 400
+- [ ] `POST /api/predictor/rank/reveal` without auth → 401
+- [ ] `POST /api/predictor/rank/reveal` with auth + 0 rank quota → 402 `RANK_QUOTA_EXHAUSTED`
+- [ ] `POST /api/predictor/rank/reveal` with valid auth → `{ results: [...], locked: false, fromCache: false }`
+- [ ] Repeat same reveal → `{ fromCache: true }` — no quota consumed
+- [ ] Results order: reach rows (margin < 0) before safe rows (margin ≥ 0)
+- [ ] Non-HU student: `effectiveCategories` contains no H-suffix codes
+
+### 3.3 — Data Spot Checks
+
+- [ ] Pick 3 rows from the original Excel → confirm `closing_rank` in DB matches exactly
+- [ ] Rank 8000, closing rank 7200 → probability 80% (10% drop, segment 1)
+- [ ] Rank 8000, closing rank 5600 → probability 20% (30% drop, segment 2)
+
+### 3.4 — Frontend Browser Checks (Rank Predictor)
+
+- [ ] Page loads rank-only — no percentile slider
+- [ ] Rank input: non-integers rejected, 0 rejected, >250000 rejected
+- [ ] Branch group chip selects/deselects all group branches
+- [ ] Locked state: only counts shown, no college names
+- [ ] Unlocked table: reach section header + safe section header, SR numbers 1–30
+- [ ] Probability badge colors: green (≥80%), amber (40–79%), red (<40%)
+- [ ] PDF download: correct filename, 30 rows, correct headers
+- [ ] URL hydration: paste `?rank=8000&cat=OBC&hu=1` → inputs restored + predict auto-runs
+- [ ] MyPredictions: rank search shows `#` badge, "Rank Searches: X / 3" quota meter visible
+- [ ] Homepage rank widget renders, CTA pre-fills predictor URL
+- [ ] `vite build` exits 0
+
+### 3.5 — Shadow Flow Browser Checks
+
+- [ ] Open CollegePredictor logged out → phone modal appears with phone field only (no name field)
+- [ ] Enter phone → shadow account created → predict runs
+- [ ] Shadow banner visible: "Your results are saved on this device only."
+- [ ] Open same phone in incognito → device mismatch → "Sign in with Google" shown
+- [ ] Close browser → reopen → shadow token refresh works on same device (results still accessible)
+- [ ] Phone number that already has a registered account → ACCOUNT_EXISTS message shown
+
+### 3.6 — Logto Auth Checks
+
+- [ ] Existing user (rohitrhuge@gmail.com) signs in via "Continue with Email" → same password works
+- [ ] New user signs in via "Continue with Google" → account created → lands on home
+- [ ] Forgot password: Logto sends Brevo email → reset link works
+- [ ] Shadow user signs in with Google → merge runs automatically → searches transferred → shadow row deleted
+- [ ] `POST /api/auth/register` returns friendly redirect message
+- [ ] Admin accounts (tushar + rohit) can access admin dashboard after Google login
+
+### 3.7 — User Migration Script (Paid Percentile Users)
+
+- [ ] Create `backend/scripts/migrate_percentile_users.mjs`:
+  - Query: `SELECT user_id, searches_limit FROM predictor_profiles WHERE searches_limit > 0`
+  - Dry-run: print affected user IDs and amounts, no writes
+  - Live: `SET searches_limit = 0, rank_searches_limit = rank_searches_limit + 3`
+  - Log each row updated
+- [ ] Run dry-run on Neon dev DB → confirm output correct
+- [ ] Run live on Neon dev DB → verify rank quota incremented
+- [ ] Run live on prod VPS after deploy (Rohit runs manually)
+
+### 3.8 — Deploy
+
+- [ ] `git add -A && git commit` on `dev` branch
+- [ ] `git push origin dev`
+- [ ] Open PR: `dev` → `main`
+- [ ] Merge PR → Coolify triggers rebuild
+- [ ] Confirm `prisma migrate deploy` appears in build logs (DB migration applied to prod)
+- [ ] Run `import_users_to_logto.mjs` against prod (Rohit)
+- [ ] Run `migrate_percentile_users.mjs` against prod (Rohit)
+- [ ] Spot-check one rank prediction on `apexclasses.org/college-predictor`
+- [ ] Spot-check Google login on `apexclasses.org`
 
 ---
 
-## What you can test right now (with dev server already running or restartable)
+## Phase 5 — College Location & Website
 
-### Backend (port 5000)
-```bash
-# Health
-curl http://localhost:5000/health
+**Goal:** Surface each college's city/area and official website on every result card and in the PDF. Data already exists in `clgpredict/pune data final for segregation.xlsx` (col B = Location, col C = Website on branch rows). Email does not exist in the source — skipped by design.
 
-# Predictor meta (categories, branches, year)
-curl http://localhost:5000/api/predictor/meta
+**Data facts:**
+- Source file: `clgpredict/pune data final for segregation.xlsx`
+- Column A: code (5-digit = college header row; 10-digit = branch row)
+- Column B: Location (e.g. "Pune", "Pimpri-Chinchwad")
+- Column C: Website (e.g. "https://coep.org.in")
+- 76 of 77 colleges have both fields; 1 college has website only, no location — handle gracefully (show what's available)
+- No email column in any source file — skip permanently
 
-# Predict — 95th pct, OBC, Pune, Comp/IT
-curl -X POST http://localhost:5000/api/predictor/predict \
-  -H "Content-Type: application/json" \
-  -d '{"percentile":95,"category":"OBC","homeUniversity":true,"branches":["Computer Engineering","Information Technology"],"tfws":false}'
+### 5.1 — DB Migration: add location + website to colleges table
 
-# Lead capture
-curl -X POST http://localhost:5000/api/predictor/lead \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test","phone":"+919999999999","percentile":92,"category":"OPEN"}'
+- [ ] Create migration file `backend/prisma/migrations/20260722000000_add_college_location_website/migration.sql`
+- [ ] Write SQL:
+  ```sql
+  ALTER TABLE "colleges" ADD COLUMN IF NOT EXISTS "location" VARCHAR(255);
+  ALTER TABLE "colleges" ADD COLUMN IF NOT EXISTS "website"  VARCHAR(255);
+  ```
+- [ ] Both columns nullable (not all colleges guaranteed to have data)
+- [ ] Do NOT alter `cutoffs` or `rank_cutoffs` — location/website lives only on the `colleges` row
 
-# Analytics
-curl -X POST http://localhost:5000/api/analytics/event \
-  -H "Content-Type: application/json" \
-  -d '{"event":"predictor_open"}'
-curl http://localhost:5000/api/analytics/summary
-```
+### 5.2 — ETL Script: seed location + website from xlsx
 
-### Validation scripts
-```bash
-cd backend
-node scripts/validate_predictor.mjs   # SQL-contract invariants
-node scripts/edge_cases.mjs          # 15 edge cases
-```
+- [ ] Install `xlsx` npm package as a dev-dependency in `backend/`: `npm install --save-dev xlsx`
+- [ ] Create `backend/scripts/seed_college_location_website.mjs`
+- [ ] Script logic (atomic steps inside the script):
+  1. Read `clgpredict/pune data final for segregation.xlsx` using `xlsx.readFile()`; target sheet index 0
+  2. Convert sheet to array-of-arrays: `xlsx.utils.sheet_to_json(sheet, { header: 1 })`
+  3. Iterate rows; identify branch rows where `String(row[0]).length === 10` (10-digit code)
+  4. Extract `collegeCode = String(row[0]).slice(0, 5)` — the parent 5-digit code
+  5. Extract `location = (row[1] || '').trim() || null`
+  6. Extract `website = (row[2] || '').trim() || null`
+  7. Build a `Map<collegeCode, { location, website }>`: for each college code, take the first non-null location and first non-null website found across its branch rows (branch rows share the same location/website)
+  8. In `--dry-run` mode: print a table of (code, location, website) — no DB writes
+  9. In live mode: for each entry in the map, run `UPDATE colleges SET location = $1, website = $2 WHERE code = $3`; collect and log the update count
+  10. Log summary: `Updated X colleges. Y had no match in DB (codes: ...). Z had missing location. W had missing website.`
+- [ ] Accept `--dry-run` flag via `process.argv.includes('--dry-run')`
+- [ ] Use `DATABASE_URL` from `backend/.env` via `pg` pool (same pattern as other scripts)
+- [ ] Path to xlsx file should be constructed relative to the script: `../../clgpredict/pune data final for segregation.xlsx` resolved from `import.meta.url`
 
-### Frontend
-- `/` — homepage: hero `PredictorPreview` animates on load, `PercentileLandscape` is draggable
-- `/college-predictor` — full predictor with live what-if re-rank
-- Mobile: resize browser to 375px / 768px to check responsiveness
+### 5.3 — Backend: expose location + website in rank model queries
 
-### Still NOT testable locally
-- 5.A.4–5.A.6: prod deploy (needs platform access)
-- 5.A.3: Razorpay live keys (no test mode for live)
-- 5.C.4: needs a real student/coaching dataset to spot-check against the sheet
-- 5.D.1–5.D.5: not built yet
+- [ ] In `backend/src/predictor/predictor.rank.model.js`, update `findReachByRank`:
+  - In the CTE `ranked` SELECT: add `c.location, c.website` after `c.name`
+  - In the outer SELECT: add `location, website` after `name`
+  - No other changes — filter/sort logic untouched
+- [ ] In `backend/src/predictor/predictor.rank.model.js`, update `findSafeByRank`:
+  - Same change: add `c.location, c.website` to both the CTE SELECT and the outer SELECT
 
-### To start dev server
-```bash
-# Backend (terminal 1)
-cd E:/PROJECTS/ApexClasses/backend && npm run dev
+### 5.4 — Backend: expose location + website in percentile model query
 
-# Frontend (terminal 2)
-cd E:/PROJECTS/ApexClasses/frontend && npm run dev
-```
+- [ ] In `backend/src/predictor/predictor.model.js`, update `findEligible`:
+  - In the CTE `ranked` SELECT: add `c.location, c.website` after `c.name`
+  - In the outer SELECT: add `location, website`
+  - No other changes
+
+### 5.5 — Frontend: show location + website on each result card (CollegePredictor.jsx)
+
+- [ ] In `frontend/src/pages/CollegePredictor.jsx`, locate the JSX that renders each result item in the reach and safe sections (the `reachItems.map(...)` and `safeItems.map(...)` blocks)
+- [ ] Below the college name line, add a row that conditionally renders:
+  - If `it.location`: `<MapPin size={12} />` icon + `<span>{it.location}</span>` in grey, small text
+  - If `it.website`: `<Globe size={12} />` icon + `<a href={it.website} target="_blank" rel="noopener noreferrer">{it.website displayed as hostname only}</a>` — extract hostname using `new URL(it.website).hostname` (fallback to raw string if URL parse fails); link styled in indigo, small text
+  - Both on the same sub-line, separated by a `·` divider if both are present
+  - Entire sub-line only rendered if `it.location || it.website` is truthy
+- [ ] Import `Globe` from `lucide-react` (already imports `MapPin`)
+- [ ] Do not change the layout of the name, branch chip, closing rank, or probability badge
+
+### 5.6 — Frontend: add location + website to rank PDF (predictorPdf.js)
+
+- [ ] In `frontend/src/predictor/predictorPdf.js`, in `downloadRankPdf`, update the row-rendering loop for both reach and safe sections:
+  - After printing the college name on line `y`, if `it.location || it.website`:
+    - Drop `y` by 1 pt (tighter spacing)
+    - Print a sub-line at `y + 10` in font size 7, color grey `(150, 150, 150)`:
+      - If `it.location`: `📍 {it.location}` — use plain text, not emoji (jsPDF doesn't render emoji); use `Loc: {it.location}`
+      - If both: `Loc: {it.location}  ·  {hostname}`
+      - If website only: `{hostname}`
+      - Truncate combined sub-line to 55 chars max with `…` to stay within the COLLEGE column width
+    - Increase the per-row height from 14 pt to 22 pt (to accommodate the sub-line)
+  - Do NOT add a new column — keeps the existing 7-column layout intact, avoids width overflow on A4
+  - `ensureSpace` check must use the new row height (22 pt instead of 14 pt)
+
+### 5.7 — Run ETL on dev DB and verify
+
+- [ ] `cd backend && node scripts/seed_college_location_website.mjs --dry-run` → confirm 76–77 college entries printed with correct location + website
+- [ ] Spot-check 3 colleges against the xlsx manually (COEP, MIT, Indira) to confirm data accuracy
+- [ ] Run live: `node scripts/seed_college_location_website.mjs` → confirm "Updated 76 colleges" in output
+- [ ] Query DB to verify: `SELECT code, name, location, website FROM colleges WHERE location IS NOT NULL LIMIT 5` — confirm data is present
+
+### 5.8 — Smoke test end-to-end
+
+- [ ] Start dev backend (`npm run dev`) — confirm migration applied (location + website columns exist in colleges)
+- [ ] Run predict for rank 8000, OBC, all branches — check one result item in network response includes `location` and `website` fields
+- [ ] In browser: confirm location text + website link appear on at least two college cards
+- [ ] Click a website link — confirm it opens in a new tab to the correct URL
+- [ ] Download PDF for an unlocked result — open PDF and confirm the sub-line with location + website hostname appears under college names
+- [ ] Test a college with no location (1 known case) — confirm it does not show location text, only website
+- [ ] Test a college with neither — confirm the sub-line is entirely absent (no empty gap)
+
+---
+
+## Phase 4 — Post-Launch Improvements (Backlog)
+
+Do after Phases 1–3 are live and stable.
+
+| Task | What |
+|---|---|
+| Female / Ladies quota data | Re-run ETL with ladies columns; add `_F` category codes; show `L` badge on rows using ladies cutoff |
+| State-quota data (S suffix) | Non-HU students only get OPEN results now; expand Excel data to fill non-HU category gaps |
+| 2025 data when available | Add `year = 2025` rows; weight recent year in probability |
+| Mumbai / Nagpur / Aurangabad | Expand to other city regions — separate Excel source files |
+| Autonomous flag | Add `autonomous BOOLEAN` to `colleges` table; show on result rows |
+| CAP round breakdown | Add `round SMALLINT` column to `rank_cutoffs`; round 1 cutoffs only now |
+| OTP for shadow recovery | Send SMS OTP to let shadow users recover on new device without Google |
+| Admin: shadow account stats | Show shadow vs registered breakdown in admin dashboard |
+
+---
+
+## File Change Map
+
+| File | Phase | Change |
+|---|---|---|
+| `backend/prisma/migrations/YYYYMMDD_shadow_logto/migration.sql` | 1+2 | New: account_type, shadow_expires_at, shadow_device_token, logto_sub, avatar_url |
+| `backend/src/predictor/predictor.routes.js` | 1 | Add `POST /shadow-guest`, `POST /shadow-refresh` |
+| `backend/src/predictor/predictor.account.controller.js` | 1 | Add shadowGuest(), shadowRefresh() handlers |
+| `backend/src/predictor/predictor.account.model.js` | 1 | Add createShadowUser(), findShadowByPhone(), findShadowByToken() |
+| `backend/src/auth/auth.routes.js` | 2 | Add logto/callback, remove register/forgot-password/reset-password |
+| `backend/src/auth/auth.controller.js` | 2 | Add logtoCallback(), stub removed routes |
+| `backend/src/auth/auth.model.js` | 2 | Add upsertLogtoUser(), linkLogtoSub() |
+| `backend/scripts/migrate_percentile_users.mjs` | 3 | New: grant 3 rank searches to paid percentile users |
+| `backend/scripts/import_users_to_logto.mjs` | 2 | New: bulk import 103 users into Logto |
+| `backend/scripts/cleanup_shadow_accounts.mjs` | 1 | New: delete expired shadow accounts |
+| `backend/.env` | 2 | Add LOGTO_APP_ID, LOGTO_APP_SECRET, LOGTO_ENDPOINT |
+| `frontend/src/pages/CollegePredictor.jsx` | 1 | Phone modal → phone-only, call shadow-guest endpoint |
+| `frontend/src/pages/AuthCallback.jsx` | 2 | New: exchange Logto code, merge shadow if needed |
+| `frontend/src/pages/Login.jsx` | 2 | Replace form with Logto redirect buttons |
+| `frontend/src/pages/Register.jsx` | 2 | Delete |
+| `frontend/src/pages/ForgotPassword.jsx` | 2 | Delete |
+| `frontend/src/pages/ResetPassword.jsx` | 2 | Delete |
+| `frontend/src/context/AuthContext.jsx` | 1+2 | Add isShadow, loginAsShadow(), loginWithLogto(), remove register() |
+| `frontend/.env` | 2 | Add VITE_LOGTO_APP_ID, VITE_LOGTO_ENDPOINT |
+| `backend/prisma/migrations/20260722000000_add_college_location_website/migration.sql` | 5 | New: location + website nullable columns on colleges table |
+| `backend/scripts/seed_college_location_website.mjs` | 5 | New: ETL — reads xlsx, extracts location/website from branch rows, UPDATEs 76 colleges rows |
+| `backend/src/predictor/predictor.rank.model.js` | 5 | Add c.location, c.website to CTE SELECT + outer SELECT in findReachByRank and findSafeByRank |
+| `backend/src/predictor/predictor.model.js` | 5 | Add c.location, c.website to CTE SELECT + outer SELECT in findEligible |
+| `frontend/src/pages/CollegePredictor.jsx` | 5 | Sub-line under college name: MapPin location + Globe website link |
+| `frontend/src/predictor/predictorPdf.js` | 5 | Sub-line in rank PDF rows: Loc: {location} · {hostname}, row height 14→22 pt |
+
+---
+
+## Current Prod DB Snapshot (2026-07-21)
+
+| Segment | Count | Notes |
+|---|---|---|
+| Registered users (email + password) | 103 (incl. 2 admins) | Plain-text passwords — Logto auto-upgrades on first login |
+| Guest users (phone only, no password) | 75 | 0 paid, 0 searches used — safe to convert to shadow type via migration |
+| Email users without password | 8 | Import to Logto; forced password reset on first login |
+| Paid predictor payments | 6 PAID @ ₹544 | All percentile, no rank payments yet |
+| Pending payments | 5 CREATED @ ₹455 | Abandoned checkouts — ignore |
+| Rank searches granted | 100 (2 test accounts) | rohitrhuge + tushar1382 |

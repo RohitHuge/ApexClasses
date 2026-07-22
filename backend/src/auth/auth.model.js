@@ -87,3 +87,20 @@ export const updateUserRole = async (userId, role) => {
     );
     return res.rows[0];
 };
+
+// Upsert by logto_sub — called on every Logto callback to keep profile fresh.
+// Uses partial unique index: users_logto_sub_key (WHERE logto_sub IS NOT NULL).
+export const upsertUserByLogtoSub = async ({ logtoSub, email, name, phone, avatarUrl }) => {
+    const res = await query(
+        `INSERT INTO users (id, logto_sub, email, name, phone, avatar_url, role, account_type)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 'user', 'registered')
+         ON CONFLICT (logto_sub) WHERE logto_sub IS NOT NULL DO UPDATE SET
+           email      = COALESCE(EXCLUDED.email,      users.email),
+           name       = EXCLUDED.name,
+           phone      = COALESCE(EXCLUDED.phone,      users.phone),
+           avatar_url = EXCLUDED.avatar_url
+         RETURNING id, name, email, phone, role, account_type`,
+        [logtoSub, email || null, name, phone || null, avatarUrl || null]
+    );
+    return res.rows[0];
+};

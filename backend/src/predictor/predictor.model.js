@@ -43,6 +43,8 @@ export const findEligible = async (percentile, effectiveCategories, branches, re
         `WITH ranked AS (
             SELECT c.code,
                    c.name,
+                   c.location,
+                   c.website,
                    cu.branch,
                    cu.category,
                    cu.cutoff,
@@ -59,6 +61,8 @@ export const findEligible = async (percentile, effectiveCategories, branches, re
         )
         SELECT code,
                name,
+               location,
+               website,
                branch,
                cutoff::float        AS best_cutoff,
                category             AS via_category,
