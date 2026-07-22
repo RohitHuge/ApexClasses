@@ -14,6 +14,19 @@ const BUCKET_COLOR = {
 
 const fmt = (n) => (Number(n) || 0).toFixed(2);
 
+const pdfHost = (url) => {
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch { return url; }
+};
+
+const pdfSubLine = (it) => {
+    const parts = [];
+    if (it.location) parts.push(`Loc: ${it.location}`);
+    if (it.website)  parts.push(pdfHost(it.website));
+    const s = parts.join('  ·  ');
+    return s.length > 55 ? s.slice(0, 53) + '…' : s;
+};
+
 // Compact via-category for the narrow PDF column (L* = home-university quota).
 const viaShort = (raw) => (raw && raw[0] === 'L' ? `HU-${raw.slice(1)}` : raw || '—');
 
@@ -277,7 +290,9 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         reachItems.forEach((it, i) => {
-            ensureSpace(18);
+            const sub = pdfSubLine(it);
+            const rowH = sub ? 24 : 14;
+            ensureSpace(rowH + 4);
             doc.setTextColor(220, 38, 38);
             doc.text(String(i + 1), M, y, { align: 'right' });
             doc.setTextColor(30, 41, 59);
@@ -293,7 +308,13 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
             const prob = it.probability ?? 0;
             doc.setTextColor(prob >= 80 ? 5 : prob >= 40 ? 146 : 220, prob >= 80 ? 150 : prob >= 40 ? 64 : 38, prob >= 80 ? 105 : prob >= 40 ? 0 : 38);
             doc.text(`${prob}%`, W - M, y, { align: 'right' });
-            y += 14;
+            if (sub) {
+                doc.setFontSize(7);
+                doc.setTextColor(160, 160, 160);
+                doc.text(sub, M + 55, y + 9);
+                doc.setFontSize(8.5);
+            }
+            y += rowH;
             doc.setDrawColor(241, 245, 249);
             doc.line(M + 14, y - 4, W - M, y - 4);
         });
@@ -315,7 +336,9 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         safeItems.forEach((it, i) => {
-            ensureSpace(18);
+            const sub = pdfSubLine(it);
+            const rowH = sub ? 24 : 14;
+            ensureSpace(rowH + 4);
             doc.setTextColor(5, 150, 105);
             doc.text(String(reachItems.length + i + 1), M, y, { align: 'right' });
             doc.setTextColor(30, 41, 59);
@@ -331,7 +354,13 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
             const prob = it.probability ?? 0;
             doc.setTextColor(5, 150, 105);
             doc.text(`${prob}%`, W - M, y, { align: 'right' });
-            y += 14;
+            if (sub) {
+                doc.setFontSize(7);
+                doc.setTextColor(160, 160, 160);
+                doc.text(sub, M + 55, y + 9);
+                doc.setFontSize(8.5);
+            }
+            y += rowH;
             doc.setDrawColor(241, 245, 249);
             doc.line(M + 14, y - 4, W - M, y - 4);
         });

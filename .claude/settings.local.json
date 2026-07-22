@@ -58,7 +58,8 @@
       "Bash(curl -s -m 20 -X POST https://apex.rohithuge.online/api/predictor/guest -H \"Content-Type: application/json\" -d '{\"name\":\"DB Probe\",\"phone\":\"9999000011\"}')",
       "Bash(npx vite *.)",
       "Bash(npx vite *)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(curl -sk -H \"Authorization: Bearer 8|Zns3jASPcK0lnK6sEnlrLFTbMiRJ0lIQnCy43Si6ae625238\" -H \"Accept: application/json\" \"http://82.180.144.69:8000/api/v1/applications/l8wj4h9hj50mhmj6bqmfnd64/logs?lines=50\")"
     ]
   }
 }

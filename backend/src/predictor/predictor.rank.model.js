@@ -20,6 +20,8 @@ export const findReachByRank = async (rank, effectiveCategories, branches, reach
         `WITH ranked AS (
             SELECT c.code,
                    c.name,
+                   c.location,
+                   c.website,
                    rc.branch,
                    rc.category,
                    rc.closing_rank,
@@ -37,6 +39,8 @@ export const findReachByRank = async (rank, effectiveCategories, branches, reach
         )
         SELECT code,
                name,
+               location,
+               website,
                branch,
                closing_rank                    AS best_rank,
                category                        AS via_category,
@@ -59,6 +63,8 @@ export const findSafeByRank = async (rank, effectiveCategories, branches) => {
         `WITH ranked AS (
             SELECT c.code,
                    c.name,
+                   c.location,
+                   c.website,
                    rc.branch,
                    rc.category,
                    rc.closing_rank,
@@ -75,6 +81,8 @@ export const findSafeByRank = async (rank, effectiveCategories, branches) => {
         )
         SELECT code,
                name,
+               location,
+               website,
                branch,
                closing_rank                    AS best_rank,
                category                        AS via_category,

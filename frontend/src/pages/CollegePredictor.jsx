@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     GraduationCap, Sparkles, Lock, Search, Loader2, MapPin, X, Info,
-    Download, Crown, Check, Hash, Users,
+    Download, Crown, Check, Hash, Users, Globe,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -24,6 +24,11 @@ const probBadge = (p) => {
     if (p >= 80) return 'bg-emerald-100 text-emerald-700';
     if (p >= 40) return 'bg-amber-100 text-amber-700';
     return 'bg-rose-100 text-rose-700';
+};
+
+const siteHost = (url) => {
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch { return url; }
 };
 
 export default function CollegePredictor() {
@@ -548,6 +553,18 @@ export default function CollegePredictor() {
                                                                     <td className="px-3 py-2.5">
                                                                         <span className="font-semibold text-slate-800 text-xs leading-snug block">{it.college}</span>
                                                                         <span className="text-xs text-slate-400 sm:hidden">{it.branch}</span>
+                                                                        {(it.location || it.website) && (
+                                                                            <span className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5 flex-wrap">
+                                                                                {it.location && <><MapPin size={10} /><span>{it.location}</span></>}
+                                                                                {it.location && it.website && <span>·</span>}
+                                                                                {it.website && (
+                                                                                    <a href={it.website} target="_blank" rel="noopener noreferrer"
+                                                                                        className="inline-flex items-center gap-0.5 text-indigo-400 hover:text-indigo-600">
+                                                                                        <Globe size={10} />{siteHost(it.website)}
+                                                                                    </a>
+                                                                                )}
+                                                                            </span>
+                                                                        )}
                                                                     </td>
                                                                     <td className="px-3 py-2.5 text-xs text-slate-600 hidden sm:table-cell">{it.branch}</td>
                                                                     <td className="px-3 py-2.5 hidden md:table-cell">
@@ -583,6 +600,18 @@ export default function CollegePredictor() {
                                                                     <td className="px-3 py-2.5">
                                                                         <span className="font-semibold text-slate-800 text-xs leading-snug block">{it.college}</span>
                                                                         <span className="text-xs text-slate-400 sm:hidden">{it.branch}</span>
+                                                                        {(it.location || it.website) && (
+                                                                            <span className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5 flex-wrap">
+                                                                                {it.location && <><MapPin size={10} /><span>{it.location}</span></>}
+                                                                                {it.location && it.website && <span>·</span>}
+                                                                                {it.website && (
+                                                                                    <a href={it.website} target="_blank" rel="noopener noreferrer"
+                                                                                        className="inline-flex items-center gap-0.5 text-indigo-400 hover:text-indigo-600">
+                                                                                        <Globe size={10} />{siteHost(it.website)}
+                                                                                    </a>
+                                                                                )}
+                                                                            </span>
+                                                                        )}
                                                                     </td>
                                                                     <td className="px-3 py-2.5 text-xs text-slate-600 hidden sm:table-cell">{it.branch}</td>
                                                                     <td className="px-3 py-2.5 hidden md:table-cell">

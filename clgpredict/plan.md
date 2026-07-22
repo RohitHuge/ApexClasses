@@ -320,6 +320,108 @@
 
 ---
 
+## Phase 5 — College Location & Website
+
+**Goal:** Surface each college's city/area and official website on every result card and in the PDF. Data already exists in `clgpredict/pune data final for segregation.xlsx` (col B = Location, col C = Website on branch rows). Email does not exist in the source — skipped by design.
+
+**Data facts:**
+- Source file: `clgpredict/pune data final for segregation.xlsx`
+- Column A: code (5-digit = college header row; 10-digit = branch row)
+- Column B: Location (e.g. "Pune", "Pimpri-Chinchwad")
+- Column C: Website (e.g. "https://coep.org.in")
+- 76 of 77 colleges have both fields; 1 college has website only, no location — handle gracefully (show what's available)
+- No email column in any source file — skip permanently
+
+### 5.1 — DB Migration: add location + website to colleges table
+
+- [ ] Create migration file `backend/prisma/migrations/20260722000000_add_college_location_website/migration.sql`
+- [ ] Write SQL:
+  ```sql
+  ALTER TABLE "colleges" ADD COLUMN IF NOT EXISTS "location" VARCHAR(255);
+  ALTER TABLE "colleges" ADD COLUMN IF NOT EXISTS "website"  VARCHAR(255);
+  ```
+- [ ] Both columns nullable (not all colleges guaranteed to have data)
+- [ ] Do NOT alter `cutoffs` or `rank_cutoffs` — location/website lives only on the `colleges` row
+
+### 5.2 — ETL Script: seed location + website from xlsx
+
+- [ ] Install `xlsx` npm package as a dev-dependency in `backend/`: `npm install --save-dev xlsx`
+- [ ] Create `backend/scripts/seed_college_location_website.mjs`
+- [ ] Script logic (atomic steps inside the script):
+  1. Read `clgpredict/pune data final for segregation.xlsx` using `xlsx.readFile()`; target sheet index 0
+  2. Convert sheet to array-of-arrays: `xlsx.utils.sheet_to_json(sheet, { header: 1 })`
+  3. Iterate rows; identify branch rows where `String(row[0]).length === 10` (10-digit code)
+  4. Extract `collegeCode = String(row[0]).slice(0, 5)` — the parent 5-digit code
+  5. Extract `location = (row[1] || '').trim() || null`
+  6. Extract `website = (row[2] || '').trim() || null`
+  7. Build a `Map<collegeCode, { location, website }>`: for each college code, take the first non-null location and first non-null website found across its branch rows (branch rows share the same location/website)
+  8. In `--dry-run` mode: print a table of (code, location, website) — no DB writes
+  9. In live mode: for each entry in the map, run `UPDATE colleges SET location = $1, website = $2 WHERE code = $3`; collect and log the update count
+  10. Log summary: `Updated X colleges. Y had no match in DB (codes: ...). Z had missing location. W had missing website.`
+- [ ] Accept `--dry-run` flag via `process.argv.includes('--dry-run')`
+- [ ] Use `DATABASE_URL` from `backend/.env` via `pg` pool (same pattern as other scripts)
+- [ ] Path to xlsx file should be constructed relative to the script: `../../clgpredict/pune data final for segregation.xlsx` resolved from `import.meta.url`
+
+### 5.3 — Backend: expose location + website in rank model queries
+
+- [ ] In `backend/src/predictor/predictor.rank.model.js`, update `findReachByRank`:
+  - In the CTE `ranked` SELECT: add `c.location, c.website` after `c.name`
+  - In the outer SELECT: add `location, website` after `name`
+  - No other changes — filter/sort logic untouched
+- [ ] In `backend/src/predictor/predictor.rank.model.js`, update `findSafeByRank`:
+  - Same change: add `c.location, c.website` to both the CTE SELECT and the outer SELECT
+
+### 5.4 — Backend: expose location + website in percentile model query
+
+- [ ] In `backend/src/predictor/predictor.model.js`, update `findEligible`:
+  - In the CTE `ranked` SELECT: add `c.location, c.website` after `c.name`
+  - In the outer SELECT: add `location, website`
+  - No other changes
+
+### 5.5 — Frontend: show location + website on each result card (CollegePredictor.jsx)
+
+- [ ] In `frontend/src/pages/CollegePredictor.jsx`, locate the JSX that renders each result item in the reach and safe sections (the `reachItems.map(...)` and `safeItems.map(...)` blocks)
+- [ ] Below the college name line, add a row that conditionally renders:
+  - If `it.location`: `<MapPin size={12} />` icon + `<span>{it.location}</span>` in grey, small text
+  - If `it.website`: `<Globe size={12} />` icon + `<a href={it.website} target="_blank" rel="noopener noreferrer">{it.website displayed as hostname only}</a>` — extract hostname using `new URL(it.website).hostname` (fallback to raw string if URL parse fails); link styled in indigo, small text
+  - Both on the same sub-line, separated by a `·` divider if both are present
+  - Entire sub-line only rendered if `it.location || it.website` is truthy
+- [ ] Import `Globe` from `lucide-react` (already imports `MapPin`)
+- [ ] Do not change the layout of the name, branch chip, closing rank, or probability badge
+
+### 5.6 — Frontend: add location + website to rank PDF (predictorPdf.js)
+
+- [ ] In `frontend/src/predictor/predictorPdf.js`, in `downloadRankPdf`, update the row-rendering loop for both reach and safe sections:
+  - After printing the college name on line `y`, if `it.location || it.website`:
+    - Drop `y` by 1 pt (tighter spacing)
+    - Print a sub-line at `y + 10` in font size 7, color grey `(150, 150, 150)`:
+      - If `it.location`: `📍 {it.location}` — use plain text, not emoji (jsPDF doesn't render emoji); use `Loc: {it.location}`
+      - If both: `Loc: {it.location}  ·  {hostname}`
+      - If website only: `{hostname}`
+      - Truncate combined sub-line to 55 chars max with `…` to stay within the COLLEGE column width
+    - Increase the per-row height from 14 pt to 22 pt (to accommodate the sub-line)
+  - Do NOT add a new column — keeps the existing 7-column layout intact, avoids width overflow on A4
+  - `ensureSpace` check must use the new row height (22 pt instead of 14 pt)
+
+### 5.7 — Run ETL on dev DB and verify
+
+- [ ] `cd backend && node scripts/seed_college_location_website.mjs --dry-run` → confirm 76–77 college entries printed with correct location + website
+- [ ] Spot-check 3 colleges against the xlsx manually (COEP, MIT, Indira) to confirm data accuracy
+- [ ] Run live: `node scripts/seed_college_location_website.mjs` → confirm "Updated 76 colleges" in output
+- [ ] Query DB to verify: `SELECT code, name, location, website FROM colleges WHERE location IS NOT NULL LIMIT 5` — confirm data is present
+
+### 5.8 — Smoke test end-to-end
+
+- [ ] Start dev backend (`npm run dev`) — confirm migration applied (location + website columns exist in colleges)
+- [ ] Run predict for rank 8000, OBC, all branches — check one result item in network response includes `location` and `website` fields
+- [ ] In browser: confirm location text + website link appear on at least two college cards
+- [ ] Click a website link — confirm it opens in a new tab to the correct URL
+- [ ] Download PDF for an unlocked result — open PDF and confirm the sub-line with location + website hostname appears under college names
+- [ ] Test a college with no location (1 known case) — confirm it does not show location text, only website
+- [ ] Test a college with neither — confirm the sub-line is entirely absent (no empty gap)
+
+---
+
 ## Phase 4 — Post-Launch Improvements (Backlog)
 
 Do after Phases 1–3 are live and stable.
@@ -360,6 +462,12 @@ Do after Phases 1–3 are live and stable.
 | `frontend/src/pages/ResetPassword.jsx` | 2 | Delete |
 | `frontend/src/context/AuthContext.jsx` | 1+2 | Add isShadow, loginAsShadow(), loginWithLogto(), remove register() |
 | `frontend/.env` | 2 | Add VITE_LOGTO_APP_ID, VITE_LOGTO_ENDPOINT |
+| `backend/prisma/migrations/20260722000000_add_college_location_website/migration.sql` | 5 | New: location + website nullable columns on colleges table |
+| `backend/scripts/seed_college_location_website.mjs` | 5 | New: ETL — reads xlsx, extracts location/website from branch rows, UPDATEs 76 colleges rows |
+| `backend/src/predictor/predictor.rank.model.js` | 5 | Add c.location, c.website to CTE SELECT + outer SELECT in findReachByRank and findSafeByRank |
+| `backend/src/predictor/predictor.model.js` | 5 | Add c.location, c.website to CTE SELECT + outer SELECT in findEligible |
+| `frontend/src/pages/CollegePredictor.jsx` | 5 | Sub-line under college name: MapPin location + Globe website link |
+| `frontend/src/predictor/predictorPdf.js` | 5 | Sub-line in rank PDF rows: Loc: {location} · {hostname}, row height 14→22 pt |
 
 ---
 
