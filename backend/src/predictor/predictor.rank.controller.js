@@ -154,7 +154,7 @@ export const rankPayCreate = async (req, res) => {
             pack: RANK_PACK_SIZE,
         });
     } catch (err) {
-        console.error('Rank pay create error:', err.message);
+        console.error('Rank pay create error:', err.message || err.error?.description || err);
         res.status(500).json({ error: 'Could not start payment' });
     }
 };

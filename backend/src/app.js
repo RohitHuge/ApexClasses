@@ -13,6 +13,7 @@ import { generalLimiter } from './middleware/rateLimit.middleware.js';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1); // Traefik sits in front
 
 const allowedOrigins = ['http://localhost:5173', 'https://apexclasses.org', 'https://apexclassestrial.pages.dev' , 'https://apexclassespreview.pages.dev'];
 
