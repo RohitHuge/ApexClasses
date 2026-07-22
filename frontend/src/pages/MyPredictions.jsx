@@ -183,10 +183,10 @@ export default function MyPredictions() {
                                         <p className="text-xs text-slate-500">
                                             {rankProfile.limit > 0
                                                 ? `${rankProfile.remaining} of ${rankProfile.limit} searches left`
-                                                : 'No searches yet — ₹50 for 3'}
+                                                : 'No searches yet — ₹49 per search'}
                                         </p>
                                     ) : (
-                                        <p className="text-xs text-slate-500">₹50 for 3 rank searches</p>
+                                        <p className="text-xs text-slate-500">₹49 per rank search</p>
                                     )}
                                 </div>
                             </div>
@@ -195,7 +195,7 @@ export default function MyPredictions() {
                                     New rank search
                                 </Link>
                                 <button onClick={handleBuyRank} className="flex-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 transition">
-                                    {rankProfile?.limit > 0 ? 'Buy 3 more — ₹50' : 'Get 3 searches — ₹50'}
+                                    {rankProfile?.limit > 0 ? 'Buy another — ₹49' : 'Get a search — ₹49'}
                                 </button>
                             </div>
                         </div>

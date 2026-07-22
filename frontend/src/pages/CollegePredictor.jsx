@@ -17,8 +17,8 @@ import { BRANCH_GROUPS, toggleGroup } from '../predictor/branchGroups';
 import { loadRazorpayScript } from '../order/utils/loadRazorpay';
 import { track } from '../analytics/analyticsClient';
 
-const RANK_PRICE = 50;
-const RANK_PACK  = 3;
+const RANK_PRICE = 49;
+const RANK_PACK  = 1;
 
 const probBadge = (p) => {
     if (p >= 80) return 'bg-emerald-100 text-emerald-700';

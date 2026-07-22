@@ -98,33 +98,37 @@ export const rankReveal = async (req, res) => {
         };
         const comboHash = comboHashOf(inputs);
 
-        // Already revealed → return frozen snapshot, no charge.
-        const cached = await AccountModel.getSearchByCombo(userId, comboHash);
-        if (cached) {
-            return res.json({ success: true, fromCache: true, savedId: cached.id, ...cached.result });
+        // Check if this combo was already unlocked (quota dedup — no double charge).
+        const existing = await AccountModel.getSearchByCombo(userId, comboHash);
+
+        if (!existing) {
+            // First reveal — check quota, charge 1 search, record combo.
+            const prof = await AccountModel.getOrCreateProfile(userId);
+            if (prof.rank_searches_limit - prof.rank_searches_used <= 0) {
+                return res.status(402).json({
+                    error: 'You have no rank searches left.',
+                    code: 'RANK_QUOTA_EXHAUSTED',
+                    rankProfile: publicRankProfile(prof),
+                });
+            }
         }
 
-        // Quota check against rank-specific counter.
-        const prof = await AccountModel.getOrCreateProfile(userId);
-        if (prof.rank_searches_limit - prof.rank_searches_used <= 0) {
-            return res.status(402).json({
-                error: 'You have no rank searches left.',
-                code: 'RANK_QUOTA_EXHAUSTED',
-                rankProfile: publicRankProfile(prof),
-            });
-        }
-
+        // Always run live query — ensures fresh location/website data and correct metrics.
         const result = await RankService.predictByRank({ ...inputs, unlocked: true });
 
-        const saved = await AccountModel.insertSearch({ userId, comboHash, inputs, result, mode: 'rank' });
-
-        const updated = await AccountModel.incrementRankUsed(userId);
+        let savedId = existing?.id;
+        let updated;
+        if (!existing) {
+            const saved = await AccountModel.insertSearch({ userId, comboHash, inputs, result, mode: 'rank' });
+            savedId = saved.id;
+            updated = await AccountModel.incrementRankUsed(userId);
+        }
 
         res.json({
             success: true,
-            fromCache: false,
-            savedId: saved.id,
-            rankProfile: publicRankProfile(updated),
+            fromCache: !!existing,
+            savedId,
+            ...(updated ? { rankProfile: publicRankProfile(updated) } : {}),
             ...result,
         });
     } catch (err) {

@@ -84,10 +84,10 @@
     "id": "rank_predictor_pack",
     "type": "predictor",
     "mode": "online",
-    "title": "Rank Predictor — Full Access Pack",
-    "description": "3 rank-based college predictions with full list, PDF option form & probability scores.",
-    "price": 50,
-    "pack": 3
+    "title": "Rank Predictor — Full Access",
+    "description": "1 rank-based college prediction with full list, PDF option form & probability scores.",
+    "price": 49,
+    "pack": 1
   },
   "admin_test_token": {
     "id": "admin_test_token",
