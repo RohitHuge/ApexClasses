@@ -531,7 +531,6 @@ export default function CollegePredictor() {
                                                         <th className="px-3 py-2 text-left">College</th>
                                                         <th className="px-3 py-2 text-left hidden sm:table-cell">Branch</th>
                                                         <th className="px-3 py-2 text-left hidden md:table-cell">Category</th>
-                                                        <th className="px-3 py-2 text-right">Cl. Rank</th>
                                                         <th className="px-3 py-2 text-right">Prob.</th>
                                                     </tr>
                                                 </thead>
@@ -540,7 +539,7 @@ export default function CollegePredictor() {
                                                     {reachItems.length > 0 && (
                                                         <>
                                                             <tr>
-                                                                <td colSpan={7} className="px-3 py-2 bg-rose-50 border-y border-rose-100">
+                                                                <td colSpan={6} className="px-3 py-2 bg-rose-50 border-y border-rose-100">
                                                                     <span className="text-xs font-bold text-rose-700 uppercase tracking-widest">
                                                                         ── Reach / Ambitious ({reachItems.length} colleges) ──
                                                                     </span>
@@ -570,9 +569,6 @@ export default function CollegePredictor() {
                                                                     <td className="px-3 py-2.5 hidden md:table-cell">
                                                                         <span className="text-[11px] text-slate-500">{it.viaLabel || it.viaCategory}</span>
                                                                     </td>
-                                                                    <td className="px-3 py-2.5 text-right text-xs font-semibold text-slate-700 tabular-nums">
-                                                                        {(it.closingRank || 0).toLocaleString('en-IN')}
-                                                                    </td>
                                                                     <td className="px-3 py-2.5 text-right">
                                                                         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold ${probBadge(it.probability)}`}>
                                                                             {it.probability}%
@@ -587,7 +583,7 @@ export default function CollegePredictor() {
                                                     {safeItems.length > 0 && (
                                                         <>
                                                             <tr>
-                                                                <td colSpan={7} className="px-3 py-2 bg-emerald-50 border-y border-emerald-100">
+                                                                <td colSpan={6} className="px-3 py-2 bg-emerald-50 border-y border-emerald-100">
                                                                     <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">
                                                                         ── Guaranteed Admission ({safeItems.length} colleges) ──
                                                                     </span>
@@ -617,9 +613,6 @@ export default function CollegePredictor() {
                                                                     <td className="px-3 py-2.5 hidden md:table-cell">
                                                                         <span className="text-[11px] text-slate-500">{it.viaLabel || it.viaCategory}</span>
                                                                     </td>
-                                                                    <td className="px-3 py-2.5 text-right text-xs font-semibold text-slate-700 tabular-nums">
-                                                                        {(it.closingRank || 0).toLocaleString('en-IN')}
-                                                                    </td>
                                                                     <td className="px-3 py-2.5 text-right">
                                                                         <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold ${probBadge(it.probability)}`}>
                                                                             {it.probability}%
@@ -632,7 +625,7 @@ export default function CollegePredictor() {
 
                                                     {reachItems.length === 0 && safeItems.length === 0 && (
                                                         <tr>
-                                                            <td colSpan={7} className="px-3 py-8 text-center text-slate-500 text-sm">
+                                                            <td colSpan={6} className="px-3 py-8 text-center text-slate-500 text-sm">
                                                                 No colleges found for your inputs. Try widening branches or category.
                                                             </td>
                                                         </tr>

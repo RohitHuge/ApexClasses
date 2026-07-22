@@ -264,7 +264,6 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
         doc.text('COLLEGE',   M + 55,  y);
         doc.text('BRANCH',    M + 225, y);
         doc.text('CATEGORY',  M + 355, y);
-        doc.text('CL.RANK',   M + 450, y, { align: 'right' });
         doc.text('PROB.',      W - M,   y, { align: 'right' });
         y += 5;
         doc.setDrawColor(226, 232, 240);
@@ -303,8 +302,6 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
             doc.text(branch,                        M + 225, y);
             doc.setTextColor(100, 116, 139);
             doc.text(it.viaLabel || it.viaCategory || '', M + 355, y);
-            doc.setTextColor(30, 41, 59);
-            doc.text((it.closingRank || 0).toLocaleString('en-IN'), M + 450, y, { align: 'right' });
             const prob = it.probability ?? 0;
             doc.setTextColor(prob >= 80 ? 5 : prob >= 40 ? 146 : 220, prob >= 80 ? 150 : prob >= 40 ? 64 : 38, prob >= 80 ? 105 : prob >= 40 ? 0 : 38);
             doc.text(`${prob}%`, W - M, y, { align: 'right' });
@@ -349,8 +346,6 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
             doc.text(branch,                        M + 225, y);
             doc.setTextColor(100, 116, 139);
             doc.text(it.viaLabel || it.viaCategory || '', M + 355, y);
-            doc.setTextColor(30, 41, 59);
-            doc.text((it.closingRank || 0).toLocaleString('en-IN'), M + 450, y, { align: 'right' });
             const prob = it.probability ?? 0;
             doc.setTextColor(5, 150, 105);
             doc.text(`${prob}%`, W - M, y, { align: 'right' });

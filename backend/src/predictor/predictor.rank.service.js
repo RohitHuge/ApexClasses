@@ -127,6 +127,8 @@ export const predictByRank = async ({ rank, category, homeUniversity, branches, 
     const toItem = (r) => ({
         code:        r.code,
         college:     r.name,
+        location:    r.location  || null,
+        website:     r.website   || null,
         branch:      r.branch,
         closingRank: r.best_rank,
         margin:      r.margin,
