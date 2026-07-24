@@ -354,13 +354,13 @@ export default function Home() {
                 Drag the slider below and watch your rank move across 24 representative Pune
                 engineering colleges. The Reach / Safe counts update in real time so you can{' '}
                 <em>feel</em> where you stand before diving into the full predictor.
-                Powered by 2024 closing ranks across 77 colleges and 6,000+ branch entries.
+                Powered by 2025 closing ranks across 77 colleges and 6,000+ branch entries.
               </p>
               <ul className="space-y-3 mb-8 text-slate-700">
                 {[
                     { icon: ShieldCheck, text: 'Live Reach / Safe counts at any rank' },
                     { icon: MapPin, text: 'Home-university (L-quota) aware' },
-                    { icon: GraduationCap, text: '77 colleges · 28 branches · 2024 data' },
+                    { icon: GraduationCap, text: '77 colleges · 28 branches · 2025 data' },
                 ].map((f) => (
                     <li key={f.text} className="flex items-center gap-3 text-sm">
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600">
@@ -782,7 +782,7 @@ function RankLandscape() {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Live · 2024 closing ranks</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Live · 2025 closing ranks</p>
           <p className="text-base font-extrabold text-slate-800">Find your spot</p>
         </div>
         <div className="text-right">
