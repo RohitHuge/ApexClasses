@@ -5,7 +5,7 @@ import { SELECTABLE_CATEGORIES } from './predictor.service.js';
 export const REACH_RANK_SLACK = 3000;
 const REACH_SLACK_LADDER = [3000, 5000, 8000, 12000, 20000, 999999];
 
-const MAX_REACH = 10;
+const MAX_REACH = 20;
 const MAX_SAFE  = 20;
 
 // Friendly labels for category codes in rank_cutoffs.
@@ -112,9 +112,7 @@ export const predictByRank = async ({ rank, category, homeUniversity, branches, 
     const branchFilter = branches && branches.length ? branches : null;
 
     // ── Reach: expand slack until >= MAX_REACH colleges found ────────────────
-    // Include ALL reach colleges regardless of probability — even 0% ambitions
-    // belong in the CAP option form. Colleges are already sorted ASC by
-    // closing_rank, which puts the most ambitious (lowest rank) first.
+    // Colleges are sorted ASC by closing_rank (most ambitious first).
     let reachRows = [];
     for (const slack of REACH_SLACK_LADDER) {
         reachRows = await RankModel.findReachByRank(rank, effective, branchFilter, slack);

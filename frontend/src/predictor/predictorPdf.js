@@ -59,7 +59,7 @@ export const downloadResultsPdf = ({ query, counts, buckets, leadName, leadPhone
     doc.text('APEX CLASSES', M, 30);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text('MHT-CET College Predictor · Pune Region · 2024 cutoffs', M, 48);
+    doc.text('MHT-CET College Predictor · Pune Region · 2025 cutoffs', M, 48);
 
     doc.setFontSize(8);
     doc.text(`Generated ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`, W - M, 48, { align: 'right' });
@@ -209,7 +209,7 @@ export const downloadRankPdf = ({ query, results, leadName, leadPhone }) => {
     doc.text('APEX CLASSES', M, 30);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text('MHT-CET Option Form Reference · Rank-Based Predictor · 2024 cutoffs', M, 48);
+    doc.text('MHT-CET Option Form Reference · Rank-Based Predictor · 2025 cutoffs', M, 48);
     doc.setFontSize(8);
     doc.text(`Generated ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`, W - M, 48, { align: 'right' });
 
@@ -372,7 +372,7 @@ const drawFooterRank = (doc, W, H, M) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.text(
-        'Indicative only — based on 2024 closing ranks. Not a guarantee of admission. Fill CAP option form in SR order: reach options first, safe last.',
+        'Indicative only — based on 2025 closing ranks. Not a guarantee of admission. Fill CAP option form in SR order: reach options first, safe last.',
         W / 2, H - 24, { align: 'center' }
     );
     doc.text(`apexclasses.org · MHT-CET Rank Predictor · page ${page}`, W - M, H - 12, { align: 'right' });
@@ -384,7 +384,7 @@ const drawFooter = (doc, W, H, M) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.text(
-        'Indicative only — based on 2024 closing cutoffs. Not a guarantee of admission. Actual cutoffs vary by CAP round, seat movement, and applicant volume.',
+        'Indicative only — based on 2025 closing cutoffs. Not a guarantee of admission. Actual cutoffs vary by CAP round, seat movement, and applicant volume.',
         W / 2, H - 24, { align: 'center' }
     );
     doc.text(`apexclasses.org · MHT-CET College Predictor · page ${page}`, W - M, H - 12, { align: 'right' });

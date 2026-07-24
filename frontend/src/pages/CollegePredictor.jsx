@@ -306,7 +306,7 @@ export default function CollegePredictor() {
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
-                                <Sparkles size={14} /> MHT-CET · Pune Region · 2024 rank cutoffs
+                                <Sparkles size={14} /> MHT-CET · Pune Region · 2025 rank cutoffs
                             </span>
                             {user && (
                                 <Link to="/my-predictions" className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-900">
@@ -462,7 +462,7 @@ export default function CollegePredictor() {
                                     <Info size={16} className="flex-shrink-0 mt-0.5 text-amber-600" />
                                     <p className="leading-relaxed">
                                         <span className="font-bold">Indicative only.</span>{' '}
-                                        Based on 2024 closing ranks. Actual cutoffs shift each year by round, seat matrix, and applicant volume.
+                                        Based on 2025 closing ranks. Actual cutoffs shift each year by round, seat matrix, and applicant volume.
                                     </p>
                                 </div>
 

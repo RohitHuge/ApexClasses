@@ -59,7 +59,8 @@
       "Bash(npx vite *.)",
       "Bash(npx vite *)",
       "Bash(python -c ' *)",
-      "Bash(curl -sk -H \"Authorization: Bearer 8|Zns3jASPcK0lnK6sEnlrLFTbMiRJ0lIQnCy43Si6ae625238\" -H \"Accept: application/json\" \"http://82.180.144.69:8000/api/v1/applications/l8wj4h9hj50mhmj6bqmfnd64/logs?lines=50\")"
+      "Bash(curl -sk -H \"Authorization: Bearer 8|Zns3jASPcK0lnK6sEnlrLFTbMiRJ0lIQnCy43Si6ae625238\" -H \"Accept: application/json\" \"http://82.180.144.69:8000/api/v1/applications/l8wj4h9hj50mhmj6bqmfnd64/logs?lines=50\")",
+      "Bash(psql *)"
     ]
   }
 }
