@@ -17,7 +17,7 @@ import { BRANCH_GROUPS, toggleGroup } from '../predictor/branchGroups';
 import { loadRazorpayScript } from '../order/utils/loadRazorpay';
 import { track } from '../analytics/analyticsClient';
 
-const RANK_PRICE = 49;
+const RANK_PRICE = 101;
 const RANK_PACK  = 1;
 
 const probBadge = (p) => {
